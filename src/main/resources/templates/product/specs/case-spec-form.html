@@ -1,0 +1,42 @@
+<div class="row g-3" th:if="${pcase != null}">
+
+    <div class="col-md-6">
+        <label for="pcase-formfactor" class="form-label">Form Factor</label>
+        <select class="form-control form-control-sm" id="pcase-formfactor"
+                name="pcase.formFactor" th:value="${pcase.formFactor}">
+            <option value="">-- Select Form Factor --</option>
+            <option value="Mini-ITX" th:selected="${pcase.formFactor == 'Mini-ITX'}">Mini-ITX</option>
+            <option value="Micro-ATX" th:selected="${pcase.formFactor == 'Micro-ATX'}">Micro-ATX</option>
+            <option value="ATX" th:selected="${pcase.formFactor == 'ATX'}">ATX</option>
+            <option value="E-ATX" th:selected="${pcase.formFactor == 'E-ATX'}">E-ATX</option>
+        </select>
+    </div>
+
+    <div class="col-md-6">
+        <label for="pcase-gpu-length" class="form-label">Max GPU Length (mm)</label>
+        <input type="number" class="form-control form-control-sm" id="pcase-gpu-length"
+               name="pcase.gpu.maxLength"
+               th:value="${pcase.gpuMaxLength}"
+               min="0">
+    </div>
+
+    <div class="col-md-6">
+        <label for="pcase-psu-formfactor" class="form-label">PSU Form Factor</label>
+        <select class="form-control form-control-sm" id="pcase-psu-formfactor"
+                name="pcase.psuFormFactor" th:value="${pcase.psuFormFactor}">
+            <option value="">-- Select PSU Form Factor --</option>
+            <option value="ATX" th:selected="${pcase.psuFormFactor == 'ATX'}">ATX</option>
+            <option value="SFX" th:selected="${pcase.psuFormFactor == 'SFX'}">SFX</option>
+            <option value="SFX-L" th:selected="${pcase.psuFormFactor == 'SFX-L'}">SFX-L</option>
+        </select>
+    </div>
+
+    <div class="col-md-6">
+        <label for="pcase-cpu-height" class="form-label">Max CPU Cooler Height (mm)</label>
+        <input type="number" class="form-control form-control-sm" id="pcase-cpu-height"
+               name="pcase.cpu.maxCoolerHeight"
+               th:value="${pcase.cpuMaxCoolerHeight}"
+               min="0">
+    </div>
+
+</div>

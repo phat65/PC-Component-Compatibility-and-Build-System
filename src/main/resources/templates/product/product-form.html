@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="https://www.thymeleaf.org/extras/spring-security" lang="en"><head>
+    <meta charset="UTF-8" />
+    <title>Add Product</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+        :root{
+            --header-h: 60px;
+            /* 1. Bảng màu được tinh chỉnh */
+            --primary: #3b82f6;       /* Xanh lam 500 */
+            --primary-hover: #2563eb; /* Xanh lam 600 */
+            --ink: #1f2937;            /* Xám 800 (mềm hơn màu đen) */
+            --muted: #6b7280;          /* Xám 500 */
+            --bg: #f6f7fb;            /* Xám 50 */
+            --card: #ffffff;
+            --border: #e5e7eb;          /* Xám 200 */
+            --error: #dc2626;           /* Đỏ 600 */
+
+            /* 2. Bán kính và bóng đổ nhất quán */
+            --radius-md: 8px;           /* Cho input/button */
+            --radius-lg: 12px;          /* Cho card */
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        *, *::before, *::after {
+            box-sizing: border-box; /* Giúp việc tính toán padding/border dễ đoán hơn */
+        }
+
+        body{
+            margin:0;
+            font-family: system-ui,-apple-system,Segoe UI,Inter,Roboto,Arial,sans-serif;
+            background: var(--bg);
+            color: var(--ink);
+            line-height: 1.6; /* 3. Tăng khoảng cách dòng để dễ đọc */
+        }
+        .container{
+            max-width:820px;
+            margin:0 auto;
+            padding:calc(var(--header-h) + 10px) 16px 24px;
+        }
+        .card{
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 24px; /* 3. Thêm không gian thở */
+            box-shadow: var(--shadow);
+            margin-bottom: 20px; /* Thêm khoảng cách giữa các card */
+        }
+        h1.title{
+            font-weight: 700;
+            font-size: 24px; /* 3. To hơn một chút */
+            margin: 0 0 16px;
+        }
+        label{
+            display: block;
+            font-weight: 600;
+            margin: 16px 0 6px; /* 3. Tăng khoảng cách trên */
+            font-size: 0.9rem; /* 14.4px */
+            color: var(--muted); /* 1. Màu label nhạt hơn */
+        }
+
+        /* 4. Cải thiện toàn bộ input, select, textarea */
+        input[type="text"],
+        input[type="number"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 12px; /* Tăng padding */
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            background: #ffffff; /* 4. Nền trắng sạch sẽ */
+            font-size: 1rem; /* 4. Cỡ chữ 16px dễ đọc */
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        input[type="text"]:focus,
+        input[type="number"]:focus,
+        select:focus,
+        textarea:focus {
+            outline: none;
+            border-color: var(--primary); /* 1. Viền xanh khi focus */
+            background: #fff;
+            /* 4. Thêm vòng sáng mờ (focus ring) */
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        }
+
+        textarea{min-height:100px;resize:vertical}
+        .error{color:var(--error);font-size:0.875rem;margin-top:5px}
+        .hint{color:var(--muted);font-size:0.875rem;margin-top:5px}
+
+        /* 4. Cải thiện khu vực "Gate" */
+        .gate{
+            display:flex;
+            gap: 12px; /* Tăng khoảng cách */
+            align-items:center;
+            flex-wrap:wrap;
+            margin-bottom:14px;
+        }
+        .gate label {
+            margin: 0; /* Ghi đè margin mặc định của label */
+            color: var(--ink); /* 4. Làm cho label này rõ ràng hơn */
+        }
+
+        /* 5. Cải thiện các nút bấm */
+        .btn{
+            padding: 10px 16px;
+            border: 1px solid var(--border);
+            background: var(--card);
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: background 0.2s, transform 0.1s;
+        }
+        .btn:hover{
+            background: #f9fafb; /* Xám 50 */
+        }
+        .btn:active {
+            transform: scale(0.98); /* 5. Hiệu ứng nhấn */
+        }
+
+        /* Nút "Chọn ảnh" */
+        input[type="file"] + .btn {
+            margin-top: 8px;
+        }
+
+        .primary{
+            background: var(--primary); /* 1. Nút chính màu xanh */
+            color: #fff;
+            border: none;
+            padding: 12px 20px;
+            border-radius: var(--radius-md);
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+        }
+        .primary:hover{
+            background: var(--primary-hover); /* 1. Màu hover */
+        }
+        .primary:active {
+            transform: scale(0.98); /* 5. Hiệu ứng nhấn */
+        }
+
+        /* 6. Cải thiện khu vực xem trước ảnh */
+        .preview{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+        .thumb{
+            width: 110px;
+            height: 88px;
+            border: 1px solid var(--border); /* 6. Viền liền mạch, không đứt nét */
+            border-radius: var(--radius-md);
+            background: var(--bg); /* Nền xám nhạt */
+            display:flex;
+            align-items:center;
+            justify-content: center;
+            overflow:hidden;
+        }
+        .thumb img{width:100%;height:100%;object-fit:cover}
+
+        .actions{display:flex;justify-content:flex-end;margin-top:20px}
+    </style>
+</head>
+<body>
+
+<div sec:authorize="!isAuthenticated()"
+     th:replace="layout/header-default :: header-default"></div>
+<div sec:authorize="hasRole('ADMIN')"
+     th:replace="layout/header-admin :: header-admin"></div>
+
+<div sec:authorize="hasRole('STAFF')"
+     th:replace="layout/header-staff :: header-staff"></div>
+
+<div sec:authorize="hasRole('CUSTOMER')"
+     th:replace="layout/header-customer :: header-customer"></div>
+<div class="container">
+    <h1 class="title">Add Product</h1>
+
+    <div class="card">
+        <div class="gate">
+            <label for="categorySelect" style="margin:0">Primary Category *</label>
+            <select id="categorySelect" style="min-width:240px" required>
+                <option value="">-- Choose Primary Category --</option>
+                <option th:each="cat : ${categories}"
+                        th:if="${cat.displayOrder <= 10}"
+                        th:value="${cat.categoryId}"
+                        th:text="${cat.categoryName}"></option>
+            </select>
+            <button type="button" class="btn" id="btnStart">Continue</button>
+        </div>
+
+
+        <p id="gateMsg" class="hint" style="margin:16px 0 0">Choose primary category to display the specification form.</p>
+
+        <div class="error" th:if="${categoryError}" th:text="${categoryError}"></div>
+    </div>
+
+    <form id="productForm" class="card"
+          th:action="@{/staff/products/save}"
+          th:object="${product}"
+          style="display:none"
+          method="post" enctype="multipart/form-data">
+
+        <input type="hidden" id="primaryCategoryId" name="categoryIds" />
+        <!-- Additional categories will be added dynamically via JS -->
+
+        <label for="brand">Brand *</label>
+        <select id="brand" name="brand.brandId" required>
+            <option value="">-- Choose brand --</option>
+            <option th:each="b : ${brands}" th:value="${b.brandId}" th:text="${b.name}"></option>
+        </select>
+        <div class="error" th:if="${brandError}" th:text="${brandError}"></div>
+
+        <label for="name">Product's Name *</label>
+        <input id="name" type="text" th:field="*{productName}" placeholder="VD: ASUS PRIME B550M-A"
+               pattern="^[A-Za-zÀ-ỹ0-9\\s\\-_,\\.;:()]+$" minlength="3" maxlength="100" required/>
+        <div class="error" th:if="${#fields.hasErrors('productName')}" th:errors="*{productName}"></div>
+
+        <label for="price">Price ($) *</label>
+        <input id="price" type="number" th:field="*{price}" min="0.01" step="0.01" placeholder="VD: 149.90" required/>
+        <div class="error" th:if="${#fields.hasErrors('price')}" th:errors="*{price}"></div>
+
+        <label for="desc">Description</label>
+        <textarea id="desc" th:field="*{description}" placeholder="Mô tả ngắn gọn..."></textarea>
+
+        <label for="inventory">Inventory *</label>
+        <input id="inventory" type="number" th:field="*{inventoryQuantity}" min="0" step="1" placeholder="VD: 100" required/>
+        <div class="error" th:if="${#fields.hasErrors('inventoryQuantity')}" th:errors="*{inventoryQuantity}"></div>
+        <label>Specification</label>
+
+        <!-- Spec Validation Errors -->
+        <div th:if="${specErrors != null and !specErrors.isEmpty()}"
+             style="background: #fee; border: 1px solid var(--error); border-radius: var(--radius-md); padding: 12px; margin-bottom: 16px;">
+            <strong style="color: var(--error);">❌ Specification Validation Errors:</strong>
+            <ul style="margin: 8px 0 0 20px; color: var(--error);">
+                <li th:each="err : ${specErrors}" th:text="${err}"></li>
+            </ul>
+        </div>
+
+        <div id="specFormContainer" class="card" style="padding: 16px; box-shadow: none; background: var(--bg);">
+            <p class="hint" style="margin:0"></p>
+        </div>
+
+        <label for="lifecycleStatus">Lifecycle</label>
+        <select id="lifecycleStatus" th:field="*{lifecycleStatus}">
+            <option th:each="lifecycle : ${T(com.example.PCOnlineShop.model.product.ProductLifecycleStatus).values()}"
+                    th:value="${lifecycle}"
+                    th:text="${lifecycle.displayName}"></option>
+        </select>
+        <div class="hint">Draft và Discontinued sẽ tự động bị ẩn khỏi giao diện.</div>
+
+        <label for="status">Visibility</label>
+        <select id="status" th:field="*{status}">
+            <option th:value="true">Visible</option>
+            <option th:value="false">Hidden</option>
+        </select>
+
+        <label>Image</label>
+        <input type="file" id="imageInput" name="imageFiles" accept="image/png, image/jpeg" multiple style="display:none"/>
+        <button type="button" class="btn" onclick="document.getElementById('imageInput').click()">Choose Image</button>
+        <div class="preview" id="imagePreview">
+            <div class="thumb"><span class="hint"></span></div>
+        </div>
+
+        <div class="actions">
+            <a th:href="@{/staff/products/list}" class="btn btn-secondary me-2">Cancel</a>
+            <button type="submit" class="primary">Create</button>
+        </div>
+    </form>
+</div>
+
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    const submittedCatId = /*[[${submittedCategoryId}]]*/ null;
+    const submittedBrandId = /*[[${submittedBrandId}]]*/ null;
+    const categorySelectForReload = document.getElementById('categorySelect');
+    const brandSelect = document.getElementById('brand');
+
+    document.addEventListener('DOMContentLoaded', () => {
+        if (submittedCatId) {
+            categorySelectForReload.value = submittedCatId;
+            if (submittedBrandId) {
+                brandSelect.value = submittedBrandId;
+            }
+            openFormWithCategory(submittedCatId, false);
+        }
+    });
+    /*]]>*/
+</script>
+
+<script>
+    const categorySelect = document.getElementById('categorySelect');
+    const btnStart = document.getElementById('btnStart');
+    const gateMsg = document.getElementById('gateMsg');
+    const productForm = document.getElementById('productForm');
+    const primaryCategoryId = document.getElementById('primaryCategoryId');
+    const specContainer = document.getElementById('specFormContainer');
+    const lifecycleSelect = document.getElementById('lifecycleStatus');
+    const visibilitySelect = document.getElementById('status');
+
+    function openFormWithCategory(cid, shouldScroll = true){
+        if(!cid){
+            productForm.style.display = 'none';
+            gateMsg.textContent = 'Choose primary category to display the specification form.';
+            specContainer.innerHTML = '<p class="hint">No spec form yet — will appear after selecting category.</p>';
+            return;
+        }
+        primaryCategoryId.value = cid;
+        productForm.style.display = 'block';
+        gateMsg.textContent = 'Category selected. Fill in product details.';
+        loadSpec(cid);
+
+        if (shouldScroll) {
+            productForm.scrollIntoView({behavior:'smooth', block:'start'});
+        }
+    }
+
+    btnStart.addEventListener('click', () => openFormWithCategory(categorySelect.value, true));
+
+    categorySelect.addEventListener('change', () => {
+        if(productForm.style.display === 'block'){
+            openFormWithCategory(categorySelect.value, true);
+        }
+    });
+
+
+    async function loadSpec(categoryId){
+        try{
+            specContainer.innerHTML = '<p class="hint">Loading specification form...</p>';
+            const res = await fetch(`/staff/products/spec-form?categoryId=${categoryId}`);
+            if (!res.ok) throw new Error('Network response was not ok');
+            specContainer.innerHTML = await res.text();
+        }catch(e){
+            console.error(e);
+            specContainer.innerHTML = '<p class="error">Error loading specification form!</p>';
+        }
+    }
+
+    lifecycleSelect.addEventListener('change', () => {
+        if (lifecycleSelect.value !== 'SELLING') {
+            visibilitySelect.value = 'false';
+        }
+    });
+
+    // DEBUG: Log form submission
+    productForm.addEventListener('submit', (e) => {
+        console.log('=== FORM SUBMIT DEBUG ===');
+        const formData = new FormData(productForm);
+        console.log('Brand ID:', formData.get('brand.brandId'));
+        console.log('Category IDs:', formData.getAll('categoryIds'));
+        console.log('Product Name:', formData.get('productName'));
+        console.log('All form data:');
+        for (let [key, value] of formData.entries()) {
+            console.log(`  ${key}: ${value}`);
+        }
+        console.log('========================');
+    });
+
+    const imageInput = document.getElementById('imageInput');
+    const imagePreview = document.getElementById('imagePreview');
+    imageInput.addEventListener('change', (e) => {
+        imagePreview.innerHTML = '';
+        const files = Array.from(e.target.files);
+        if(files.length === 0){
+            imagePreview.innerHTML = '<div class="thumb"><span class="hint">No image yet</span></div>';
+            return;
+        }
+        files.forEach(f => {
+            const reader = new FileReader();
+            reader.onload = ev => {
+                const box = document.createElement('div');
+                box.className = 'thumb';
+                box.innerHTML = `<img src="${ev.target.result}" alt="preview">`;
+                imagePreview.appendChild(box);
+            };
+            reader.readAsDataURL(f);
+        });
+    });
+</script>
+
+</body>
+</html>

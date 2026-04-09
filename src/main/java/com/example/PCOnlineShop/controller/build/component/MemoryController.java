@@ -1,0 +1,71 @@
+package com.example.PCOnlineShop.controller.build.component;
+
+import com.example.PCOnlineShop.dto.build.BuildItemDto;
+import com.example.PCOnlineShop.model.build.Memory;
+import com.example.PCOnlineShop.service.build.BuildService;
+import com.example.PCOnlineShop.service.build.component.MemoryService;
+import lombok.AllArgsConstructor;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+@AllArgsConstructor
+@Controller
+@SessionAttributes({"buildItems"})
+@RequestMapping("/build")
+public class MemoryController {
+    private final MemoryService memoryService;
+    private final BuildService buildService;
+
+    @ModelAttribute("buildItems")
+    public BuildItemDto buildItems() {
+        return new BuildItemDto();
+    }
+
+    @GetMapping("/memory")
+    public String showMemoryPage(@ModelAttribute("buildItems") BuildItemDto buildItem, Model model) {
+        List<Memory> memories = buildService.getCompatibleMemory(buildItem);
+        model.addAttribute("memories", memories);
+        model.addAttribute("allBrands", memoryService.getAllBrands(memories));
+        return "/build/memory";
+    }
+
+    @PostMapping("/memory/filter")
+    public String filterMemories(@RequestParam(required = false) List<String> brands,
+                                 @RequestParam(required = false) String sortBy,
+                                 @ModelAttribute("buildItems") BuildItemDto buildItem,
+                                 Model model) {
+        List<Memory> memories = buildService.getCompatibleMemory(buildItem);
+        Map<String,List<String>> filters = new HashMap<>();
+        filters.put("brands", brands);
+        memories = memoryService.filterMemories(memories, filters, sortBy);
+
+        model.addAttribute("memories", memories);
+        model.addAttribute("allBrands", memoryService.getAllBrands(buildService.getCompatibleMemory(buildItem)));
+        model.addAttribute("selectedBrands", brands);
+        model.addAttribute("selectedSort", sortBy);
+        return "/build/memory";
+    }
+
+    @PostMapping("/selectMemory")
+    public String selectMemory(@RequestParam(value = "memoryId", required = false) Integer memoryId,
+                               @ModelAttribute("buildItems") BuildItemDto buildItem,
+                               org.springframework.web.servlet.mvc.support.RedirectAttributes redirectAttributes) {
+        // Memory is REQUIRED - must select one
+        if (memoryId == null && buildItem.getMemory() == null) {
+            redirectAttributes.addFlashAttribute("error", "Please select memory to continue.");
+            return "redirect:/build/memory";
+        }
+
+        // Only update if user selected new memory
+        if (memoryId != null) {
+            buildItem.setMemory(memoryService.getMemoryById(memoryId));
+        }
+        // If memoryId is null but buildItem.memory exists, keep it
+        return "redirect:/build/storage";
+    }
+}

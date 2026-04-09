@@ -1,0 +1,61 @@
+<div class="row g-3" th:if="${cpu != null}">
+
+    <div class="col-md-6">
+        <label for="cpu-socket" class="form-label">Socket</label>
+        <select class="form-control form-control-sm" id="cpu-socket"
+                name="cpu.socket" th:value="${cpu.socket}">
+            <option value="">-- Select Socket --</option>
+            <option value="AM4" th:selected="${cpu.socket == 'AM4'}">AM4</option>
+            <option value="AM5" th:selected="${cpu.socket == 'AM5'}">AM5</option>
+            <option value="LGA1700" th:selected="${cpu.socket == 'LGA1700'}">LGA1700</option>
+            <option value="LGA1200" th:selected="${cpu.socket == 'LGA1200'}">LGA1200</option>
+            <option value="LGA1151" th:selected="${cpu.socket == 'LGA1151'}">LGA1151</option>
+            <option value="TR4" th:selected="${cpu.socket == 'TR4'}">TR4 (Threadripper)</option>
+        </select>
+    </div>
+
+    <div class="col-md-6">
+        <label for="cpu-tdp" class="form-label">TDP (W)</label>
+        <input type="number" class="form-control form-control-sm" id="cpu-tdp"
+               name="cpu.tdp"
+               th:value="${cpu.tdp}" min="0">
+    </div>
+
+    <div class="col-md-6">
+        <label for="cpu-memspeed" class="form-label">Max Memory Speed (MHz)</label>
+        <input type="number" class="form-control form-control-sm" id="cpu-memspeed"
+               name="cpu.maxMemorySpeed"
+               th:value="${cpu.maxMemorySpeed}" min="0">
+    </div>
+
+    <div class="col-md-6">
+        <label for="cpu-memchannels" class="form-label">Memory Channels</label>
+        <input type="number" class="form-control form-control-sm" id="cpu-memchannels"
+               name="cpu.memoryChannels"
+               th:value="${cpu.memoryChannels}" min="0">
+    </div>
+
+    <div class="col-md-6">
+        <label for="cpu-pcie" class="form-label">PCIe Version</label>
+        <select class="form-control form-control-sm" id="cpu-pcie"
+                name="cpu.pcieVersion" th:value="${cpu.pcieVersion}">
+            <option value="">-- Select PCIe Version --</option>
+            <option value="3.0" th:selected="${cpu.pcieVersion == '3.0'}">PCIe 3.0</option>
+            <option value="4.0" th:selected="${cpu.pcieVersion == '4.0'}">PCIe 4.0</option>
+            <option value="5.0" th:selected="${cpu.pcieVersion == '5.0'}">PCIe 5.0</option>
+        </select>
+    </div>
+
+    <div class="col-md-12 d-flex align-items-end">
+        <div class="form-check">
+            <input type="hidden" name="cpu.hasIGPU" value="false"/>
+            <input class="form-check-input" type="checkbox" id="cpu-hasIGPU"
+                   name="cpu.hasIGPU" value="true"
+                   th:checked="${cpu.hasIGPU}">
+            <label class="form-check-label" for="cpu-hasIGPU">
+                Has Integrated iGPU
+            </label>
+        </div>
+    </div>
+
+</div>

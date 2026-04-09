@@ -1,0 +1,173 @@
+package com.example.PCOnlineShop.controller.home;
+
+import com.example.PCOnlineShop.model.account.Account;
+import com.example.PCOnlineShop.model.product.Brand;
+import com.example.PCOnlineShop.model.product.Category;
+import com.example.PCOnlineShop.model.product.Product;
+import com.example.PCOnlineShop.repository.account.AccountRepository;
+import com.example.PCOnlineShop.repository.product.BrandRepository;
+import com.example.PCOnlineShop.repository.product.CategoryRepository;
+import com.example.PCOnlineShop.service.feedback.FeedbackService;
+import com.example.PCOnlineShop.service.product.CategoryService;
+import com.example.PCOnlineShop.service.product.ProductService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.stream.IntStream;
+
+@Controller
+@RequiredArgsConstructor
+public class HomeController {
+
+    private final ProductService productService;
+    private final CategoryService categoryService;
+    private final CategoryRepository categoryRepository;
+    private final BrandRepository brandRepository;
+    private final AccountRepository accountRepository;
+    private final FeedbackService feedbackService;
+    /**
+     * ✅ Trang landing (trang chủ đầu tiên)
+     */
+
+   @GetMapping("/")
+    public String landing() {
+        return "landing";
+    }
+
+    /**
+     * ✅ Trang Home (hiển thị sản phẩm nổi bật, lọc theo brand/category)
+     */
+    @GetMapping("/home")
+    public String home(
+            @RequestParam(required = false) Integer category,
+            @RequestParam(required = false) Integer brand,
+            Authentication authentication,
+            Model model
+    ) {
+        if (authentication != null && authentication.isAuthenticated()) {
+            String email = authentication.getName();
+            Account user = accountRepository.findByEmail(email).orElse(null);
+            model.addAttribute("currentUser", user);
+        }
+
+        // Get only main categories (Mainboard, CPU, GPU, Memory, Storage, Case, Power Supply, Cooling, Other)
+        List<Category> categories = categoryRepository.findMainCategories();
+        List<Brand> brands = brandRepository.findAll();
+        List<Product> products;
+
+        if (category != null) {
+            products = productService.getProductsByCategory(category);
+            model.addAttribute("selectedCategory", category);
+        } else if (brand != null) {
+            products = productService.getProductsByBrand(brand);
+            model.addAttribute("selectedBrand", brand);
+        } else {
+            products = productService.getFeaturedProducts();
+        }
+
+        model.addAttribute("categories", categories);
+        model.addAttribute("brands", brands);
+        model.addAttribute("featuredProducts", products);
+
+        return "home";
+    }
+
+    /**
+     *  Trang Product Home - hiển thị toàn bộ sản phẩm (phân trang + lọc)
+     */
+    @GetMapping("/products")
+    public String productHome(
+            @RequestParam(required = false) Integer category,
+            @RequestParam(required = false) Integer brand,
+            @RequestParam(required = false) Double minPrice,
+            @RequestParam(required = false) Double maxPrice,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(defaultValue = "price") String sortField,
+            @RequestParam(defaultValue = "desc") String sortDir,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "12") int size,
+            Model model
+    ) {
+        if (keyword != null) {
+            keyword = keyword.trim().replaceAll("\\s+", " ");
+        }
+        Sort sort = sortDir.equalsIgnoreCase("asc")
+                ? Sort.by(sortField).ascending()
+                : Sort.by(sortField).descending();
+
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        Page<Product> productPage = productService.searchVisibleCatalogProducts(
+                category,
+                brand,
+                minPrice,
+                maxPrice,
+                keyword,
+                pageable
+        );
+
+        model.addAttribute("products", productPage.getContent());
+        model.addAttribute("currentPage", page);
+        model.addAttribute("totalPages", productPage.getTotalPages());
+        model.addAttribute("pageNumbers",
+                java.util.stream.IntStream.range(0, productPage.getTotalPages()).boxed().toList());
+
+        // Truyền các giá trị filter về view
+        // Truyền các giá trị filter về view - only main categories
+        model.addAttribute("categories", categoryRepository.findMainCategories());
+        model.addAttribute("selectedCategory", category);
+        model.addAttribute("selectedBrand", brand);
+        model.addAttribute("brands", brandRepository.findAll());
+        model.addAttribute("minPrice", minPrice);
+        model.addAttribute("maxPrice", maxPrice);
+        model.addAttribute("keyword", keyword);
+        model.addAttribute("sortDir", sortDir);
+
+        return "product/product-home";
+    }
+
+
+    /**
+     * ✅ Trang chi tiết sản phẩm
+     */
+    @GetMapping("products/{id}")
+    public String showProductDetail(@PathVariable("id") Integer id, Model model) {
+        Product product = productService.getVisibleSellingProductById(id);
+        if (product == null) return "redirect:/home";
+
+        model.addAttribute("product", product);
+        model.addAttribute("categories", categoryService.getAllCategories());
+        model.addAttribute("images", product.getImages());
+
+        //  Lấy sản phẩm liên quan
+        List<Category> productCategories = product.getCategories();
+        if (productCategories != null && !productCategories.isEmpty()) {
+            // Use primary category (first one) for related products
+            Category primaryCategory = productCategories.getFirst();
+            List<Product> related = productService.getTopRelatedProducts(
+                    primaryCategory.getCategoryId(), id);
+            model.addAttribute("relatedProducts", related);
+        }
+
+        //  Lấy toàn bộ feedback đã được duyệt (Allow) — không phân trang
+        var feedbackPage = feedbackService.getAllowedByProduct(id, 0, Integer.MAX_VALUE);
+        model.addAttribute("feedbackPage", feedbackPage);
+
+        Double avgRating = feedbackService.getAverageRating(id);
+        model.addAttribute("avgRating", avgRating);
+
+        long feedbackCount = feedbackPage.getTotalElements();
+        model.addAttribute("feedbackCount", feedbackCount);
+
+        return "product/product-details";
+    }
+}

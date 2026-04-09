@@ -1,0 +1,46 @@
+<div class="row g-3" th:if="${storage != null}">
+
+    <div class="col-md-6">
+        <label for="st-capacity" class="form-label">Capacity (GB)</label>
+        <input type="number" class="form-control form-control-sm" id="st-capacity"
+               name="storage.capacity"
+               th:value="${storage.capacity}" min="0">
+    </div>
+
+    <div class="col-md-6">
+        <label for="st-type" class="form-label">Type</label>
+        <select class="form-control form-control-sm" id="st-type"
+                name="storage.type" th:value="${storage.type}">
+            <option value="">-- Select Type --</option>
+            <option value="SSD" th:selected="${storage.type == 'SSD'}">SSD</option>
+            <option value="HDD" th:selected="${storage.type == 'HDD'}">HDD</option>
+            <option value="NVMe" th:selected="${storage.type == 'NVMe'}">NVMe</option>
+        </select>
+    </div>
+
+    <div class="col-md-6">
+        <label for="st-interface" class="form-label">Interface</label>
+        <select class="form-control form-control-sm" id="st-interface"
+                name="storage.interfaceType" th:value="${storage.interfaceType}">
+            <option value="">-- Select Interface --</option>
+            <option value="SATA" th:selected="${storage.interfaceType == 'SATA'}">SATA</option>
+            <option value="NVMe" th:selected="${storage.interfaceType == 'NVMe'}">NVMe</option>
+            <option value="M.2" th:selected="${storage.interfaceType == 'M.2'}">M.2</option>
+        </select>
+    </div>
+
+    <div class="col-md-6">
+        <label for="st-read" class="form-label">Read Speed (MB/s)</label>
+        <input type="number" class="form-control form-control-sm" id="st-read"
+               name="storage.readSpeed"
+               th:value="${storage.readSpeed}" min="0">
+    </div>
+
+    <div class="col-md-6">
+        <label for="st-write" class="form-label">Write Speed (MB/s)</label>
+        <input type="number" class="form-control form-control-sm" id="st-write"
+               name="storage.writeSpeed"
+               th:value="${storage.writeSpeed}" min="0">
+    </div>
+
+</div>

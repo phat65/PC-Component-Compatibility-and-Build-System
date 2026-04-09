@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="https://www.thymeleaf.org/extras/spring-security" lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <title>My Profile</title>
+    <link rel="stylesheet" th:href="@{/css/profile.css}">
+    <style>
+        body {
+            background-color: #f9f9f9;
+            font-family: "Segoe UI", sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Wrapper 2 form */
+        .profile-wrapper {
+            display: flex;
+            gap: 30px;
+            justify-content: center;
+            flex-wrap: wrap;
+            padding: 50px 20px;
+        }
+
+        /* Form card */
+        .profile-container,
+        .password-container {
+            background: #fff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Kích thước */
+        .profile-container {
+            width: 400px;
+        }
+
+        .password-container {
+            width: 220px;
+        }
+
+        .profile-container h2,
+        .password-container h2 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 12px;
+        }
+
+        label {
+            font-weight: bold;
+            display: block;
+            margin-bottom: 6px;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 8px 10px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+        }
+
+        button {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        /* Success/Error message */
+        .message {
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .success {
+            color: green;
+        }
+
+        .error {
+            color: red;
+        }
+
+        @media (max-width: 700px) {
+            .profile-wrapper {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .password-container {
+                width: 80%;
+                margin-bottom: 20px;
+            }
+
+            .profile-container {
+                width: 90%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+
+<div sec:authorize="!isAuthenticated()"
+     th:replace="~{layout/header-default :: header-default}"></div>
+<div sec:authorize="hasRole('ADMIN')"
+     th:replace="~{layout/header-admin :: header-admin}"></div>
+<div sec:authorize="hasRole('STAFF')"
+     th:replace="~{layout/header-staff :: header-staff}"></div>
+<div sec:authorize="hasRole('CUSTOMER')"
+     th:replace="~{layout/header-customer :: header-customer}"></div>
+
+
+<div class="profile-wrapper">
+
+
+    <div class="password-container">
+        <h2>🔑 Change Password</h2>
+
+        <div th:if="${pwdSuccess}" class="message success" th:text="${pwdSuccess}"></div>
+        <div th:if="${pwdError}" class="message error" th:text="${pwdError}"></div>
+
+        <form th:action="@{/auth/profile/change-password}" method="post">
+            <div class="form-group">
+                <label>Current Password:</label>
+                <input type="password" name="currentPassword"  required>
+            </div>
+
+            <div class="form-group">
+                <label>New Password:</label>
+                <input type="password" name="newPassword" required>
+            </div>
+
+            <div class="form-group">
+                <label>Confirm Password:</label>
+                <input type="password" name="confirmPassword"  required>
+            </div>
+
+            <button type="submit">Change Password</button>
+        </form>
+    </div>
+
+    <!-- Form profile -->
+    <div class="profile-container">
+        <h2>👤 User Profile</h2>
+
+        <div th:if="${success}" class="message success">✅ <span th:text="${success}"></span></div>
+        <div th:if="${error}" class="message error">❌ <span th:text="${error}"></span></div>
+
+        <form th:action="@{/profile/update}" method="post" th:object="${account}">
+            <div class="form-group">
+                <label>Họ:</label>
+                <input type="text" th:field="*{lastname}" >
+            </div>
+
+            <div class="form-group">
+                <label>Name:</label>
+                <input type="text" th:field="*{firstname}">
+            </div>
+
+            <div class="form-group">
+                <label>Email:</label>
+                <input type="email" th:field="*{email}" readonly>
+            </div>
+
+            <div class="form-group">
+                <label>Phone Number:</label>
+                <input type="text" th:field="*{phoneNumber}" readonly>
+            </div>
+
+            <div class="form-group">
+                <label>Gender:</label>
+                <select th:field="*{gender}">
+                    <option value="true">Male</option>
+                    <option value="false">Female</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Addresses:</label>
+                <ul>
+                    <li th:each="addr : ${addresses}" th:text="${addr.address}"></li>
+                </ul>
+            </div>
+
+            <button type="submit">💾 Save</button>
+        </form>
+    </div>
+
+</div>
+
+</body>
+</html>

@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<body>
+<header th:fragment="header-default">
+    <style>
+        /* Reset cơ bản */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Segoe UI", Arial, sans-serif;
+        }
+
+        /* Header chính */
+        header {
+            width: 100%;
+            background-color: #ffffff;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 40px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        /* Logo */
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo img {
+            width: 45px;
+            height: 45px;
+            border-radius: 8px;
+        }
+
+        .logo h1 {
+            font-size: 20px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        /* Menu dropdown */
+        .menu select {
+            padding: 6px 10px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            font-size: 14px;
+            background-color: #f9f9f9;
+            cursor: pointer;
+        }
+
+        .menu select:hover {
+            background-color: #f0f0f0;
+        }
+
+        /* Thanh tìm kiếm */
+        .search-bar {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            max-width: 400px;
+            margin: 0 40px;
+        }
+
+        .search-bar input {
+            width: 100%;
+            padding: 8px 10px;
+            border: 1px solid #ccc;
+            border-right: none;
+            border-radius: 6px 0 0 6px;
+        }
+
+        .search-bar button {
+            padding: 8px 14px;
+            border: 1px solid #ccc;
+            background-color: #4CAF50;
+            color: white;
+            border-radius: 0 6px 6px 0;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .search-bar button:hover {
+            background-color: #45a049;
+        }
+
+        /* Các nút bên phải */
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header-right button,
+        .header-right a {
+            padding: 8px 14px;
+            border: none;
+            border-radius: 6px;
+            background-color: #f2f2f2;
+            color: #333;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s ease;
+            text-decoration: none;
+        }
+
+        .header-right a.cart {
+            font-size: 14px;
+            background-color: #eee;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .header-right button:hover,
+        .header-right a:hover {
+            background-color: #ddd;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            header {
+                flex-direction: column;
+                align-items: flex-start;
+                padding: 15px 20px;
+            }
+
+            .search-bar {
+                width: 100%;
+                margin: 10px 0;
+            }
+
+            .header-right {
+                width: 100%;
+                justify-content: flex-end;
+            }
+        }
+
+        .btn-blog {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 14px;
+            border-radius: 10px;
+            background: linear-gradient(180deg, #ffffff 0%, #f7f9fc 100%);
+            border: 1px solid #e6eef8;
+            color: #1f2937;
+            text-decoration: none;
+            font-weight: 600;
+            box-shadow: 0 2px 8px rgba(22, 35, 56, 0.06);
+            transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s;
+            line-height: 1;
+        }
+
+        .btn-blog .icon {
+            font-size: 16px;
+            display: inline-block;
+            transform: translateY(-1px);
+        }
+
+        .btn-blog:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 24px rgba(22, 35, 56, 0.08);
+            background: linear-gradient(180deg, #ffffff 0%, #eef6ff 100%);
+        }
+
+        /* Make sure it fits small screens */
+        @media (max-width: 480px) {
+            .btn-blog { padding: 6px 10px; gap: 6px; font-size: 14px; }
+            .btn-blog .label { display: none; } /* show only icon on very small screens */
+        }
+    </style>
+
+    <div class="logo">
+        <a th:href="@{/home}" class="logo-link" style="display: flex; align-items: center; text-decoration: none; color: inherit;">
+            <img src="/assets/image/logo.jpg" alt="Logo">
+            <h1 style="margin-left: 8px;">PCOnlineShop</h1>
+        </a>
+    </div>
+
+    <form class="menu" th:action="@{products}" >
+        <select onchange="this.form.submit()" name="category">
+            <option>Menu</option>
+            <option th:each="c : ${categories}"
+                    th:value="${c.categoryId}"
+                    th:text="${c.categoryName}"
+                    >
+            </option>
+        </select>
+    </form>
+    <a th:href="@{/blog}" class="btn-blog" role="button" aria-label="Blog">
+        <span class="icon">📰</span>
+        <span class="label">Blog</span>
+    </a>
+    <form class="search-bar" th:action="@{/products}" method="get">
+        <input name="keyword" type="text" placeholder="Search products...">
+        <button>Search</button>
+    </form>
+
+    <div class="header-right">
+        <button th:onclick="|window.location.href='@{/build/start}'|">🧩 Build PC</button>
+
+
+        <a th:href="@{/cart}" class="cart">🛒My cart</a>
+        <button th:onclick="|window.location.href='@{/auth/login}'|">Login</button>
+    </div>
+</header>
+</body>
+</html>

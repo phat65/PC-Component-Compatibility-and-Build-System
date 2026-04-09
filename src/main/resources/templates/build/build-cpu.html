@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="https://www.thymeleaf.org/extras/spring-security" lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Select CPU</title>
+    <link rel="stylesheet" th:href="@{/css/BuildStyle.css}">
+</head>
+
+<body>
+<div sec:authorize="!isAuthenticated()"
+     th:replace="layout/header-default :: header-default"></div>
+<div sec:authorize="hasRole('ADMIN')"
+     th:replace="layout/header-admin :: header-admin"></div>
+
+<div sec:authorize="hasRole('STAFF')"
+     th:replace="layout/header-staff :: header-staff"></div>
+
+<div sec:authorize="hasRole('CUSTOMER')"
+     th:replace="layout/header-customer :: header-customer"></div>
+<div class="layout">
+<div class="container">
+    <!-- Sidebar -->
+    <div th:replace="~{layout/build-sidebar :: buildSidebar('cpu')}"></div>
+
+    <!-- Main content -->
+    <div class="main-content">
+        <!-- Error message -->
+        <div th:if="${error}" style="background-color: #f44336; color: white; padding: 10px; margin-bottom: 10px; border-radius: 4px;">
+            <strong>⚠️ Error:</strong> <span th:text="${error}"></span>
+        </div>
+
+        <!-- Filter -->
+        <div class="filter-bar">
+            <input type="text" placeholder="Search..." id="searchBox"/>
+            <button type="button" onclick="filterProducts()">Go!</button>
+            <button type="button" id="openFilterPopup">Filter</button>
+            <a href="#" class="clear-filter" th:href="@{/build/cpu}">Clear filter</a>
+        </div>
+
+        <!-- Filter & Sort Form Popup -->
+        <div id="filterPopup" class="popup" style="display:none;">
+            <div class="popup-content">
+                <form th:action="@{/build/cpu/filter}" method="post" id="filterForm">
+                    <h4>Filter By:</h4>
+                    <div>
+                        <div th:each="brandObj : ${allBrands}">
+                            <input type="checkbox" name="brands" th:value="${brandObj.name}"
+                                   th:id="${'brand-' + brandObj.brandId}"
+                                   th:checked="${selectedBrands != null && selectedBrands.contains(brandObj.name)}" />
+                            <label th:for="${'brand-' + brandObj.brandId}" th:text="${brandObj.name}"></label>
+                        </div>
+                    </div>
+
+                    <h4 style="margin-top: 20px;">Sort By:</h4>
+                    <select name="sortBy" id="sortSelect">
+                        <option value="">-- No Sort --</option>
+                        <option value="priceAsc" th:selected="${selectedSort == 'priceAsc'}">Price: Low to High</option>
+                        <option value="priceDesc" th:selected="${selectedSort == 'priceDesc'}">Price: High to Low</option>
+                        <option value="nameAsc" th:selected="${selectedSort == 'nameAsc'}">Name: A-Z</option>
+                        <option value="nameDesc" th:selected="${selectedSort == 'nameDesc'}">Name: Z-A</option>
+                    </select>
+
+                    <button type="submit" id="applyFilter">Apply</button>
+                    <button type="button" id="closeFilterPopup">Close</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Product Grid -->
+        <form th:action="@{/build/selectCpu}" method="post" id="cpuForm" data-require-selection="true">
+            <input type="hidden" name="cpuId" id="selectedCpuId"
+                   th:value="${buildItems.cpu?.product?.productId ?: ''}"/>
+            <div class="product-grid">
+                <div th:each="cpu : ${cpus}"
+                     class="product-card"
+                     th:classappend="${buildItems.cpu?.product?.productId == cpu.productId} ? 'selected' : ''"
+                     th:attr="data-id=${cpu.productId}"
+                     th:data-name="${cpu.product.productName}"
+                     th:data-socket="${cpu.socket}"
+                     th:data-tdp="${cpu.tdp}"
+                     th:data-igpu="${cpu.hasIGPU}">
+                    <!-- Product Image -->
+                    <div class="product-image">
+                        <img th:if="${cpu.product.images != null && !cpu.product.images.isEmpty()}"
+                             th:src="@{${cpu.product.images[0].imageUrl}}"
+                             th:alt="${cpu.product.productName}"/>
+                        <div th:unless="${cpu.product.images != null && !cpu.product.images.isEmpty()}"
+                             style="display:flex;align-items:center;justify-content:center;height:100%;color:#999;font-size:12px;">
+                            No Image
+                        </div>
+                    </div>
+                    <h4 th:text="${cpu.product.productName}"></h4>
+                    <p th:text="'Socket: ' + ${cpu.socket}"></p>
+                    <strong th:text="'$' + ${cpu.product.price}"></strong>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="footer-bar">
+                <span>Total Price: <strong id="priceTotal" th:text="'$' + ${buildItems.formattedTotalPrice}"></strong></span>
+                <button type="submit" class="next-btn">Choose</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Detail panel -->
+    <div class="detail-panel">
+        <div class="detail-header">SELECT CPU</div>
+        <div class="detail-body">
+            <h3 id="detailName">Name Product</h3>
+            <div class="detail-image"></div>
+            <div class="detail-spec">
+                <h4>SPECIFICATION</h4>
+                <p id="detailSocket">Socket: ...</p>
+                <p id="detailTdp">TDP: ...</p>
+                <p id="detailIGPU">IGPU: ...</p>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script th:src="@{/js/BuildJs.js}"></script>
+</body>
+</html>

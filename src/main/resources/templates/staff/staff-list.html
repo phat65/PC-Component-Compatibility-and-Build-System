@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.w3.org/1999/xhtml" lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Staff List</title>
+
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/jquery.dataTables.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.dataTables.min.css">
+
+    <link rel="stylesheet" th:href="@{/css/StaffStyle.css}">
+
+</head>
+<body>
+
+<div th:replace="layout/header-admin :: header-admin"></div>
+<div style="height: 70px;"></div>
+
+<div class="container">
+    <h2>Staff List</h2>
+
+    <div class="toolbar" sec:authorize="hasRole('ADMIN')">
+        <a th:href="@{/staff/add}" class="btn-add">+ Add Staff</a>
+    </div>
+
+    <div class="filter-bar">
+        <label for="statusFilter">Status:</label>
+        <select id="statusFilter">
+            <option value="active"   th:selected="${statusFilter == 'active'}">Active</option>
+            <option value="inactive" th:selected="${statusFilter == 'inactive'}">Inactive</option>
+            <option value="all"      th:selected="${statusFilter == 'all'}">All</option>
+        </select>
+    </div>
+
+    <table id="staffTable" class="display" style="width:100%">
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>Tên</th>
+            <th>Email</th>
+            <th>Phone</th>
+            <th>Address</th>
+            <!--<th>Gender</th>-->
+            <th>Status</th>
+            <th style="min-width:200px;">Actions</th>
+        </tr>
+        </thead>
+
+        <tbody>
+        <tr th:each="s : ${staffList}">
+            <td th:text="${s.accountId}"></td>
+            <td th:text="${s.fullName}"></td>
+            <td th:text="${s.email}"></td>
+            <td th:text="${s.phoneNumber}"></td>
+           <!-- <td th:text="${s.gender} == true ? 'Male' : 'Female'"></td>-->
+            <td th:text="${s.defaultAddress}"></td>
+            <td>
+        <span th:classappend="${s.enabled} ? 'badge badge-active' : 'badge badge-inactive'"
+              th:text="${s.enabled} ? 'Active' : 'Inactive'">Active</span>
+            </td>
+            <td>
+                <a th:href="@{'/staff/view/' + ${s.accountId}}" class="btn btn-sm btn-view">View</a>
+                <a th:href="@{'/staff/edit/' + ${s.accountId}}" class="btn btn-sm btn-edit">Edit</a>
+                <a th:href="@{'/staff/delete/' + ${s.accountId}}"
+                   class="btn btn-sm"
+                   th:classappend="${s.enabled} ? 'btn-deactivate' : 'btn-activate'"
+                   th:text="${s.enabled} ? 'Deactivate' : 'Activate'">
+                </a>
+            </td>
+        </tr>
+        </tbody>
+
+    </table>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
+
+<script th:inline="none">
+    $(function () {
+        $('#statusFilter').on('change', function () {
+            const status = $(this).val();
+            window.location.href = '/staff/list?statusFilter=' + status;
+        });
+
+        $('#staffTable').DataTable({
+            ordering: false,
+            responsive: false,
+            pageLength: 5,
+            lengthMenu: [5, 10, 25, 50, 100],
+            order: [[0, 'asc']],
+            columnDefs: [
+                { targets: -1, orderable: false, searchable: false, responsivePriority: 1 },
+                { targets: 4, className: 'all' },
+                { targets: -2, responsivePriority: 2 }
+            ],
+            language: {
+                search: "Tìm:",
+                lengthMenu: "Hiển thị _MENU_ dòng",
+                info: "Hiển thị _START_–_END_ / _TOTAL_",
+                paginate: { previous: "Trước", next: "Sau" },
+                zeroRecords: "Không có dữ liệu phù hợp",
+                infoEmpty: "Không có bản ghi"
+            }
+        });
+    });
+</script>
+
+</body>
+</html>

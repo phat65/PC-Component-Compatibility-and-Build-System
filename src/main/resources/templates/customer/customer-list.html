@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.w3.org/1999/xhtml" lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Customer List</title>
+
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/jquery.dataTables.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.dataTables.min.css">
+
+    <link rel="stylesheet" th:href="@{/css/StaffStyle.css}">
+</head>
+<body>
+
+<!-- Header -->
+<div sec:authorize="hasRole('ADMIN')" th:replace="layout/header-admin :: header-admin"></div>
+<div sec:authorize="hasRole('STAFF')" th:replace="layout/header-staff :: header-staff"></div>
+<div style="height: 70px;"></div>
+<div class="container">
+    <h2>Customer List</h2>
+
+    <div class="toolbar" sec:authorize="hasRole('ADMIN')">
+        <a th:href="@{/customer/add}" class="btn-add">+ Add Customer</a>
+    </div>
+
+    <div class="filter-bar">
+        <label for="statusFilter">Status:</label>
+        <select id="statusFilter">
+            <option value="active"   th:selected="${statusFilter == 'active'}">Active</option>
+            <option value="inactive" th:selected="${statusFilter == 'inactive'}">Inactive</option>
+            <option value="all"      th:selected="${statusFilter == 'all'}">All</option>
+        </select>
+    </div>
+
+    <table id="customerTable" class="display" style="width:100%">
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>Tên</th>
+            <th>Email</th>
+            <th>Phone</th>
+            <th>Address</th>
+            <th>Status</th>
+            <th style="min-width:200px;">Actions</th>
+        </tr>
+        </thead>
+
+        <tbody>
+        <tr th:each="c : ${customerList}">
+            <td th:text="${c.accountId}"></td>
+            <td th:text="${c.fullName}"></td>
+            <td th:text="${c.email}"></td>
+            <td th:text="${c.phoneNumber}"></td>
+            <td th:text="${c.defaultAddress}"></td>
+            <td>
+                <span th:classappend="${c.enabled} ? 'badge badge-active' : 'badge badge-inactive'"
+                      th:text="${c.enabled} ? 'Active' : 'Inactive'">Active</span>
+            </td>
+            <td>
+                <a th:href="@{'/customer/view/' + ${c.accountId}}" class="btn btn-sm btn-view">View</a>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
+
+<script th:inline="none">
+    $(function () {
+        $('#statusFilter').on('change', function () {
+            const status = $(this).val();
+            window.location.href = '/customer/list?statusFilter=' + status;
+        });
+
+        $('#customerTable').DataTable({
+            responsive: false,
+            pageLength: 5,
+            lengthMenu: [5, 10, 25, 50, 100],
+            order: [[0, 'asc']],
+            columnDefs: [
+                { targets: -1, orderable: false, searchable: false, responsivePriority: 1 },
+                { targets: 4, className: 'all' },
+                { targets: -2, responsivePriority: 2 }
+            ],
+            language: {
+                search: "Tìm:",
+                lengthMenu: "Hiển thị _MENU_ dòng",
+                info: "Hiển thị _START_–_END_ / _TOTAL_",
+                paginate: { previous: "Trước", next: "Sau" },
+                zeroRecords: "Không có dữ liệu phù hợp",
+                infoEmpty: "Không có bản ghi"
+            }
+        });
+    });
+</script>
+
+</body>
+</html>
