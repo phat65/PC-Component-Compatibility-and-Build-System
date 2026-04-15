@@ -3,16 +3,16 @@ package com.example.PCOnlineShop.service.build;
 import com.example.PCOnlineShop.model.build.GPU;
 import com.example.PCOnlineShop.model.product.Brand;
 import com.example.PCOnlineShop.repository.build.GpuRepository;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Map;
 
-@AllArgsConstructor
-@Deprecated(forRemoval = true)
+@RequiredArgsConstructor
+@Service
 public class GpuService {
-    private  GpuRepository gpuRepository;
+    private final GpuRepository gpuRepository;
 
     public List<GPU> getAllGpu() {
         return gpuRepository.findAllWithImages();

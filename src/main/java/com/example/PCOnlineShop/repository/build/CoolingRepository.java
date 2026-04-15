@@ -1,13 +1,14 @@
 package com.example.PCOnlineShop.repository.build;
 
-import com.example.PCOnlineShop.model.build.Cooling;
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
-import java.util.Optional;
+import com.example.PCOnlineShop.model.build.Cooling;
 
 @Repository
 public interface CoolingRepository extends JpaRepository<Cooling,Integer> {
@@ -38,6 +39,6 @@ public interface CoolingRepository extends JpaRepository<Cooling,Integer> {
            "LEFT JOIN FETCH c.product p " +
            "LEFT JOIN FETCH p.images " +
            "LEFT JOIN FETCH p.brand " +
-           "WHERE c.id = :id")
-    Optional<Cooling> findByIdWithImages(@Param("id") int id);
+           "WHERE c.productId = :productId")
+    Optional<Cooling> findByIdWithImages(@Param("productId") int productId);
 }

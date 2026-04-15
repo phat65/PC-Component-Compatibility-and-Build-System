@@ -4,7 +4,7 @@ import com.example.PCOnlineShop.dto.build.BuildItemDto;
 import com.example.PCOnlineShop.model.build.Storage;
 import com.example.PCOnlineShop.service.build.BuildService;
 import com.example.PCOnlineShop.service.build.StorageService;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -13,11 +13,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-@AllArgsConstructor
-@Deprecated(forRemoval = true)
+@RequiredArgsConstructor
+@Controller
 @SessionAttributes({"buildItems"})
 @RequestMapping("/build")
 public class StorageController {
+    private static final String STORAGE_VIEW = "build/storage";
+
     private final StorageService storageService;
     private final BuildService buildService;
 
@@ -31,7 +33,7 @@ public class StorageController {
         List<Storage> storages = buildService.getCompatibleStorage(buildItem);
         model.addAttribute("storages", storages);
         model.addAttribute("allBrands", storageService.getAllBrands(storages));
-        return "/build/storage";
+        return STORAGE_VIEW;
     }
 
     @PostMapping("/storage/filter")
@@ -48,7 +50,7 @@ public class StorageController {
         model.addAttribute("allBrands", storageService.getAllBrands(buildService.getCompatibleStorage(buildItem)));
         model.addAttribute("selectedBrands", brands);
         model.addAttribute("selectedSort", sortBy);
-        return "/build/storage";
+        return STORAGE_VIEW;
     }
 
     @PostMapping("/selectStorage")

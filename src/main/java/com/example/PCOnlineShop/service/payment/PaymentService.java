@@ -7,6 +7,7 @@ import com.example.PCOnlineShop.model.payment.Payment;
 import com.example.PCOnlineShop.repository.payment.PaymentRepository;
 import com.example.PCOnlineShop.service.order.OrderService;
 import jakarta.persistence.EntityNotFoundException;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,14 +26,19 @@ import java.util.List;
 @Service
 public class PaymentService {
 
+    private final String appBaseUrl;
     private final PayOS payOS;
     private final PaymentRepository paymentRepository;
     private final OrderService orderService;
 
-    public PaymentService(PayOS payOS, PaymentRepository paymentRepository, @Lazy OrderService orderService) {
+    public PaymentService(PayOS payOS,
+                          PaymentRepository paymentRepository,
+                          @Lazy OrderService orderService,
+                          @Value("${app.base-url}") String appBaseUrl) {
         this.payOS = payOS;
         this.paymentRepository = paymentRepository;
         this.orderService = orderService;
+        this.appBaseUrl = appBaseUrl;
     }
 
     @Transactional
@@ -51,8 +57,8 @@ public class PaymentService {
         paymentRepository.save(payment);
 
         final String description = "Payment for order #" + payment.getOrder().getOrderId();
-        final String returnUrl = "http://localhost:8081/payment/callback/success";
-        final String cancelUrl = "http://localhost:8081/payment/callback/failed";
+        final String returnUrl = buildCallbackUrl("/payment/callback/success");
+        final String cancelUrl = buildCallbackUrl("/payment/callback/failed");
 
         List<PaymentLinkItem> items = new ArrayList<>();
         for (OrderDetail detail : payment.getOrder().getOrderDetails()) {
@@ -160,5 +166,9 @@ public class PaymentService {
         } catch (Exception e) {
             return null;
         }
+    }
+
+    private String buildCallbackUrl(String path) {
+        return appBaseUrl.replaceAll("/+$", "") + path;
     }
 }

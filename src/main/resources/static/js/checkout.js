@@ -1,5 +1,22 @@
 document.addEventListener("DOMContentLoaded", function() {
 
+    function getCsrfToken() {
+        const match = document.cookie.match(/(?:^|; )XSRF-TOKEN=([^;]+)/);
+        return match ? decodeURIComponent(match[1]) : '';
+    }
+
+    function withCsrfHeaders(headers) {
+        const csrfToken = getCsrfToken();
+        if (!csrfToken) {
+            return headers;
+        }
+
+        return {
+            ...headers,
+            'X-XSRF-TOKEN': csrfToken
+        };
+    }
+
     // --- Lấy các Element ---
     const shipHomeRadio = document.getElementById("ship-home");
     const shipStoreRadio = document.getElementById("ship-store");
@@ -133,6 +150,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
             fetch('/address/add', {
                 method: 'POST',
+                headers: withCsrfHeaders({}),
                 body: formData,
             })
                 .then(response => {
@@ -276,6 +294,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
                 fetch('/address/set-default', {
                     method: 'POST',
+                    headers: withCsrfHeaders({}),
                     body: formData
                 })
                     .then(response => response.json())
@@ -331,6 +350,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
             fetch('/address/update', {
                 method: 'POST',
+                headers: withCsrfHeaders({}),
                 body: formData
             })
                 .then(response => {

@@ -3,16 +3,16 @@ package com.example.PCOnlineShop.service.build;
 import com.example.PCOnlineShop.model.build.Cooling;
 import com.example.PCOnlineShop.model.product.Brand;
 import com.example.PCOnlineShop.repository.build.CoolingRepository;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Map;
 
-@AllArgsConstructor
-@Deprecated(forRemoval = true)
+@RequiredArgsConstructor
+@Service
 public class CoolingService {
-    private CoolingRepository coolingRepository;
+    private final CoolingRepository coolingRepository;
 
     public List<Cooling> getCoolings()
     {

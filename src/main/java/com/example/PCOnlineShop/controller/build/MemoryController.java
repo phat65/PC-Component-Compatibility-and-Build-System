@@ -4,7 +4,7 @@ import com.example.PCOnlineShop.dto.build.BuildItemDto;
 import com.example.PCOnlineShop.model.build.Memory;
 import com.example.PCOnlineShop.service.build.BuildService;
 import com.example.PCOnlineShop.service.build.MemoryService;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -13,11 +13,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-@AllArgsConstructor
-@Deprecated(forRemoval = true)
+@RequiredArgsConstructor
+@Controller
 @SessionAttributes({"buildItems"})
 @RequestMapping("/build")
 public class MemoryController {
+    private static final String MEMORY_VIEW = "build/memory";
+
     private final MemoryService memoryService;
     private final BuildService buildService;
 
@@ -31,7 +33,7 @@ public class MemoryController {
         List<Memory> memories = buildService.getCompatibleMemory(buildItem);
         model.addAttribute("memories", memories);
         model.addAttribute("allBrands", memoryService.getAllBrands(memories));
-        return "/build/memory";
+        return MEMORY_VIEW;
     }
 
     @PostMapping("/memory/filter")
@@ -48,7 +50,7 @@ public class MemoryController {
         model.addAttribute("allBrands", memoryService.getAllBrands(buildService.getCompatibleMemory(buildItem)));
         model.addAttribute("selectedBrands", brands);
         model.addAttribute("selectedSort", sortBy);
-        return "/build/memory";
+        return MEMORY_VIEW;
     }
 
     @PostMapping("/selectMemory")

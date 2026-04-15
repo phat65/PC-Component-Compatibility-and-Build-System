@@ -1,41 +1,27 @@
 server:
-  port: 8080
+  servlet:
+    session:
+      cookie:
+        http-only: true
+        same-site: lax
 
 spring:
-  payos:
-    client-id: 965f76da-4caf-4a90-ae0c-518a1d58f78d
-    api-key: 92f220db-fae0-43ea-ab25-f18711431484
-    checksum-key: 38a678b6cb4d7ce9bda44a31e46aea99db667b6e648ead5dd0785807f1a66154
-    log-level: INFO
-    base-url: https://api.payos.vn
-
+  application:
+    name: pconlineshop
+  profiles:
+    default: dev
   datasource:
-    url: jdbc:mysql://localhost:3307/pconlineshop?useSSL=false&serverTimezone=Asia/Ho_Chi_Minh&allowPublicKeyRetrieval=true
-    username: root
-    password: 123456
     driver-class-name: com.mysql.cj.jdbc.Driver
-
   jpa:
     hibernate:
       ddl-auto: none
-    show-sql: true
-    properties:
-      hibernate:
-        format_sql: true
-
   flyway:
     enabled: true
     locations: classpath:db/migration
-
   mail:
-    host: smtp.gmail.com
-    port: 587
-    username: pda1232004@gmail.com
-    password: nuof ezwf bvax cydo
     properties:
       mail:
         smtp:
           auth: true
           starttls:
             enable: true
-

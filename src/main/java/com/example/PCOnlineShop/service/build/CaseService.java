@@ -3,17 +3,16 @@ package com.example.PCOnlineShop.service.build;
 import com.example.PCOnlineShop.model.build.Case;
 import com.example.PCOnlineShop.model.product.Brand;
 import com.example.PCOnlineShop.repository.build.CaseRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Map;
 
-@Deprecated(forRemoval = true)
+@RequiredArgsConstructor
+@Service
 public class CaseService {
-
-    @Autowired
-    private CaseRepository caseRepository;
+    private final CaseRepository caseRepository;
 
     public List<Case> getAllCases() {
         return caseRepository.findAllWithImages();

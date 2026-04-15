@@ -282,7 +282,9 @@
             <a th:href="@{/orders/list}" class="dropdown-item" role="menuitem">📦 My Orders</a>
 
             <a th:href="@{/profile}" class="dropdown-item" role="menuitem">👤 My Profile</a>
-            <a th:href="@{/auth/logout}" class="dropdown-item" role="menuitem">Logout</a>
+            <form th:action="@{/auth/logout}" method="post" style="margin: 0;">
+                <button type="submit" class="dropdown-item" role="menuitem">Logout</button>
+            </form>
         </div>
     </div>
 
@@ -333,3 +335,4 @@
 </header>
 </body>
 </html>
+

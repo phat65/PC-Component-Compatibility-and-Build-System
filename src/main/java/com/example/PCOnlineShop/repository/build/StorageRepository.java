@@ -1,13 +1,14 @@
 package com.example.PCOnlineShop.repository.build;
 
-import com.example.PCOnlineShop.model.build.Storage;
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
-import java.util.Optional;
+import com.example.PCOnlineShop.model.build.Storage;
 
 @Repository
 public interface StorageRepository extends JpaRepository<Storage,Integer> {
@@ -38,6 +39,6 @@ public interface StorageRepository extends JpaRepository<Storage,Integer> {
            "LEFT JOIN FETCH s.product p " +
            "LEFT JOIN FETCH p.images " +
            "LEFT JOIN FETCH p.brand " +
-           "WHERE s.id = :id")
-    Optional<Storage> findByIdWithImages(@Param("id") int id);
+           "WHERE s.productId = :productId")
+    Optional<Storage> findByIdWithImages(@Param("productId") int productId);
 }

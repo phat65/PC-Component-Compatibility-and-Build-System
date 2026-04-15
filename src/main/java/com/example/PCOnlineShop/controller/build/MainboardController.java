@@ -1,37 +1,47 @@
 package com.example.PCOnlineShop.controller.build;
 
-import com.example.PCOnlineShop.dto.build.BuildItemDto;
-import com.example.PCOnlineShop.model.build.Mainboard;
-import com.example.PCOnlineShop.service.build.BuildService;
-import com.example.PCOnlineShop.service.build.MainboardService;
-import lombok.AllArgsConstructor;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-@AllArgsConstructor
-@Deprecated(forRemoval = true)
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.SessionAttributes;
+
+import com.example.PCOnlineShop.dto.build.BuildItemDto;
+import com.example.PCOnlineShop.model.build.Mainboard;
+import com.example.PCOnlineShop.service.build.BuildService;
+import com.example.PCOnlineShop.service.build.MainboardService;
+
+import lombok.RequiredArgsConstructor;
+
+@RequiredArgsConstructor
+@Controller
 @SessionAttributes({"buildItems"})
 @RequestMapping("/build")
 public class MainboardController {
+    private static final String MAINBOARD_VIEW = "build/mainboards";
+
     private final MainboardService mainboardService;
-    private  final BuildService buildService;
+    private final BuildService buildService;
 
     @ModelAttribute("buildItems")
     public BuildItemDto buildItems() {
         return new BuildItemDto();
     }
 
-    // Hiển thị danh sách motherboard
+    // show list motherboard
     @GetMapping("/mainboard")
     public String showMainboardPage(@ModelAttribute("buildItems") BuildItemDto buildItem, Model model) {
         model.addAttribute("mainboards", buildService.getCompatibleMainboards(buildItem));
         model.addAttribute("allBrands", mainboardService.getAllBrands(buildItem));
-        return "build/mainboards";
+        return MAINBOARD_VIEW;
     }
 
     // Filter motherboard by brands
@@ -50,15 +60,14 @@ public class MainboardController {
         model.addAttribute("allBrands", mainboardService.getAllBrands(buildItem));
         model.addAttribute("selectedBrands", brands);
         model.addAttribute("selectedSort", sortBy);
-        return "build/mainboards";
+        return MAINBOARD_VIEW;
     }
 
     // Hiển thị chi tiết motherboard
+    @Deprecated(forRemoval = true)
     @GetMapping("/mainboard/{id}")
-    public String showMainboardDetail(@PathVariable int id, Model model) {
-        Mainboard mainboard = mainboardService.getMainboardById(id);
-        model.addAttribute("mainboard", mainboard);
-        return "/build/mainboard/mainboard-detail";
+    public String redirectMainboardDetail(@PathVariable int id) {
+        return "redirect:/build/mainboard";
     }
 
     //Chọn motherboard
@@ -79,5 +88,5 @@ public class MainboardController {
         // If mainboardId is null but buildItem.mainboard exists, keep it
         return "redirect:/build/cpu";
     }
-    // Thêm, sửa, xóa motherboard sẽ do admin thực hiện qua trang admin
+    // Adding, editing, and deleting motherboards will be done by the administrator via the admin page.
 }

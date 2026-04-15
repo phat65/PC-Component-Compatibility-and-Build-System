@@ -1,12 +1,13 @@
 package com.example.PCOnlineShop.repository.build;
-import com.example.PCOnlineShop.model.build.CPU;
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
-import java.util.Optional;
+import com.example.PCOnlineShop.model.build.CPU;
 
 @Repository
 public interface CpuRepository extends JpaRepository<CPU, Integer> {
@@ -37,6 +38,6 @@ public interface CpuRepository extends JpaRepository<CPU, Integer> {
            "LEFT JOIN FETCH c.product p " +
            "LEFT JOIN FETCH p.images " +
            "LEFT JOIN FETCH p.brand " +
-           "WHERE c.id = :id")
-    Optional<CPU> findByIdWithImages(@Param("id") int id);
+           "WHERE c.productId = :productId")
+    Optional<CPU> findByIdWithImages(@Param("productId") int productId);
 }

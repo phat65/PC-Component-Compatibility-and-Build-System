@@ -38,6 +38,6 @@ public interface MemoryRepository extends JpaRepository<Memory, Integer> {
            "LEFT JOIN FETCH m.product p " +
            "LEFT JOIN FETCH p.images " +
            "LEFT JOIN FETCH p.brand " +
-           "WHERE m.productId = :id")
-    Optional<Memory> findByIdWithImages(@Param("id") int id);
+           "WHERE m.productId = :productId")
+    Optional<Memory> findByIdWithImages(@Param("productId") int productId);
 }

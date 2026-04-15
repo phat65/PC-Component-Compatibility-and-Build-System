@@ -4,7 +4,7 @@ import com.example.PCOnlineShop.dto.build.BuildItemDto;
 import com.example.PCOnlineShop.model.build.CPU;
 import com.example.PCOnlineShop.service.build.BuildService;
 import com.example.PCOnlineShop.service.build.CpuService;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -13,13 +13,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-@AllArgsConstructor
-@Deprecated(forRemoval = true)
+@RequiredArgsConstructor
+@Controller
 @SessionAttributes({"buildItems"})
 @RequestMapping("/build")
 public class CpuController {
-    private CpuService cpuService;
-    private BuildService buildService;
+    private static final String CPU_VIEW = "build/build-cpu";
+
+    private final CpuService cpuService;
+    private final BuildService buildService;
 
     @ModelAttribute("buildItems")
     public BuildItemDto buildItems() {
@@ -32,7 +34,7 @@ public class CpuController {
         List<CPU> cpus = buildService.getCompatibleCpus(buildItem);
         model.addAttribute("cpus", cpus);
         model.addAttribute("allBrands", cpuService.getAllBrands(cpus));
-        return "/build/build-cpu";
+        return CPU_VIEW;
     }
 
     // Filter CPU by brands
@@ -50,7 +52,7 @@ public class CpuController {
         model.addAttribute("allBrands", cpuService.getAllBrands(buildService.getCompatibleCpus(buildItem)));
         model.addAttribute("selectedBrands", brands);
         model.addAttribute("selectedSort", sortBy);
-        return "/build/build-cpu";
+        return CPU_VIEW;
     }
 
     // Chọn CPU

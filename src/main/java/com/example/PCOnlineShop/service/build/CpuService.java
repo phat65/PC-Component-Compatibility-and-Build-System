@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Map;
 
 @RequiredArgsConstructor
-@Deprecated(forRemoval = true)
+@Service
 public class CpuService {
     private final CpuRepository cpuRepository;
 

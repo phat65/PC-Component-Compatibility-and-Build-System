@@ -56,7 +56,7 @@ public class CartService {
                 if(product.getImages() != null && !product.getImages().isEmpty()) {
                     dto.setImageUrl(product.getImages().get(0).getImageUrl());
                 } else {
-                    dto.setImageUrl("/images/no-image.png");
+                    dto.setImageUrl("/images/no-image.svg");
                 }
                 dtos.add(dto);
             }

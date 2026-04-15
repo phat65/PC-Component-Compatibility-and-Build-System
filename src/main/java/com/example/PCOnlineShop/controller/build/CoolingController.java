@@ -4,7 +4,7 @@ import com.example.PCOnlineShop.dto.build.BuildItemDto;
 import com.example.PCOnlineShop.model.build.Cooling;
 import com.example.PCOnlineShop.service.build.BuildService;
 import com.example.PCOnlineShop.service.build.CoolingService;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -13,11 +13,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-@AllArgsConstructor
-@Deprecated(forRemoval = true)
+@RequiredArgsConstructor
+@Controller
 @SessionAttributes({"buildItems"})
 @RequestMapping("/build")
 public class CoolingController {
+    private static final String COOLING_VIEW = "build/cooling";
+
     private final CoolingService coolingService;
     private final BuildService buildService;
 
@@ -31,7 +33,7 @@ public class CoolingController {
         List<Cooling> coolings = buildService.getCompatibleCoolings(buildItem);
         model.addAttribute("coolings", coolings);
         model.addAttribute("allBrands", coolingService.getAllBrands(coolings));
-        return "/build/cooling";
+        return COOLING_VIEW;
     }
 
     @PostMapping("/cooling/filter")
@@ -48,7 +50,7 @@ public class CoolingController {
         model.addAttribute("allBrands", coolingService.getAllBrands(buildService.getCompatibleCoolings(buildItem)));
         model.addAttribute("selectedBrands", brands);
         model.addAttribute("selectedSort", sortBy);
-        return "/build/cooling";
+        return COOLING_VIEW;
     }
 
     @PostMapping("/selectCooling")

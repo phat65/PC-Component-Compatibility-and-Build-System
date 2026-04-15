@@ -21,6 +21,9 @@ import java.util.Optional;
 @Service
 public class ProductService {
     private static final ProductLifecycleStatus PUBLIC_CATALOG_STATUS = ProductLifecycleStatus.SELLING;
+    private static final int FEATURED_PRODUCTS_LIMIT = 8;
+    private static final int HOME_RELATED_PRODUCTS_LIMIT = 4;
+    private static final int RELATED_PRODUCTS_LIMIT = 8;
 
     private final ProductRepository productRepository;
     private final BrandRepository brandRepository;
@@ -100,7 +103,10 @@ public class ProductService {
     }
 
     public List<Product> getFeaturedProducts() {
-        return productRepository.findTop8ByStatusTrueAndLifecycleStatus(PUBLIC_CATALOG_STATUS);
+        return productRepository.findByStatusTrueAndLifecycleStatusOrderByProductIdDesc(
+                PUBLIC_CATALOG_STATUS,
+                PageRequest.of(0, FEATURED_PRODUCTS_LIMIT)
+        ).getContent();
     }
     public List<Product> getProductsByCategory(Integer categoryId) {
         Optional<Category> category = categoryRepository.findById(categoryId);
@@ -131,7 +137,11 @@ public class ProductService {
     }
     // Lấy sản phẩm liên quan cùng category (trừ chính nó)
     public List<Product> getTopRelatedProducts(Integer categoryId, Integer currentProductId) {
-        return productRepository.findTop4ByCategory_CategoryIdAndProductIdNot(categoryId, currentProductId);
+        return productRepository.findRandomRelatedProductsByCategory(
+                categoryId,
+                currentProductId,
+                PageRequest.of(0, HOME_RELATED_PRODUCTS_LIMIT)
+        );
     }
     public boolean existsActiveProductName(String productName) {
         return productRepository.existsByProductNameIgnoreCaseAndLifecycleStatusNot(
@@ -159,7 +169,11 @@ public class ProductService {
 
         // Use primary category (first one) for related products
         Category primaryCategory = categories.getFirst();
-        return productRepository.findTop8ByCategoryAndStatusTrueAndLifecycleStatus(primaryCategory, PUBLIC_CATALOG_STATUS);
+        return productRepository.findRandomByCategoryAndStatusTrueAndLifecycleStatus(
+                primaryCategory,
+                PUBLIC_CATALOG_STATUS,
+                PageRequest.of(0, RELATED_PRODUCTS_LIMIT)
+        );
     }
 
     public Page<Product> searchVisibleCatalogProducts(Integer categoryId,

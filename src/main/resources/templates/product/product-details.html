@@ -46,7 +46,7 @@
              th:src="@{${product.images[0].imageUrl}}"
              alt="Main product image" class="w-full h-[420px] object-cover rounded-lg shadow-lg">
         <img th:if="${product.images == null or product.images.isEmpty()}"
-             src="/images/no-image.png"
+             src="/images/no-image.svg"
              alt="No image" class="w-full h-[420px] object-cover rounded-lg shadow-lg">
         <div class="flex gap-3 mt-4 overflow-x-auto">
             <img th:each="img : ${product.images}"

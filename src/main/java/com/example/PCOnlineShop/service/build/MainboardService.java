@@ -10,7 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Map;
 
-@Deprecated(forRemoval = true)
+@Service
 @RequiredArgsConstructor
 public class MainboardService {
     private final MainboardRepository mainboardRepository;

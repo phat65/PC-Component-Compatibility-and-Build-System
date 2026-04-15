@@ -1,0 +1,62 @@
+services:
+  app:
+    image: ${APP_IMAGE}
+    restart: unless-stopped
+    env_file:
+      - .env.prod
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+    ports:
+      - "${SERVER_PORT:-8080}:8080"
+    depends_on:
+      - mysql
+    secrets:
+      - source: db_password
+        target: db.password
+      - source: mail_username
+        target: mail.username
+      - source: mail_password
+        target: mail.password
+      - source: payos_client_id
+        target: payos.client-id
+      - source: payos_api_key
+        target: payos.api-key
+      - source: payos_checksum_key
+        target: payos.checksum-key
+
+  mysql:
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: pconlineshop
+      MYSQL_USER: ${DB_USERNAME}
+      MYSQL_PASSWORD_FILE: /run/secrets/mysql.user-password
+      MYSQL_ROOT_PASSWORD_FILE: /run/secrets/mysql.root-password
+    volumes:
+      - mysql_data:/var/lib/mysql
+    secrets:
+      - source: mysql_user_password
+        target: mysql.user-password
+      - source: mysql_root_password
+        target: mysql.root-password
+
+secrets:
+  db_password:
+    file: .docker-secrets/db.password
+  mail_username:
+    file: .docker-secrets/mail.username
+  mail_password:
+    file: .docker-secrets/mail.password
+  payos_client_id:
+    file: .docker-secrets/payos.client-id
+  payos_api_key:
+    file: .docker-secrets/payos.api-key
+  payos_checksum_key:
+    file: .docker-secrets/payos.checksum-key
+  mysql_user_password:
+    file: .docker-secrets/mysql.user-password
+  mysql_root_password:
+    file: .docker-secrets/mysql.root-password
+
+volumes:
+  mysql_data:

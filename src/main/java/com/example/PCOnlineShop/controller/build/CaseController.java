@@ -4,7 +4,7 @@ import com.example.PCOnlineShop.dto.build.BuildItemDto;
 import com.example.PCOnlineShop.model.build.Case;
 import com.example.PCOnlineShop.service.build.BuildService;
 import com.example.PCOnlineShop.service.build.CaseService;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -13,16 +13,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-@Deprecated(forRemoval = true)
+@RequiredArgsConstructor
+@Controller
 @RequestMapping("/build")
 @SessionAttributes({"buildItems"})
 public class CaseController {
+    private static final String CASE_VIEW = "build/cases";
 
-    @Autowired
-    private CaseService caseService;
-
-    @Autowired
-    private BuildService buildService;
+    private final CaseService caseService;
+    private final BuildService buildService;
 
     @ModelAttribute("buildItems")
     public BuildItemDto buildItems() {
@@ -30,11 +29,11 @@ public class CaseController {
     }
 
     @GetMapping("/case")
-    public String showCases(Model model, @ModelAttribute("buildItems") BuildItemDto buildItem) {
+    public String showCaseSelectionPage(Model model, @ModelAttribute("buildItems") BuildItemDto buildItem) {
         List<Case> cases = buildService.getCompatibleCases(buildItem);
         model.addAttribute("cases", cases);
         model.addAttribute("allBrands", caseService.getAllBrands(cases));
-        return "build/cases";
+        return CASE_VIEW;
     }
 
     @PostMapping("/case/filter")
@@ -51,7 +50,7 @@ public class CaseController {
         model.addAttribute("allBrands", caseService.getAllBrands(buildService.getCompatibleCases(buildItem)));
         model.addAttribute("selectedBrands", brands);
         model.addAttribute("selectedSort", sortBy);
-        return "build/cases";
+        return CASE_VIEW;
     }
 
     @PostMapping("/selectCase")

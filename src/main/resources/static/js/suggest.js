@@ -51,6 +51,22 @@
         ],
         suggestedBuild: null
     };
+    function getCsrfToken() {
+        const match = document.cookie.match(/(?:^|; )XSRF-TOKEN=([^;]+)/);
+        return match ? decodeURIComponent(match[1]) : '';
+    }
+
+    function withCsrfHeaders(headers) {
+        const csrfToken = getCsrfToken();
+        if (!csrfToken) {
+            return headers;
+        }
+
+        return {
+            ...headers,
+            'X-XSRF-TOKEN': csrfToken
+        };
+    }
 
     // DOM Elements
     const elements = {
@@ -195,9 +211,9 @@
 
             const response = await fetch('/api/build/suggest', {
                 method: 'POST',
-                headers: {
+                headers: withCsrfHeaders({
                     'Content-Type': 'application/json'
-                },
+                }),
                 body: JSON.stringify({
                     preset: state.selectedPreset.id,
                     budget: budget
@@ -282,9 +298,9 @@
         // Call API to convert and store in session
         fetch('/api/build/apply', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: withCsrfHeaders({
+                    'Content-Type': 'application/json'
+                }),
             body: JSON.stringify(state.suggestedBuild)
         })
         .then(response => {
@@ -343,4 +359,5 @@
         init();
     }
 })();
+
 

@@ -3,16 +3,16 @@ package com.example.PCOnlineShop.service.build;
 import com.example.PCOnlineShop.model.build.PowerSupply;
 import com.example.PCOnlineShop.model.product.Brand;
 import com.example.PCOnlineShop.repository.build.PowerSupplyRepository;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Map;
 
-@Deprecated(forRemoval = true)
-@AllArgsConstructor
+@Service
+@RequiredArgsConstructor
 public class PowerSupplyService {
-    private PowerSupplyRepository powerSupplyRepository;
+    private final PowerSupplyRepository powerSupplyRepository;
 
     public List<PowerSupply> getAllPowerSupply() {
         return powerSupplyRepository.findAllWithImages();

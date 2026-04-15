@@ -4,7 +4,7 @@ import com.example.PCOnlineShop.dto.build.BuildItemDto;
 import com.example.PCOnlineShop.model.build.PowerSupply;
 import com.example.PCOnlineShop.service.build.BuildService;
 import com.example.PCOnlineShop.service.build.PowerSupplyService;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -13,11 +13,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-@AllArgsConstructor
-@Deprecated(forRemoval = true)
+@RequiredArgsConstructor
+@Controller
 @SessionAttributes({"buildItems"})
 @RequestMapping("/build")
 public class PowerSupplyController {
+    private static final String PSU_VIEW = "build/psu";
+
     private final PowerSupplyService powerSupplyService;
     private final BuildService buildService;
 
@@ -31,7 +33,7 @@ public class PowerSupplyController {
         List<PowerSupply> psus = buildService.getCompatiblePowerSupplies(buildItem);
         model.addAttribute("psus", psus);
         model.addAttribute("allBrands", powerSupplyService.getAllBrands(psus));
-        return "/build/psu";
+        return PSU_VIEW;
     }
 
     @PostMapping("/psu/filter")
@@ -48,7 +50,7 @@ public class PowerSupplyController {
         model.addAttribute("allBrands", powerSupplyService.getAllBrands(buildService.getCompatiblePowerSupplies(buildItem)));
         model.addAttribute("selectedBrands", brands);
         model.addAttribute("selectedSort", sortBy);
-        return "/build/psu";
+        return PSU_VIEW;
     }
 
     @PostMapping("/selectPsu")

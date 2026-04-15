@@ -1,13 +1,14 @@
 package com.example.PCOnlineShop.repository.build;
 
-import com.example.PCOnlineShop.model.build.GPU;
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
-import java.util.Optional;
+import com.example.PCOnlineShop.model.build.GPU;
 
 @Repository
 public interface GpuRepository extends JpaRepository<GPU, Integer> {
@@ -38,6 +39,6 @@ public interface GpuRepository extends JpaRepository<GPU, Integer> {
            "LEFT JOIN FETCH g.product p " +
            "LEFT JOIN FETCH p.images " +
            "LEFT JOIN FETCH p.brand " +
-           "WHERE g.id = :id")
-    Optional<GPU> findByIdWithImages(@Param("id") int id);
+           "WHERE g.productId = :productId")
+    Optional<GPU> findByIdWithImages(@Param("productId") int productId);
 }

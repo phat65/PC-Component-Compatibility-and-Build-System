@@ -3,16 +3,16 @@ package com.example.PCOnlineShop.service.build;
 import com.example.PCOnlineShop.model.build.Storage;
 import com.example.PCOnlineShop.model.product.Brand;
 import com.example.PCOnlineShop.repository.build.StorageRepository;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Map;
 
-@Deprecated(forRemoval = true)
-@AllArgsConstructor
+@Service
+@RequiredArgsConstructor
 public class StorageService {
-    private StorageRepository storageRepository;
+    private final StorageRepository storageRepository;
 
     public Storage getStorageById(int id) {
         return storageRepository.findByIdWithImages(id).orElse(null);

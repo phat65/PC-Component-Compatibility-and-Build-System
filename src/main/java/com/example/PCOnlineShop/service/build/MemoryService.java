@@ -3,16 +3,16 @@ package com.example.PCOnlineShop.service.build;
 import com.example.PCOnlineShop.model.build.Memory;
 import com.example.PCOnlineShop.model.product.Brand;
 import com.example.PCOnlineShop.repository.build.MemoryRepository;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Map;
 
-@AllArgsConstructor
-@Deprecated(forRemoval = true)
+@RequiredArgsConstructor
+@Service
 public class MemoryService {
-    private MemoryRepository memoryRepository;
+    private final MemoryRepository memoryRepository;
 
     public List<Memory> getAllMemory() {
         return memoryRepository.findAllWithImages();

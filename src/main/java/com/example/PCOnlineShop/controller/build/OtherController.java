@@ -1,8 +1,9 @@
 package com.example.PCOnlineShop.controller.build;
 
 import com.example.PCOnlineShop.dto.build.BuildItemDto;
-import com.example.PCOnlineShop.service.build.BuildService;
 import com.example.PCOnlineShop.model.product.Product;
+import com.example.PCOnlineShop.service.build.BuildService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -12,19 +13,17 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-@Deprecated(forRemoval = true)
+@RequiredArgsConstructor
+@Controller
 @RequestMapping("/build")
 @SessionAttributes("buildItems")
 public class OtherController {
+    private static final String OTHER_VIEW = "build/other";
 
     private final BuildService buildService;
 
-    public OtherController(BuildService buildService) {
-        this.buildService = buildService;
-    }
-
     @ModelAttribute("buildItems")
-    public BuildItemDto getBuildItems() {
+    public BuildItemDto buildItems() {
         return new BuildItemDto();
     }
 
@@ -32,7 +31,7 @@ public class OtherController {
     public String showOtherPage(@ModelAttribute("buildItems") BuildItemDto buildItems, Model model) {
         List<Product> others = buildService.getOtherProducts();
         model.addAttribute("others", others != null ? others : new ArrayList<>());
-        return "build/other";
+        return OTHER_VIEW;
     }
 
     @PostMapping("/selectOther")

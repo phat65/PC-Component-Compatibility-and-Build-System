@@ -1,29 +1,31 @@
 package com.example.PCOnlineShop.repository.product;
 
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.example.PCOnlineShop.model.product.Brand;
 import com.example.PCOnlineShop.model.product.Category;
 import com.example.PCOnlineShop.model.product.Product;
 import com.example.PCOnlineShop.model.product.ProductLifecycleStatus;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
-
-import java.util.List;
-import java.util.Optional;
 
 @Repository
 public interface ProductRepository extends JpaRepository<Product, Integer> {
 
-    Page<Product> findAll(Pageable pageable);
+    Page<Product> findByBrand_BrandId(Integer brandId, Pageable pageable);
 
-    Page<Product> findByBrand_BrandId(int brandId, Pageable pageable);
-
-    // ManyToMany: Tìm product có chứa category_id trong danh sách categories
+    // Find product have category_id in list categories
     @Query("SELECT DISTINCT p FROM Product p JOIN p.categories c WHERE c.categoryId = :categoryId")
-    Page<Product> findByCategory_CategoryId(@Param("categoryId") int categoryId, Pageable pageable);
+    Page<Product> findByCategory_CategoryId(@Param("categoryId") Integer categoryId, Pageable pageable);
 
     @Query("""
         SELECT DISTINCT p FROM Product p
@@ -32,16 +34,19 @@ public interface ProductRepository extends JpaRepository<Product, Integer> {
           AND p.productId != :currentProductId
           AND p.status = true
           AND p.lifecycleStatus = com.example.PCOnlineShop.model.product.ProductLifecycleStatus.SELLING
-        ORDER BY RAND()
+        ORDER BY function('RAND')
     """)
-    List<Product> findTop4ByCategory_CategoryIdAndProductIdNot(@Param("categoryId") Integer categoryId,
-                                                               @Param("currentProductId") Integer currentProductId);
+    List<Product> findRandomRelatedProductsByCategory(@Param("categoryId") Integer categoryId,
+                                                      @Param("currentProductId") Integer currentProductId,
+                                                      Pageable pageable);
 
-    @Query("SELECT DISTINCT p FROM Product p LEFT JOIN FETCH p.images")
+    @EntityGraph(attributePaths = "images")
+    @Query("SELECT DISTINCT p FROM Product p")
     List<Product> findAllWithImages();
 
-    @Query("SELECT DISTINCT p FROM Product p LEFT JOIN FETCH p.images WHERE p.productId = :productId")
-    Product findByIdWithImages(@Param("productId") Integer productId);
+    @EntityGraph(attributePaths = "images")
+    @Query("SELECT p FROM Product p WHERE p.productId = :productId")
+    Optional<Product> findByIdWithImages(@Param("productId") Integer productId);
 
     @Query("""
         SELECT DISTINCT p FROM Product p
@@ -62,23 +67,31 @@ public interface ProductRepository extends JpaRepository<Product, Integer> {
 
     boolean existsByProductName(String productName);
 
+    @EntityGraph(attributePaths = {"brand", "categories", "images"})
     Optional<Product> findWithDetailsByProductId(int productId);
 
-    public long countByBrand_BrandId(Integer brandId);
+    long countByBrand_BrandId(Integer brandId);
 
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Transactional
     @Query("UPDATE Product p SET p.brand.brandId = :targetId WHERE p.brand.brandId = :sourceId")
     void reassignBrandByIds(@Param("sourceId") Integer sourceId,
                             @Param("targetId") Integer targetId);
 
-    List<Product> findTop8ByStatusTrueAndLifecycleStatus(ProductLifecycleStatus lifecycleStatus);
+    @EntityGraph(attributePaths = "images")
+    Page<Product> findByStatusTrueAndLifecycleStatusOrderByProductIdDesc(ProductLifecycleStatus lifecycleStatus,
+                                                                         Pageable pageable);
 
-    // Tìm products có category cụ thể và đang active
+    // Find products with a specific category and that are currently active.
     @Query("SELECT DISTINCT p FROM Product p JOIN p.categories c WHERE c = :category AND p.status = true AND p.lifecycleStatus = :lifecycleStatus")
+    @EntityGraph(attributePaths = "images")
     List<Product> findByCategoryAndStatusTrueAndLifecycleStatus(@Param("category") Category category,
                                                                 @Param("lifecycleStatus") ProductLifecycleStatus lifecycleStatus);
 
+    @EntityGraph(attributePaths = "images")
     List<Product> findByBrandAndStatusTrueAndLifecycleStatus(Brand brand, ProductLifecycleStatus lifecycleStatus);
 
+    @EntityGraph(attributePaths = "images")
     List<Product> findByStatusTrueAndLifecycleStatus(ProductLifecycleStatus lifecycleStatus);
 
     @Query("""
@@ -96,13 +109,17 @@ public interface ProductRepository extends JpaRepository<Product, Integer> {
             Pageable pageable
     );
 
-    @Query("SELECT DISTINCT p FROM Product p JOIN p.categories c WHERE c = :category AND p.status = true AND p.lifecycleStatus = :lifecycleStatus ORDER BY RAND()")
-    List<Product> findTop8ByCategoryAndStatusTrueAndLifecycleStatus(@Param("category") Category category,
-                                                                    @Param("lifecycleStatus") ProductLifecycleStatus lifecycleStatus);
-
-    @Query("SELECT DISTINCT p FROM Product p JOIN p.categories c WHERE c.categoryId = :categoryId")
-    Page<Product> findByCategory_CategoryId(@Param("categoryId") Integer categoryId, Pageable pageable);
-    Page<Product> findByBrand_BrandId(Integer brandId, Pageable pageable);
+    @Query("""
+        SELECT DISTINCT p FROM Product p
+        JOIN p.categories c
+        WHERE c = :category
+          AND p.status = true
+          AND p.lifecycleStatus = :lifecycleStatus
+        ORDER BY function('RAND')
+    """)
+    List<Product> findRandomByCategoryAndStatusTrueAndLifecycleStatus(@Param("category") Category category,
+                                                                      @Param("lifecycleStatus") ProductLifecycleStatus lifecycleStatus,
+                                                                      Pageable pageable);
 
     @Query(value = """
             SELECT DISTINCT p.* FROM product p
@@ -139,9 +156,9 @@ public interface ProductRepository extends JpaRepository<Product, Integer> {
 
     boolean existsByProductNameIgnoreCaseAndLifecycleStatusNot(String productName, ProductLifecycleStatus lifecycleStatus);
 
+    @EntityGraph(attributePaths = "images")
     @Query("""
         SELECT DISTINCT p FROM Product p
-        LEFT JOIN FETCH p.images
         WHERE p.productId = :productId
           AND p.status = true
           AND p.lifecycleStatus = :lifecycleStatus

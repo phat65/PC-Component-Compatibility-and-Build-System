@@ -5,7 +5,7 @@ import com.example.PCOnlineShop.dto.build.BuildItemDto;
 import com.example.PCOnlineShop.model.build.GPU;
 import com.example.PCOnlineShop.service.build.BuildService;
 import com.example.PCOnlineShop.service.build.GpuService;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -14,12 +14,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-
-@Deprecated(forRemoval = true)
+@Controller
 @SessionAttributes({"buildItems"})
 @RequestMapping("/build")
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class GpuController {
+    private static final String GPU_VIEW = "build/build-gpu";
+
     private final BuildService buildService;
     private final GpuService gpuService;
 
@@ -34,7 +35,7 @@ public class GpuController {
         List<GPU> gpus = buildService.getCompatibleGPUs(buildItem);
         model.addAttribute("gpus", gpus);
         model.addAttribute("allBrands", gpuService.getAllBrands(gpus));
-        return "/build/build-gpu";
+        return GPU_VIEW;
     }
 
     // Filter GPU by brands
@@ -52,7 +53,7 @@ public class GpuController {
         model.addAttribute("allBrands", gpuService.getAllBrands(buildService.getCompatibleGPUs(buildItem)));
         model.addAttribute("selectedBrands", brands);
         model.addAttribute("selectedSort", sortBy);
-        return "/build/build-gpu";
+        return GPU_VIEW;
     }
 
     // Chon GPU

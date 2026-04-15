@@ -1,13 +1,14 @@
 package com.example.PCOnlineShop.repository.build;
 
-import com.example.PCOnlineShop.model.build.PowerSupply;
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
-import java.util.Optional;
+import com.example.PCOnlineShop.model.build.PowerSupply;
 
 @Repository
 public interface PowerSupplyRepository extends JpaRepository<PowerSupply,Integer> {
@@ -38,6 +39,6 @@ public interface PowerSupplyRepository extends JpaRepository<PowerSupply,Integer
            "LEFT JOIN FETCH p.product pr " +
            "LEFT JOIN FETCH pr.images " +
            "LEFT JOIN FETCH pr.brand " +
-           "WHERE p.id = :id")
-    Optional<PowerSupply> findByIdWithImages(@Param("id") int id);
+           "WHERE p.productId = :productId")
+    Optional<PowerSupply> findByIdWithImages(@Param("productId") int productId);
 }

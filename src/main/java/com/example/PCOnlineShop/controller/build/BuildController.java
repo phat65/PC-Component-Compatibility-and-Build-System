@@ -20,6 +20,8 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 @SessionAttributes({"buildItems"})
 @RequestMapping("/build")
 public class BuildController {
+    private static final String BUILD_START_VIEW = "build/build-pc";
+    private static final String PRESET_RESULT_VIEW = "build/preset-result";
 
     private final CartService cartService;
     private final AccountRepository accountRepository;
@@ -36,21 +38,21 @@ public class BuildController {
     }
 
     @ModelAttribute("buildItems")
-    public BuildItemDto buildItem() {
+    public BuildItemDto buildItems() {
         return new BuildItemDto();
     }
 
 
     @GetMapping("/start" )
-    public String startBuild() {
-        return "/build/build-pc";
+    public String showBuildStartPage() {
+        return BUILD_START_VIEW;
     }
     @GetMapping("/preset-result")
-    public String showPresetResult() {
-        return "/build/preset-result";
+    public String showPresetResultPage() {
+        return PRESET_RESULT_VIEW;
     }
     @GetMapping("/startover")
-    public String startOver(SessionStatus sessionStatus, Model model) {
+    public String restartBuild(SessionStatus sessionStatus, Model model) {
         sessionStatus.setComplete();
         model.addAttribute("buildItems", new BuildItemDto());
         return "redirect:/build/mainboard";

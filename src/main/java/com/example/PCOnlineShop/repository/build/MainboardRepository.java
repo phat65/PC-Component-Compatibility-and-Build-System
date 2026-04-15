@@ -1,12 +1,13 @@
 package com.example.PCOnlineShop.repository.build;
-import com.example.PCOnlineShop.model.build.Mainboard;
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
-import java.util.Optional;
+import com.example.PCOnlineShop.model.build.Mainboard;
 
 
 @Repository
@@ -38,6 +39,6 @@ public interface MainboardRepository extends JpaRepository<Mainboard, Integer> {
            "JOIN FETCH m.product p " +
            "LEFT JOIN FETCH p.images " +
            "LEFT JOIN FETCH p.brand " +
-           "WHERE m.productId = :id")
-    Optional<Mainboard> findByIdWithImages(@Param("id") int id);
+           "WHERE m.productId = :productId")
+    Optional<Mainboard> findByIdWithImages(@Param("productId") int productId);
 }
