@@ -25,11 +25,26 @@ public class AddressService {
         return addressRepository.findDefaultByAccount(account);
     }
 
+    public void saveDefaultAddress(Account account, String fullName, String phone, String address) {
+        if (account == null || address == null || address.isEmpty()) {
+            return;
+        }
+
+        addressRepository.findByAccount(account).forEach(a -> a.setDefault(false));
+
+        Address addr = new Address();
+        addr.setAccount(account);
+        addr.setFullName(fullName);
+        addr.setPhone(phone);
+        addr.setAddress(address);
+        addr.setDefault(true);
+        addressRepository.save(addr);
+    }
+
     public Address addNewAddress(Account account, String fullName, String phone, String address)
-            throws IllegalArgumentException { // Báo lỗi cụ thể
+            throws IllegalArgumentException {
 
         if (addressRepository.existsByAccountAndPhone(account, phone)) {
-            // Ném ra lỗi để Controller bắt được
             throw new IllegalArgumentException("Số điện thoại này đã được sử dụng cho một địa chỉ khác.");
         }
 
@@ -47,26 +62,21 @@ public class AddressService {
         return addressRepository.save(newAddress);
     }
 
-    // Phương thức cập nhật địa chỉ
     @Transactional
     public Address updateAddress(Account account, int addressId, String fullName, String phone, String address)
             throws IllegalArgumentException {
 
-        // 1. Tìm địa chỉ
         Address existingAddress = addressRepository.findById(addressId)
                 .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy địa chỉ với ID: " + addressId));
 
-        // 2. Kiểm tra bảo mật: Địa chỉ này có thuộc tài khoản đang đăng nhập không?
         if (existingAddress.getAccount().getAccountId() != account.getAccountId()) {
             throw new SecurityException("Bạn không có quyền sửa địa chỉ này.");
         }
 
-        // 3. Kiểm tra SĐT trùng (loại trừ chính nó)
         if (addressRepository.existsByAccountAndPhoneAndAddressIdNot(account, phone, addressId)) {
             throw new IllegalArgumentException("Số điện thoại này đã được sử dụng cho một địa chỉ khác.");
         }
 
-        // 4. Cập nhật thông tin
         existingAddress.setFullName(fullName);
         existingAddress.setPhone(phone);
         existingAddress.setAddress(address);
@@ -74,22 +84,17 @@ public class AddressService {
         return addressRepository.save(existingAddress);
     }
 
-    // Phương thức đặt làm mặc định
     @Transactional
     public void setDefaultAddress(Account account, int addressId) {
-        // 1. Tìm địa chỉ muốn đặt làm mặc định
         Address newDefault = addressRepository.findById(addressId)
                 .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy địa chỉ với ID: " + addressId));
 
-        // 2. Kiểm tra bảo mật
         if (newDefault.getAccount().getAccountId() != account.getAccountId()) {
             throw new SecurityException("Bạn không có quyền thay đổi địa chỉ này.");
         }
 
-        // 3. Bỏ tất cả mặc định cũ (dùng query mới trong Repository)
         addressRepository.clearDefaultByAccount(account);
 
-        // 4. Đặt địa chỉ này làm mặc định và lưu
         newDefault.setDefault(true);
         addressRepository.save(newDefault);
     }
