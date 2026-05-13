@@ -9,9 +9,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @RequiredArgsConstructor
 @Controller
@@ -42,9 +40,7 @@ public class CaseController {
                               @ModelAttribute("buildItems") BuildItemDto buildItem,
                               Model model) {
         List<Case> cases = buildService.getCompatibleCases(buildItem);
-        Map<String,List<String>> filters = new HashMap<>();
-        filters.put("brands", brands);
-        cases = caseService.filterCases(cases, filters, sortBy);
+        cases = caseService.filterCases(cases, brands, sortBy);
 
         model.addAttribute("cases", cases);
         model.addAttribute("allBrands", caseService.getAllBrands(buildService.getCompatibleCases(buildItem)));
@@ -65,7 +61,15 @@ public class CaseController {
 
         // Only update if user selected a new case
         if (caseId != null) {
-            buildItem.setPcCase(caseService.getCaseById(caseId));
+            return caseService.findSelectableCaseByProductId(caseId)
+                    .map(pcCase -> {
+                        buildItem.setPcCase(pcCase);
+                        return "redirect:/build/cooling";
+                    })
+                    .orElseGet(() -> {
+                        redirectAttributes.addFlashAttribute("error", "Selected case is not available.");
+                        return "redirect:/build/case";
+                    });
         }
         // If caseId is null but buildItem.pcCase exists, keep it
         return "redirect:/build/cooling";

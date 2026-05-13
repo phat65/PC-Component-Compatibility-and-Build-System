@@ -1,25 +1,16 @@
 package com.example.PCOnlineShop.controller.build;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.SessionAttributes;
-
 import com.example.PCOnlineShop.dto.build.BuildItemDto;
 import com.example.PCOnlineShop.model.build.Mainboard;
 import com.example.PCOnlineShop.service.build.BuildService;
 import com.example.PCOnlineShop.service.build.MainboardService;
-
 import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import java.util.List;
 
 @RequiredArgsConstructor
 @Controller
@@ -39,8 +30,9 @@ public class MainboardController {
     // show list motherboard
     @GetMapping("/mainboard")
     public String showMainboardPage(@ModelAttribute("buildItems") BuildItemDto buildItem, Model model) {
-        model.addAttribute("mainboards", buildService.getCompatibleMainboards(buildItem));
-        model.addAttribute("allBrands", mainboardService.getAllBrands(buildItem));
+        List<Mainboard> mainboards = buildService.getCompatibleMainboards(buildItem);
+        model.addAttribute("mainboards", mainboards);
+        model.addAttribute("allBrands", mainboardService.getAllBrands(mainboards));
         return MAINBOARD_VIEW;
     }
 
@@ -51,13 +43,10 @@ public class MainboardController {
                                    @ModelAttribute("buildItems") BuildItemDto buildItem,
                                    Model model) {
         List<Mainboard> mainboards = buildService.getCompatibleMainboards(buildItem);
-        Map<String,List<String>> filters = new HashMap<>();
-        filters.put("brands", brands);
-        mainboards = mainboardService.filterMainboards(mainboards, filters, sortBy);
-
+        mainboards = mainboardService.filterMainboards(mainboards, brands, sortBy);
 
         model.addAttribute("mainboards", mainboards);
-        model.addAttribute("allBrands", mainboardService.getAllBrands(buildItem));
+        model.addAttribute("allBrands", mainboardService.getAllBrands(buildService.getCompatibleMainboards(buildItem)));
         model.addAttribute("selectedBrands", brands);
         model.addAttribute("selectedSort", sortBy);
         return MAINBOARD_VIEW;
@@ -74,7 +63,7 @@ public class MainboardController {
     @PostMapping("/selectMainboard")
     public String selectMainboard(@RequestParam(required = false) Integer mainboardId,
                                   @ModelAttribute("buildItems") BuildItemDto buildItem,
-                                  org.springframework.web.servlet.mvc.support.RedirectAttributes redirectAttributes) {
+                                  RedirectAttributes redirectAttributes) {
         // Mainboard is REQUIRED - must select one
         if (mainboardId == null && buildItem.getMainboard() == null) {
             redirectAttributes.addFlashAttribute("error", "Please select a mainboard to continue.");
@@ -83,7 +72,15 @@ public class MainboardController {
 
         // Only update if user selected a new mainboard
         if (mainboardId != null) {
-            buildItem.setMainboard(mainboardService.getMainboardById(mainboardId));
+            return mainboardService.findSelectableMainboardByProductId(mainboardId)
+                    .map(mainboard -> {
+                        buildItem.setMainboard(mainboard);
+                        return "redirect:/build/cpu";
+                    })
+                    .orElseGet(() -> {
+                        redirectAttributes.addFlashAttribute("error", "Selected mainboard is not available.");
+                        return "redirect:/build/mainboard";
+                    });
         }
         // If mainboardId is null but buildItem.mainboard exists, keep it
         return "redirect:/build/cpu";

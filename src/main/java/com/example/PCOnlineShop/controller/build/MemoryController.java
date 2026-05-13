@@ -8,10 +8,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @RequiredArgsConstructor
 @Controller
@@ -42,9 +41,7 @@ public class MemoryController {
                                  @ModelAttribute("buildItems") BuildItemDto buildItem,
                                  Model model) {
         List<Memory> memories = buildService.getCompatibleMemory(buildItem);
-        Map<String,List<String>> filters = new HashMap<>();
-        filters.put("brands", brands);
-        memories = memoryService.filterMemories(memories, filters, sortBy);
+        memories = memoryService.filterMemories(memories, brands, sortBy);
 
         model.addAttribute("memories", memories);
         model.addAttribute("allBrands", memoryService.getAllBrands(buildService.getCompatibleMemory(buildItem)));
@@ -56,7 +53,7 @@ public class MemoryController {
     @PostMapping("/selectMemory")
     public String selectMemory(@RequestParam(value = "memoryId", required = false) Integer memoryId,
                                @ModelAttribute("buildItems") BuildItemDto buildItem,
-                               org.springframework.web.servlet.mvc.support.RedirectAttributes redirectAttributes) {
+                               RedirectAttributes redirectAttributes) {
         // Memory is REQUIRED - must select one
         if (memoryId == null && buildItem.getMemory() == null) {
             redirectAttributes.addFlashAttribute("error", "Please select memory to continue.");
@@ -65,7 +62,15 @@ public class MemoryController {
 
         // Only update if user selected new memory
         if (memoryId != null) {
-            buildItem.setMemory(memoryService.getMemoryById(memoryId));
+            return memoryService.findSelectableMemoryByProductId(memoryId)
+                    .map(memory -> {
+                        buildItem.setMemory(memory);
+                        return "redirect:/build/storage";
+                    })
+                    .orElseGet(() -> {
+                        redirectAttributes.addFlashAttribute("error", "Selected memory is not available.");
+                        return "redirect:/build/memory";
+                    });
         }
         // If memoryId is null but buildItem.memory exists, keep it
         return "redirect:/build/storage";

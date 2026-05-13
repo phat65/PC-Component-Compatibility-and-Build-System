@@ -8,10 +8,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @RequiredArgsConstructor
 @Controller
@@ -42,9 +41,7 @@ public class StorageController {
                                  @ModelAttribute("buildItems") BuildItemDto buildItem,
                                  Model model) {
         List<Storage> storages = buildService.getCompatibleStorage(buildItem);
-        Map<String,List<String>> filters = new HashMap<>();
-        filters.put("brands", brands);
-        storages = storageService.filterStorages(storages, filters, sortBy);
+        storages = storageService.filterStorages(storages, brands, sortBy);
 
         model.addAttribute("storages", storages);
         model.addAttribute("allBrands", storageService.getAllBrands(buildService.getCompatibleStorage(buildItem)));
@@ -56,7 +53,7 @@ public class StorageController {
     @PostMapping("/selectStorage")
     public String selectStorage(@RequestParam(value = "storageId", required = false) Integer storageId,
                                 @ModelAttribute("buildItems") BuildItemDto buildItem,
-                                org.springframework.web.servlet.mvc.support.RedirectAttributes redirectAttributes) {
+                                RedirectAttributes redirectAttributes) {
         // Storage is REQUIRED - must select one
         if (storageId == null && buildItem.getStorage() == null) {
             redirectAttributes.addFlashAttribute("error", "Please select storage to continue.");
@@ -65,7 +62,15 @@ public class StorageController {
 
         // Only update if user selected new storage
         if (storageId != null) {
-            buildItem.setStorage(storageService.getStorageById(storageId));
+            return storageService.findSelectableStorageByProductId(storageId)
+                    .map(storage -> {
+                        buildItem.setStorage(storage);
+                        return "redirect:/build/psu";
+                    })
+                    .orElseGet(() -> {
+                        redirectAttributes.addFlashAttribute("error", "Selected storage is not available.");
+                        return "redirect:/build/storage";
+                    });
         }
         // If storageId is null but buildItem.storage exists, keep it
         return "redirect:/build/psu";

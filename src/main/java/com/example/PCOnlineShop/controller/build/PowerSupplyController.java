@@ -8,10 +8,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @RequiredArgsConstructor
 @Controller
@@ -42,9 +41,7 @@ public class PowerSupplyController {
                                       @ModelAttribute("buildItems") BuildItemDto buildItem,
                                       Model model) {
         List<PowerSupply> powerSupplies = buildService.getCompatiblePowerSupplies(buildItem);
-        Map<String,List<String>> filters = new HashMap<>();
-        filters.put("brands", brands);
-        powerSupplies = powerSupplyService.filterPowerSupplies(powerSupplies, filters, sortBy);
+        powerSupplies = powerSupplyService.filterPowerSupplies(powerSupplies, brands, sortBy);
 
         model.addAttribute("psus", powerSupplies);
         model.addAttribute("allBrands", powerSupplyService.getAllBrands(buildService.getCompatiblePowerSupplies(buildItem)));
@@ -55,10 +52,19 @@ public class PowerSupplyController {
 
     @PostMapping("/selectPsu")
     public String selectPsu(@RequestParam(value = "psuId", required = false) Integer psuId,
-                            @ModelAttribute("buildItems") BuildItemDto buildItem) {
+                            @ModelAttribute("buildItems") BuildItemDto buildItem,
+                            RedirectAttributes redirectAttributes) {
         // Only update if user selected new PSU
         if (psuId != null) {
-            buildItem.setPowerSupply(powerSupplyService.getPowerSupplyById(psuId));
+            return powerSupplyService.findSelectablePowerSupplyByProductId(psuId)
+                    .map(psu -> {
+                        buildItem.setPowerSupply(psu);
+                        return "redirect:/build/other";
+                    })
+                    .orElseGet(() -> {
+                        redirectAttributes.addFlashAttribute("error", "Selected PSU is not available.");
+                        return "redirect:/build/psu";
+                    });
         }
         // Stay on PSU page after selection
         return "redirect:/build/other";

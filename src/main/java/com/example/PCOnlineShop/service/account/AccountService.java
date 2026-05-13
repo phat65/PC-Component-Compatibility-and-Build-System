@@ -1,11 +1,15 @@
 package com.example.PCOnlineShop.service.account;
 
+import java.util.Optional;
+
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+
 import com.example.PCOnlineShop.constant.RoleName;
 import com.example.PCOnlineShop.model.account.Account;
 import com.example.PCOnlineShop.repository.account.AccountRepository;
+
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
@@ -64,5 +68,21 @@ public class AccountService {
 
         account.setRole(roleName);
         return accountRepository.save(account);
+    }
+
+    public boolean changePassword(String phoneNumber, String currentPassword, String newPassword) {
+        Optional<Account> optionalAccount = accountRepository.findByPhoneNumber(phoneNumber);
+        if (optionalAccount.isEmpty()) {
+            return false;
+        }
+
+        Account account = optionalAccount.get();
+        if (!passwordEncoder.matches(currentPassword, account.getPassword())) {
+            return false;
+        }
+
+        account.setPassword(passwordEncoder.encode(newPassword));
+        accountRepository.save(account);
+        return true;
     }
 }

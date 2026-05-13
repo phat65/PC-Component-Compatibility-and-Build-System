@@ -6,8 +6,9 @@ import com.example.PCOnlineShop.repository.build.MemoryRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
+import java.util.Optional;
 
 @RequiredArgsConstructor
 @Service
@@ -26,48 +27,38 @@ public class MemoryService {
         return memoryRepository.save(memory);
     }
 
-    public Memory getMemoryById(int id) {
-        return memoryRepository.findByIdWithImages(id).orElse(null);
+    public Optional<Memory> findSelectableMemoryByProductId(int productId) {
+        return memoryRepository.findByIdWithImages(productId);
     }
 
     public void deleteMemory(int id) {
         memoryRepository.deleteById(id);
     }
 
-    public List<Memory> filterMemories(List<Memory> memories, Map<String,List<String>> filters, String sortBy) {
-        // Filter by brands if selected
-        if (filters.get("brands") != null && !filters.get("brands").isEmpty()) {
+    public List<Memory> filterMemories(List<Memory> memories, List<String> brands, String sortBy) {
+        if (brands != null && !brands.isEmpty()) {
             memories = memories.stream()
-                    .filter(m -> filters.get("brands").contains(m.getProduct().getBrand().getName()))
+                    .filter(memory -> brands.contains(memory.getProduct().getBrand().getName()))
                     .toList();
         }
 
-        // Sort if specified
-        if (sortBy != null) {
-            switch (sortBy) {
-                case "priceAsc":
-                    memories = memories.stream()
-                            .sorted((a, b) -> Double.compare(a.getProduct().getPrice(), b.getProduct().getPrice()))
-                            .toList();
-                    break;
-                case "priceDesc":
-                    memories = memories.stream()
-                            .sorted((a, b) -> Double.compare(b.getProduct().getPrice(), a.getProduct().getPrice()))
-                            .toList();
-                    break;
-                case "nameAsc":
-                    memories = memories.stream()
-                            .sorted((a, b) -> a.getProduct().getProductName().compareTo(b.getProduct().getProductName()))
-                            .toList();
-                    break;
-                case "nameDesc":
-                    memories = memories.stream()
-                            .sorted((a, b) -> b.getProduct().getProductName().compareTo(a.getProduct().getProductName()))
-                            .toList();
-                    break;
-            }
+        Comparator<Memory> comparator = getMemoryComparator(sortBy);
+        if (comparator != null) {
+            memories = memories.stream()
+                    .sorted(comparator)
+                    .toList();
         }
         return memories;
+    }
+
+    private Comparator<Memory> getMemoryComparator(String sortBy) {
+        return switch (sortBy == null ? "" : sortBy) {
+            case "priceAsc" -> Comparator.comparing(memory -> memory.getProduct().getPrice());
+            case "priceDesc" -> Comparator.comparing((Memory memory) -> memory.getProduct().getPrice()).reversed();
+            case "nameAsc" -> Comparator.comparing(memory -> memory.getProduct().getProductName(), String.CASE_INSENSITIVE_ORDER);
+            case "nameDesc" -> Comparator.comparing((Memory memory) -> memory.getProduct().getProductName(), String.CASE_INSENSITIVE_ORDER).reversed();
+            default -> null;
+        };
     }
 
     public List<Brand> getAllBrands(List<Memory> memories) {

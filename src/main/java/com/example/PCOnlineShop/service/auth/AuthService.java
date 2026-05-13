@@ -1,16 +1,14 @@
 package com.example.PCOnlineShop.service.auth;
 
+import org.springframework.stereotype.Service;
+
 import com.example.PCOnlineShop.model.account.Account;
-import com.example.PCOnlineShop.repository.account.AccountRepository;
 import com.example.PCOnlineShop.service.account.AccountService;
 import com.example.PCOnlineShop.service.account.RegistrationService;
 import com.example.PCOnlineShop.service.password.PasswordResetService;
 import com.example.PCOnlineShop.service.verification.VerificationService;
-import lombok.RequiredArgsConstructor;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
 
-import java.util.Optional;
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -20,8 +18,6 @@ public class AuthService {
     private final AccountService accountService;
     private final VerificationService verificationService;
     private final PasswordResetService passwordResetService;
-    private final AccountRepository accountRepository;
-    private final PasswordEncoder passwordEncoder;
 
     public void register(Account account, String addressStr) {
         registrationService.register(account, addressStr);
@@ -44,19 +40,7 @@ public class AuthService {
     }
 
     public boolean changePassword(String phoneNumber, String currentPassword, String newPassword) {
-        Optional<Account> optionalAccount = accountRepository.findByPhoneNumber(phoneNumber);
-        if (optionalAccount.isEmpty()) {
-            return false;
-        }
-
-        Account account = optionalAccount.get();
-        if (!passwordEncoder.matches(currentPassword, account.getPassword())) {
-            return false;
-        }
-
-        account.setPassword(passwordEncoder.encode(newPassword));
-        accountRepository.save(account);
-        return true;
+        return accountService.changePassword(phoneNumber, currentPassword, newPassword);
     }
 
     public Account saveStaff(Account account) {

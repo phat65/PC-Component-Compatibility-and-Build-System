@@ -1,15 +1,17 @@
 package com.example.PCOnlineShop.service.address;
 
-import com.example.PCOnlineShop.model.account.Account;
-import com.example.PCOnlineShop.model.account.Address;
-import com.example.PCOnlineShop.repository.account.AddressRepository;
-import jakarta.persistence.EntityNotFoundException;
-import jakarta.transaction.Transactional;
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.Optional;
+import com.example.PCOnlineShop.model.account.Account;
+import com.example.PCOnlineShop.model.account.Address;
+import com.example.PCOnlineShop.repository.account.AddressRepository;
+
+import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
 
 @Service
 public class AddressService {
@@ -24,28 +26,48 @@ public class AddressService {
     public Optional<Address> getDefaultAddress(Account account) {
         return addressRepository.findDefaultByAccount(account);
     }
-
+    
+    @Transactional
     public void saveDefaultAddress(Account account, String fullName, String phone, String address) {
-        if (account == null || address == null || address.isEmpty()) {
+        if (account == null || address == null || address.trim().isEmpty()) {
             return;
         }
 
-        addressRepository.findByAccount(account).forEach(a -> a.setDefault(false));
+        addressRepository.clearDefaultByAccount(account);
 
         Address addr = new Address();
         addr.setAccount(account);
         addr.setFullName(fullName);
         addr.setPhone(phone);
-        addr.setAddress(address);
+        addr.setAddress(address.trim());
         addr.setDefault(true);
         addressRepository.save(addr);
+    }
+
+    @Transactional
+    public void updateDefaultAddress(Account account, String fullName, String phone, String address) {
+        if (account == null || address == null || address.trim().isEmpty()) {
+            return;
+        }
+
+        Address defaultAddress = addressRepository.findDefaultByAccount(account).orElse(new Address());
+
+        addressRepository.clearDefaultByAccount(account);
+
+        defaultAddress.setAccount(account);
+        defaultAddress.setFullName(fullName);
+        defaultAddress.setPhone(phone);
+        defaultAddress.setAddress(address.trim());
+        defaultAddress.setDefault(true);
+
+        addressRepository.save(defaultAddress);
     }
 
     public Address addNewAddress(Account account, String fullName, String phone, String address)
             throws IllegalArgumentException {
 
         if (addressRepository.existsByAccountAndPhone(account, phone)) {
-            throw new IllegalArgumentException("Số điện thoại này đã được sử dụng cho một địa chỉ khác.");
+            throw new IllegalArgumentException("This phone number is already being used for a different address.");
         }
 
         Address newAddress = new Address();
@@ -67,14 +89,14 @@ public class AddressService {
             throws IllegalArgumentException {
 
         Address existingAddress = addressRepository.findById(addressId)
-                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy địa chỉ với ID: " + addressId));
+                .orElseThrow(() -> new EntityNotFoundException("Address with ID not found: " + addressId));
 
         if (existingAddress.getAccount().getAccountId() != account.getAccountId()) {
-            throw new SecurityException("Bạn không có quyền sửa địa chỉ này.");
+            throw new SecurityException("You do not have permission to edit this address.");
         }
 
         if (addressRepository.existsByAccountAndPhoneAndAddressIdNot(account, phone, addressId)) {
-            throw new IllegalArgumentException("Số điện thoại này đã được sử dụng cho một địa chỉ khác.");
+            throw new IllegalArgumentException("This phone number is already being used for a different address.");
         }
 
         existingAddress.setFullName(fullName);
@@ -87,10 +109,10 @@ public class AddressService {
     @Transactional
     public void setDefaultAddress(Account account, int addressId) {
         Address newDefault = addressRepository.findById(addressId)
-                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy địa chỉ với ID: " + addressId));
+                .orElseThrow(() -> new EntityNotFoundException("Address with ID not found: " + addressId));
 
         if (newDefault.getAccount().getAccountId() != account.getAccountId()) {
-            throw new SecurityException("Bạn không có quyền thay đổi địa chỉ này.");
+            throw new SecurityException("You are not permitted to change this address.");
         }
 
         addressRepository.clearDefaultByAccount(account);

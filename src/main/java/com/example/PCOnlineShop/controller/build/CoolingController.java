@@ -8,10 +8,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @RequiredArgsConstructor
 @Controller
@@ -42,9 +41,7 @@ public class CoolingController {
                                  @ModelAttribute("buildItems") BuildItemDto buildItem,
                                  Model model) {
         List<Cooling> coolings = buildService.getCompatibleCoolings(buildItem);
-        Map<String,List<String>> filters = new HashMap<>();
-        filters.put("brands", brands);
-        coolings = coolingService.filterCoolings(coolings, filters, sortBy);
+        coolings = coolingService.filterCoolings(coolings, brands, sortBy);
 
         model.addAttribute("coolings", coolings);
         model.addAttribute("allBrands", coolingService.getAllBrands(buildService.getCompatibleCoolings(buildItem)));
@@ -55,11 +52,20 @@ public class CoolingController {
 
     @PostMapping("/selectCooling")
     public String selectCooling(@RequestParam(value = "coolingId", required = false) Integer coolingId,
-                                @ModelAttribute("buildItems") BuildItemDto buildItem) {
+                                @ModelAttribute("buildItems") BuildItemDto buildItem,
+                                RedirectAttributes redirectAttributes) {
         // Cooling is OPTIONAL - can use stock cooler from CPU
         // Only update if user selected a cooling
         if (coolingId != null) {
-            buildItem.setCooling(coolingService.getCoolingById(coolingId));
+            return coolingService.findSelectableCoolingByProductId(coolingId)
+                    .map(cooling -> {
+                        buildItem.setCooling(cooling);
+                        return "redirect:/build/memory";
+                    })
+                    .orElseGet(() -> {
+                        redirectAttributes.addFlashAttribute("error", "Selected cooling is not available.");
+                        return "redirect:/build/cooling";
+                    });
         }
         // Allow proceeding even if cooling is null
         return "redirect:/build/memory";

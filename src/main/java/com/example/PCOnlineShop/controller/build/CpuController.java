@@ -8,10 +8,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @RequiredArgsConstructor
 @Controller
@@ -44,9 +43,7 @@ public class CpuController {
                              @ModelAttribute("buildItems") BuildItemDto buildItem,
                              Model model) {
         List<CPU> cpus = buildService.getCompatibleCpus(buildItem);
-        Map<String,List<String>> filters = new HashMap<>();
-        filters.put("brands", brands);
-        cpus = cpuService.filterCpus(cpus, filters, sortBy);
+        cpus = cpuService.filterCpus(cpus, brands, sortBy);
 
         model.addAttribute("cpus", cpus);
         model.addAttribute("allBrands", cpuService.getAllBrands(buildService.getCompatibleCpus(buildItem)));
@@ -60,7 +57,7 @@ public class CpuController {
     @PostMapping("/selectCpu")
     public String selectCpu(@RequestParam(required = false) Integer cpuId,
                             @ModelAttribute("buildItems") BuildItemDto buildItem,
-                            org.springframework.web.servlet.mvc.support.RedirectAttributes redirectAttributes) {
+                            RedirectAttributes redirectAttributes) {
         // CPU is REQUIRED - must select one
         if (cpuId == null && buildItem.getCpu() == null) {
             redirectAttributes.addFlashAttribute("error", "Please select a CPU to continue.");
@@ -69,7 +66,15 @@ public class CpuController {
 
         // Only update if user selected a new CPU
         if (cpuId != null) {
-            buildItem.setCpu(cpuService.getCpuById(cpuId));
+            return cpuService.findSelectableCpuByProductId(cpuId)
+                    .map(cpu -> {
+                        buildItem.setCpu(cpu);
+                        return "redirect:/build/gpu";
+                    })
+                    .orElseGet(() -> {
+                        redirectAttributes.addFlashAttribute("error", "Selected CPU is not available.");
+                        return "redirect:/build/cpu";
+                    });
         }
         // If cpuId is null but buildItem.cpu exists, keep it
         return "redirect:/build/gpu";

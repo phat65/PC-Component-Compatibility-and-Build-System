@@ -6,8 +6,9 @@ import com.example.PCOnlineShop.repository.build.CaseRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
+import java.util.Optional;
 
 @RequiredArgsConstructor
 @Service
@@ -26,48 +27,38 @@ public class CaseService {
         return caseRepository.save(pcCase);
     }
 
-    public Case getCaseById(int id) {
-        return caseRepository.findByIdWithImages(id).orElse(null);
+    public Optional<Case> findSelectableCaseByProductId(int productId) {
+        return caseRepository.findByIdWithImages(productId);
     }
 
     public void deleteCase(int id) {
         caseRepository.deleteById(id);
     }
 
-    public List<Case> filterCases(List<Case> cases, Map<String,List<String>> filters, String sortBy) {
-        // Filter by brands if selected
-        if (filters.get("brands") != null && !filters.get("brands").isEmpty()) {
+    public List<Case> filterCases(List<Case> cases, List<String> brands, String sortBy) {
+        if (brands != null && !brands.isEmpty()) {
             cases = cases.stream()
-                    .filter(c -> filters.get("brands").contains(c.getProduct().getBrand().getName()))
+                    .filter(c -> brands.contains(c.getProduct().getBrand().getName()))
                     .toList();
         }
 
-        // Sort if specified
-        if (sortBy != null) {
-            switch (sortBy) {
-                case "priceAsc":
-                    cases = cases.stream()
-                            .sorted((a, b) -> Double.compare(a.getProduct().getPrice(), b.getProduct().getPrice()))
-                            .toList();
-                    break;
-                case "priceDesc":
-                    cases = cases.stream()
-                            .sorted((a, b) -> Double.compare(b.getProduct().getPrice(), a.getProduct().getPrice()))
-                            .toList();
-                    break;
-                case "nameAsc":
-                    cases = cases.stream()
-                            .sorted((a, b) -> a.getProduct().getProductName().compareTo(b.getProduct().getProductName()))
-                            .toList();
-                    break;
-                case "nameDesc":
-                    cases = cases.stream()
-                            .sorted((a, b) -> b.getProduct().getProductName().compareTo(a.getProduct().getProductName()))
-                            .toList();
-                    break;
-            }
+        Comparator<Case> comparator = getCaseComparator(sortBy);
+        if (comparator != null) {
+            cases = cases.stream()
+                    .sorted(comparator)
+                    .toList();
         }
         return cases;
+    }
+
+    private Comparator<Case> getCaseComparator(String sortBy) {
+        return switch (sortBy == null ? "" : sortBy) {
+            case "priceAsc" -> Comparator.comparing(c -> c.getProduct().getPrice());
+            case "priceDesc" -> Comparator.comparing((Case c) -> c.getProduct().getPrice()).reversed();
+            case "nameAsc" -> Comparator.comparing(c -> c.getProduct().getProductName(), String.CASE_INSENSITIVE_ORDER);
+            case "nameDesc" -> Comparator.comparing((Case c) -> c.getProduct().getProductName(), String.CASE_INSENSITIVE_ORDER).reversed();
+            default -> null;
+        };
     }
 
     public List<Brand> getAllBrands(List<Case> cases) {
