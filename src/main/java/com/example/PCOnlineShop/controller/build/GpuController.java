@@ -18,6 +18,8 @@ import java.util.List;
 @RequestMapping("/build")
 public class GpuController {
     private static final String GPU_VIEW = "build/build-gpu";
+    private static final String REDIRECT_GPU = "redirect:/build/gpu";
+    private static final String REDIRECT_CASE = "redirect:/build/case";
 
     private final BuildService buildService;
     private final GpuService gpuService;
@@ -31,8 +33,7 @@ public class GpuController {
     @GetMapping("/gpu")
     public String showGpuPage(@ModelAttribute("buildItems") BuildItemDto buildItem, Model model) {
         List<GPU> gpus = buildService.getCompatibleGPUs(buildItem);
-        model.addAttribute("gpus", gpus);
-        model.addAttribute("allBrands", gpuService.getAllBrands(gpus));
+        addGpuModel(model, gpus, gpus, null, null);
         return GPU_VIEW;
     }
 
@@ -42,13 +43,10 @@ public class GpuController {
                              @RequestParam(required = false) String sortBy,
                              @ModelAttribute("buildItems") BuildItemDto buildItem,
                              Model model) {
-        List<GPU> gpus = buildService.getCompatibleGPUs(buildItem);
-        gpus = gpuService.filterGpus(gpus, brands, sortBy);
+        List<GPU> compatibleGpus = buildService.getCompatibleGPUs(buildItem);
+        List<GPU> filteredGpus = gpuService.filterGpus(compatibleGpus, brands, sortBy);
 
-        model.addAttribute("gpus", gpus);
-        model.addAttribute("allBrands", gpuService.getAllBrands(buildService.getCompatibleGPUs(buildItem)));
-        model.addAttribute("selectedBrands", brands);
-        model.addAttribute("selectedSort", sortBy);
+        addGpuModel(model, filteredGpus, compatibleGpus, brands, sortBy);
         return GPU_VIEW;
     }
 
@@ -59,18 +57,33 @@ public class GpuController {
                             RedirectAttributes redirectAttributes) {
         // GPU is OPTIONAL - can proceed without it (using iGPU from CPU)
         // Only update if user selected a GPU
-        if (gpuId != null) {
-            return gpuService.findSelectableGpuByProductId(gpuId)
-                    .map(gpu -> {
-                        buildItem.setGpu(gpu);
-                        return "redirect:/build/case";
-                    })
-                    .orElseGet(() -> {
-                        redirectAttributes.addFlashAttribute("error", "Selected GPU is not available.");
-                        return "redirect:/build/gpu";
-                    });
+        if (gpuId == null) {
+            return REDIRECT_CASE;
         }
-        // Allow proceeding even if GPU is null
-        return "redirect:/build/case";
+
+        return buildService.findSelectableCompatibleGpuByProductId(gpuId, buildItem)
+                .map(gpu -> selectAndContinue(buildItem, gpu))
+                .orElseGet(() -> rejectSelection(redirectAttributes));
+    }
+
+    private void addGpuModel(Model model,
+                             List<GPU> gpus,
+                             List<GPU> brandSource,
+                             List<String> selectedBrands,
+                             String selectedSort) {
+        model.addAttribute("gpus", gpus);
+        model.addAttribute("allBrands", gpuService.getAllBrands(brandSource));
+        model.addAttribute("selectedBrands", selectedBrands);
+        model.addAttribute("selectedSort", selectedSort);
+    }
+
+    private String selectAndContinue(BuildItemDto buildItem, GPU gpu) {
+        buildItem.setGpu(gpu);
+        return REDIRECT_CASE;
+    }
+
+    private String rejectSelection(RedirectAttributes redirectAttributes) {
+        redirectAttributes.addFlashAttribute("error", "Selected GPU is not available or compatible.");
+        return REDIRECT_GPU;
     }
 }

@@ -9,9 +9,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 @RequiredArgsConstructor
 @Controller
@@ -19,6 +17,7 @@ import java.util.Optional;
 @SessionAttributes("buildItems")
 public class OtherController {
     private static final String OTHER_VIEW = "build/other";
+    private static final String REDIRECT_OTHER = "redirect:/build/other";
 
     private final BuildService buildService;
 
@@ -29,8 +28,7 @@ public class OtherController {
 
     @GetMapping("/other")
     public String showOtherPage(@ModelAttribute("buildItems") BuildItemDto buildItems, Model model) {
-        List<Product> others = buildService.getOtherProducts();
-        model.addAttribute("others", others != null ? others : new ArrayList<>());
+        addOtherProducts(model, buildService.getOtherProducts());
         return OTHER_VIEW;
     }
 
@@ -40,17 +38,26 @@ public class OtherController {
                               RedirectAttributes redirectAttributes) {
         if (otherId == null) {
             buildItems.setOther(null);
-            redirectAttributes.addFlashAttribute("message", "Please select a product before finishing the build.");
-            return "redirect:/build/other";
+            redirectAttributes.addFlashAttribute("error", "Please select a product before finishing the build.");
+            return REDIRECT_OTHER;
         }
 
-        Optional<Product> otherOpt = buildService.findOtherByProductId(otherId);
-        if (otherOpt.isEmpty()) {
-            redirectAttributes.addFlashAttribute("message", "Product not found.");
-            return "redirect:/build/other";
-        }
+        return buildService.findOtherByProductId(otherId)
+                .map(other -> selectAndStay(buildItems, other))
+                .orElseGet(() -> rejectSelection(redirectAttributes));
+    }
 
-        buildItems.setOther(otherOpt.get());
-        return "redirect:/build/other";
+    private void addOtherProducts(Model model, List<Product> others) {
+        model.addAttribute("others", others != null ? others : List.of());
+    }
+
+    private String selectAndStay(BuildItemDto buildItems, Product other) {
+        buildItems.setOther(other);
+        return REDIRECT_OTHER;
+    }
+
+    private String rejectSelection(RedirectAttributes redirectAttributes) {
+        redirectAttributes.addFlashAttribute("error", "Product not found.");
+        return REDIRECT_OTHER;
     }
 }

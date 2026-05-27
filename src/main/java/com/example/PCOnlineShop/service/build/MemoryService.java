@@ -8,7 +8,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.Comparator;
 import java.util.List;
-import java.util.Optional;
 
 @RequiredArgsConstructor
 @Service
@@ -25,10 +24,6 @@ public class MemoryService {
 
     public Memory updateMemory(Memory memory) {
         return memoryRepository.save(memory);
-    }
-
-    public Optional<Memory> findSelectableMemoryByProductId(int productId) {
-        return memoryRepository.findByIdWithImages(productId);
     }
 
     public void deleteMemory(int id) {

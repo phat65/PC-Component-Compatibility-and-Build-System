@@ -32,13 +32,17 @@ public interface MainboardRepository extends JpaRepository<Mainboard, Integer> {
            "LEFT JOIN FETCH p.images " +
            "LEFT JOIN FETCH p.brand " +
            "WHERE p.status = true " +
-           "AND p.lifecycleStatus = com.example.PCOnlineShop.model.product.ProductLifecycleStatus.SELLING")
+           "AND p.lifecycleStatus = com.example.PCOnlineShop.model.product.ProductLifecycleStatus.SELLING " +
+           "AND (p.inventoryQuantity IS NULL OR p.inventoryQuantity > 0)")
     List<Mainboard> findAllWithImages();
 
     @Query("SELECT m FROM Mainboard m " +
            "JOIN FETCH m.product p " +
            "LEFT JOIN FETCH p.images " +
            "LEFT JOIN FETCH p.brand " +
-           "WHERE m.productId = :productId")
+           "WHERE m.productId = :productId " +
+           "AND p.status = true " +
+           "AND p.lifecycleStatus = com.example.PCOnlineShop.model.product.ProductLifecycleStatus.SELLING " +
+           "AND (p.inventoryQuantity IS NULL OR p.inventoryQuantity > 0)")
     Optional<Mainboard> findByIdWithImages(@Param("productId") int productId);
 }

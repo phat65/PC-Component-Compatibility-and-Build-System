@@ -5,7 +5,7 @@ import com.example.PCOnlineShop.dto.order.CheckoutPageDTO;
 import com.example.PCOnlineShop.model.account.Account;
 import com.example.PCOnlineShop.model.order.Order;
 import com.example.PCOnlineShop.model.payment.Payment;
-import com.example.PCOnlineShop.repository.account.AccountRepository;
+import com.example.PCOnlineShop.service.account.AccountService;
 import com.example.PCOnlineShop.service.cart.CartService;
 import com.example.PCOnlineShop.service.order.OrderService;
 import com.example.PCOnlineShop.service.payment.PaymentService;
@@ -29,11 +29,11 @@ public class OrderController {
     private final OrderService orderService;
     private final CartService cartService;
     private final PaymentService paymentService;
-    private final AccountRepository accountRepository;
+    private final AccountService accountService;
 
     private Account getCurrentAccount(UserDetails userDetails) {
         if (userDetails == null) return null;
-        return accountRepository.findByPhoneNumber(userDetails.getUsername()).orElse(null);
+        return accountService.getByPhoneNumber(userDetails.getUsername());
     }
 
     private boolean isStaffOrAdmin() {
@@ -64,6 +64,8 @@ public class OrderController {
                                   @AuthenticationPrincipal UserDetails currentUserDetails,
                                   RedirectAttributes redirectAttributes) {
         Account currentAccount = getCurrentAccount(currentUserDetails);
+        if (currentAccount == null) return "redirect:/auth/login";
+
         boolean isAdmin = isStaffOrAdmin();
         model.addAttribute("isStaffOrAdmin", isAdmin);
 
@@ -123,6 +125,7 @@ public class OrderController {
                 model.addAttribute("account", currentAccount);
                 model.addAttribute("allAddresses", data.getAllAddresses());
                 model.addAttribute("defaultAddress", data.getDefaultAddress());
+                model.addAttribute("pageTitle", "Checkout");
                 model.addAttribute("postActionUrl", "/orders/checkout");
                 return "orders/checkout";
             } catch (Exception e) {
@@ -137,9 +140,12 @@ public class OrderController {
             cartService.clearSelectedItems(currentAccount);
             return "redirect:" + payosCheckoutUrl;
 
-        } catch (Exception e) {
+        } catch (IllegalStateException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
-            return (e instanceof IllegalStateException) ? "redirect:/cart" : "redirect:/orders/checkout";
+            return "redirect:/cart";
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Unable to create payment: " + e.getMessage());
+            return "redirect:/orders/checkout";
         }
     }
 }

@@ -134,7 +134,7 @@
         <div th:if="${pwdSuccess}" class="message success" th:text="${pwdSuccess}"></div>
         <div th:if="${pwdError}" class="message error" th:text="${pwdError}"></div>
 
-        <form th:action="@{/auth/profile/change-password}" method="post">
+        <form th:action="@{/profile/change-password}" method="post">
             <div class="form-group">
                 <label>Current Password:</label>
                 <input type="password" name="currentPassword"  required>

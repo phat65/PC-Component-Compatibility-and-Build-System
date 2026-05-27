@@ -7,6 +7,7 @@ import com.example.PCOnlineShop.model.payment.Payment;
 import com.example.PCOnlineShop.repository.payment.PaymentRepository;
 import com.example.PCOnlineShop.service.order.OrderService;
 import jakarta.persistence.EntityNotFoundException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
@@ -22,9 +23,19 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
 
 @Service
+@Slf4j
 public class PaymentService {
+
+    private static final String PAYMENT_PENDING = "PENDING";
+    private static final String PAYMENT_SUCCESS = "SUCCESS";
+    private static final String PAYOS_STATUS_PAID = "PAID";
+    private static final String PAYOS_SUCCESS_CODE = "00";
+    private static final String ORDER_PENDING_PAYMENT = "Pending Payment";
+    private static final String ORDER_READY_TO_SHIP = "Ready to Ship";
+    private static final String ORDER_PAYMENT_PAID = "PAID";
 
     private final String appBaseUrl;
     private final PayOS payOS;
@@ -46,13 +57,13 @@ public class PaymentService {
         Payment payment = new Payment();
         payment.setOrder(order);
         payment.setAmount(BigDecimal.valueOf(order.getFinalAmount()));
-        payment.setStatus("PENDING");
+        payment.setStatus(PAYMENT_PENDING);
         return paymentRepository.save(payment);
     }
 
     @Transactional
     public String createPayOSLink(Payment payment) throws Exception {
-        final long uniqueOrderCode = System.currentTimeMillis();
+        final long uniqueOrderCode = generateUniqueOrderCode();
         payment.setOrderCode(uniqueOrderCode);
         paymentRepository.save(payment);
 
@@ -90,20 +101,22 @@ public class PaymentService {
         Payment payment = paymentRepository.findByOrder_OrderId(orderId)
                 .orElseThrow(() -> new EntityNotFoundException("Payment info not found for order: " + orderId));
 
-        if (!"Pending Payment".equals(payment.getOrder().getStatus())) {
+        if (!ORDER_PENDING_PAYMENT.equals(payment.getOrder().getStatus())) {
             throw new IllegalStateException("Order is not in Pending Payment state.");
         }
 
         try {
             if (payment.getOrderCode() != null) {
                 PaymentLink currentLink = payOS.paymentRequests().get(payment.getOrderCode());
-                if ("PAID".equals(currentLink.getStatus())) {
-
+                if (PAYOS_STATUS_PAID.equals(currentLink.getStatus())) {
+                    markPaymentSuccess(payment, null);
                     throw new IllegalStateException("Payment has already been completed for this order.");
                 }
             }
         } catch (Exception e) {
-            System.err.println("Can't check out-date status: " + e.getMessage());
+            if (e instanceof IllegalStateException) {
+                throw e;
+            }
         }
 
         return createPayOSLink(payment);
@@ -118,15 +131,12 @@ public class PaymentService {
         Order order = payment.getOrder();
         String webhookType = webhookData.getCode();
 
-        if ("00".equals(webhookType)) {
-            payment.setStatus("SUCCESS");
-            payment.setGatewayPaymentId(webhookData.getPaymentLinkId());
+        if (PAYOS_SUCCESS_CODE.equals(webhookType)) {
+            markPaymentSuccess(payment, webhookData.getPaymentLinkId());
             payment.setRawPayload(webhookData.toString());
-            order.setPaymentStatus("PAID");
-            order.setStatus("Ready to Ship");
-            order.setPaidAt(LocalDateTime.now());
         } else {
-            if ("PENDING".equals(payment.getStatus())) {
+            payment.setRawPayload(webhookData.toString());
+            if (PAYMENT_PENDING.equals(payment.getStatus())) {
                 orderService.cancelOrderFromPaymentId(payment.getPaymentId());
             }
         }
@@ -138,37 +148,99 @@ public class PaymentService {
         return new PaymentInfoDTO(payment);
     }
 
-    public PaymentLink queryTransaction(long orderCode) throws Exception {
+    public PaymentLink queryTransaction(long orderCode) {
         try {
             return payOS.paymentRequests().get(orderCode);
         } catch (Exception e) {
+            log.warn("Failed to query PayOS transaction for orderCode {}", orderCode, e);
             return null;
         }
     }
 
+    @Transactional
     public boolean verifyPaymentStatus(long orderCode) throws Exception {
         PaymentLink transaction = queryTransaction(orderCode);
-        return transaction != null && "PAID".equals(transaction.getStatus());
+        if (transaction == null || !PAYOS_STATUS_PAID.equals(transaction.getStatus())) {
+            return false;
+        }
+
+        Payment payment = paymentRepository.findByOrderCode(orderCode)
+                .orElseThrow(() -> new EntityNotFoundException("No information for order with orderCode: " + orderCode));
+        markPaymentSuccess(payment, null);
+        return true;
     }
 
+    @Transactional
     public void processFailedPayment(long orderCode) {
         try {
             Payment payment = paymentRepository.findByOrderCode(orderCode)
                     .orElseThrow(() -> new EntityNotFoundException("Not found"));
+            PaymentLink transaction = queryTransaction(orderCode);
+            if (transaction != null && PAYOS_STATUS_PAID.equals(transaction.getStatus())) {
+                markPaymentSuccess(payment, null);
+                return;
+            }
             orderService.cancelOrderFromPaymentId(payment.getPaymentId());
         } catch (Exception e) {
+            log.warn("Failed to process failed payment for orderCode {}", orderCode, e);
         }
+    }
+
+    @Transactional
+    public void cancelExpiredPayment(long paymentId) {
+        Payment payment = paymentRepository.findById(paymentId)
+                .orElseThrow(() -> new EntityNotFoundException("No payment found: " + paymentId));
+
+        if (!PAYMENT_PENDING.equals(payment.getStatus())) {
+            return;
+        }
+
+        Long orderCode = payment.getOrderCode();
+        if (orderCode != null) {
+            PaymentLink transaction = queryTransaction(orderCode);
+            if (transaction != null && PAYOS_STATUS_PAID.equals(transaction.getStatus())) {
+                markPaymentSuccess(payment, null);
+                return;
+            }
+        }
+
+        orderService.cancelOrderFromPaymentId(paymentId);
     }
 
     public PaymentInfoDTO getPaymentInfoSafe(long orderId) {
         try {
             return getPaymentInfoByOrderId(orderId);
         } catch (Exception e) {
+            log.warn("Failed to get payment info for order {}", orderId, e);
             return null;
         }
     }
 
     private String buildCallbackUrl(String path) {
         return appBaseUrl.replaceAll("/+$", "") + path;
+    }
+
+    private long generateUniqueOrderCode() {
+        long orderCode;
+        do {
+            orderCode = System.currentTimeMillis() * 1000 + ThreadLocalRandom.current().nextInt(1000);
+        } while (paymentRepository.existsByOrderCode(orderCode));
+        return orderCode;
+    }
+
+    private void markPaymentSuccess(Payment payment, String gatewayPaymentId) {
+        if (PAYMENT_SUCCESS.equals(payment.getStatus())) {
+            return;
+        }
+
+        Order order = payment.getOrder();
+        payment.setStatus(PAYMENT_SUCCESS);
+        if (gatewayPaymentId != null) {
+            payment.setGatewayPaymentId(gatewayPaymentId);
+        }
+        order.setPaymentStatus(ORDER_PAYMENT_PAID);
+        order.setStatus(ORDER_READY_TO_SHIP);
+        order.setPaidAt(LocalDateTime.now());
+        paymentRepository.save(payment);
     }
 }

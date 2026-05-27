@@ -4,34 +4,38 @@ import com.example.PCOnlineShop.model.account.Account;
 import com.example.PCOnlineShop.repository.account.AccountRepository;
 import com.example.PCOnlineShop.service.mail.MailService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
-import java.util.HashMap;
+import java.security.SecureRandom;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Random;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 @RequiredArgsConstructor
 public class PasswordResetService {
 
+    private static final Duration CODE_TTL = Duration.ofMinutes(5);
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+
     private final AccountRepository accountRepository;
     private final PasswordEncoder passwordEncoder;
     private final MailService mailService;
 
-    private final Map<String, String> resetCodeMap = new HashMap<>();
+    private final Map<String, ResetCode> resetCodeMap = new ConcurrentHashMap<>();
 
-    @Async
     public void sendResetCode(String identifier) {
+        identifier = normalizeIdentifier(identifier);
         Optional<Account> optionalAccount = findByIdentifier(identifier);
         if (optionalAccount.isEmpty()) {
             throw new IllegalArgumentException("No account found with the provided information!");
         }
 
-        String code = String.format("%06d", new Random().nextInt(999999));
-        resetCodeMap.put(identifier, code);
+        String code = generateCode();
 
         Account acc = optionalAccount.get();
         String content =
@@ -40,14 +44,33 @@ public class PasswordResetService {
                         "This code will expire in 5 minutes.\n\n" +
                         "Best regards,\nPC Online Shop";
         mailService.sendEmail(acc.getEmail(), "Password reset verification code", content);
+        resetCodeMap.put(identifier, new ResetCode(code, expiresAt(), false));
     }
 
     public boolean verifyResetCode(String identifier, String code) {
-        String stored = resetCodeMap.get(identifier);
-        return stored != null && stored.equals(code);
+        identifier = normalizeIdentifier(identifier);
+        if (!StringUtils.hasText(code)) {
+            return false;
+        }
+
+        ResetCode stored = resetCodeMap.get(identifier);
+        if (stored == null || stored.isExpired() || !stored.code().equals(code.trim())) {
+            resetCodeMap.remove(identifier);
+            return false;
+        }
+
+        resetCodeMap.put(identifier, stored.markVerified());
+        return true;
     }
 
     public void resetPassword(String identifier, String newPassword) {
+        identifier = normalizeIdentifier(identifier);
+        ResetCode resetCode = resetCodeMap.get(identifier);
+        if (resetCode == null || resetCode.isExpired() || !resetCode.verified()) {
+            resetCodeMap.remove(identifier);
+            throw new IllegalArgumentException("Please verify your reset code before changing password!");
+        }
+
         Optional<Account> optionalAccount = findByIdentifier(identifier);
         if (optionalAccount.isEmpty()) {
             throw new IllegalArgumentException("Account not found!");
@@ -65,5 +88,30 @@ public class PasswordResetService {
             optionalAccount = accountRepository.findByPhoneNumber(identifier);
         }
         return optionalAccount;
+    }
+
+    private String normalizeIdentifier(String identifier) {
+        if (!StringUtils.hasText(identifier)) {
+            throw new IllegalArgumentException("Email or phone number is required!");
+        }
+        return identifier.trim();
+    }
+
+    private String generateCode() {
+        return String.format("%06d", SECURE_RANDOM.nextInt(1_000_000));
+    }
+
+    private Instant expiresAt() {
+        return Instant.now().plus(CODE_TTL);
+    }
+
+    private record ResetCode(String code, Instant expiresAt, boolean verified) {
+        boolean isExpired() {
+            return Instant.now().isAfter(expiresAt);
+        }
+
+        ResetCode markVerified() {
+            return new ResetCode(code, expiresAt, true);
+        }
     }
 }

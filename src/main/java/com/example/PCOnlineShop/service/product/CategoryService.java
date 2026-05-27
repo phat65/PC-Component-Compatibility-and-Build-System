@@ -5,6 +5,7 @@ import com.example.PCOnlineShop.repository.product.CategoryRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class CategoryService {
@@ -14,12 +15,34 @@ public class CategoryService {
         this.categoryRepository = categoryRepository;
     }
 
-    public void saveCategory(Category category) {
-
-        categoryRepository.save(category);
+    public Category saveCategory(Category category) {
+        return categoryRepository.save(category);
     }
+
     public List<Category> getAllCategories() {
         return categoryRepository.findAll();
     }
 
+    public List<Category> getMainCategories() {
+        return categoryRepository.findMainCategories();
+    }
+
+    public Optional<Category> findById(Integer id) {
+        if (id == null) {
+            return Optional.empty();
+        }
+        return categoryRepository.findById(id);
+    }
+
+    public Category getRequiredCategory(Integer id) {
+        return findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Category not found"));
+    }
+
+    public Optional<Category> findByNameIgnoreCase(String categoryName) {
+        if (categoryName == null || categoryName.trim().isEmpty()) {
+            return Optional.empty();
+        }
+        return categoryRepository.findByCategoryNameIgnoreCase(categoryName.trim());
+    }
 }

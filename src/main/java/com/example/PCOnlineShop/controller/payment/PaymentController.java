@@ -1,7 +1,7 @@
 package com.example.PCOnlineShop.controller.payment;
 
 import com.example.PCOnlineShop.model.account.Account;
-import com.example.PCOnlineShop.repository.account.AccountRepository;
+import com.example.PCOnlineShop.service.account.AccountService;
 import com.example.PCOnlineShop.service.order.OrderService;
 import com.example.PCOnlineShop.service.payment.PaymentService;
 import jakarta.persistence.EntityNotFoundException;
@@ -24,7 +24,7 @@ public class PaymentController {
 
     private final PaymentService paymentService;
     private final OrderService orderService;
-    private final AccountRepository accountRepository;
+    private final AccountService accountService;
 
     @GetMapping("/callback/success")
     public String handleSuccessCallback(@RequestParam("orderCode") long orderCode,
@@ -46,10 +46,14 @@ public class PaymentController {
     @GetMapping("/callback/failed")
     public String handleFailedCallback(@RequestParam(value = "orderCode", required = false) Long orderCode,
                                        RedirectAttributes redirectAttributes) {
-        if (orderCode != null) {
-            paymentService.processFailedPayment(orderCode);
+        try {
+            if (orderCode != null) {
+                paymentService.processFailedPayment(orderCode);
+            }
+            redirectAttributes.addFlashAttribute("error", "Payment Cancelled.");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Unable to update cancelled payment.");
         }
-        redirectAttributes.addFlashAttribute("error", "Payment Cancelled.");
         return "redirect:/orders/list";
     }
 
@@ -61,6 +65,9 @@ public class PaymentController {
             validateOrderAccess(orderId, currentUserDetails);
             String checkoutUrl = paymentService.getOrRegeneratePaymentUrl(orderId);
             return "redirect:" + checkoutUrl;
+        } catch (SecurityException | EntityNotFoundException e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+            return "redirect:/orders/list";
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "Unable to retrieve payment link: " + e.getMessage());
             return "redirect:/orders/detail/" + orderId;
@@ -82,6 +89,10 @@ public class PaymentController {
     @ResponseBody
     public ResponseEntity<?> getPaymentInfo(@PathVariable long orderId,
                                             @AuthenticationPrincipal UserDetails currentUserDetails) {
+        if (currentUserDetails == null) {
+            return ResponseEntity.status(401).body(Map.of("error", "Please login again."));
+        }
+
         try {
             validateOrderAccess(orderId, currentUserDetails);
             return ResponseEntity.ok(paymentService.getPaymentInfoByOrderId(orderId));
@@ -102,11 +113,15 @@ public class PaymentController {
         if (userDetails == null) {
             return null;
         }
-        return accountRepository.findByPhoneNumber(userDetails.getUsername()).orElse(null);
+        return accountService.getByPhoneNumber(userDetails.getUsername());
     }
 
     private boolean isStaffOrAdmin() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null) {
+            return false;
+        }
+
         return authentication.getAuthorities().stream()
                 .anyMatch(role -> role.getAuthority().equals("ROLE_STAFF") || role.getAuthority().equals("ROLE_ADMIN"));
     }

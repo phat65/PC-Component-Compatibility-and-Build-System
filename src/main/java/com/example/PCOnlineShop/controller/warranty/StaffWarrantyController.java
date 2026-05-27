@@ -18,26 +18,35 @@ import java.util.List;
 @RequestMapping("/staff/warranty")
 @RequiredArgsConstructor
 public class StaffWarrantyController {
+    private static final String WARRANTY_CHECK_VIEW = "warranty/check-warranty";
 
     private final OrderService orderService;
 
     @GetMapping("/check")
-    public String showCheckPage(Model model, @RequestParam(required = false) String phone) {
-        if (StringUtils.hasText(phone)) {
-            model.addAttribute("phone", phone);
+    public String showCheckPage(@RequestParam(required = false) String phone, Model model) {
+        String normalizedPhone = normalize(phone);
+        if (StringUtils.hasText(normalizedPhone)) {
+            model.addAttribute("phone", normalizedPhone);
         }
-        return "warranty/check-warranty";
+
+        return WARRANTY_CHECK_VIEW;
     }
 
     @PostMapping("/search")
-    public String searchWarrantyByPhone(
-            @RequestParam String phone,
-            @RequestParam(required = false) Integer orderId,
-            Model model) {
+    public String searchWarrantyByPhone(@RequestParam String phone,
+                                        @RequestParam(required = false) Integer orderId,
+                                        Model model) {
+        String normalizedPhone = normalize(phone);
+        model.addAttribute("phone", normalizedPhone);
 
-        List<Order> orders = orderService.getOrdersByPhoneNumberForWarranty(phone);
+        if (!StringUtils.hasText(normalizedPhone)) {
+            model.addAttribute("error", "Phone number is required.");
+            model.addAttribute("orders", List.of());
+            return WARRANTY_CHECK_VIEW;
+        }
+
+        List<Order> orders = orderService.getOrdersByPhoneNumberForWarranty(normalizedPhone);
         model.addAttribute("orders", orders);
-        model.addAttribute("phone", phone);
 
         if (orderId != null) {
             List<WarrantyDetailDTO> warrantyDetails = orderService.getWarrantyDetailsByOrderId(orderId);
@@ -45,6 +54,10 @@ public class StaffWarrantyController {
             model.addAttribute("selectedOrderId", orderId);
         }
 
-        return "warranty/check-warranty";
+        return WARRANTY_CHECK_VIEW;
+    }
+
+    private String normalize(String value) {
+        return value == null ? null : value.trim();
     }
 }

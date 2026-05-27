@@ -94,6 +94,7 @@ public class OrderService {
             detail.setPrice(product.getPrice());
             orderDetails.add(detail);
             calculatedFinalAmount += (product.getPrice() * quantityToBuy);
+            reserveInventory(product, quantityToBuy);
         }
 
         order.setFinalAmount(calculatedFinalAmount);
@@ -152,11 +153,23 @@ public class OrderService {
         List<OrderDetail> details = orderDetailRepository.findByOrder(order);
         for (OrderDetail detail : details) {
             Product product = detail.getProduct();
-            if (product != null) {
+            if (product != null && product.getInventoryQuantity() != null) {
                 product.setInventoryQuantity(product.getInventoryQuantity() + detail.getQuantity());
                 productRepository.save(product);
             }
         }
+    }
+
+    private void reserveInventory(Product product, int quantity) {
+        Integer inventoryQuantity = product.getInventoryQuantity();
+        if (inventoryQuantity == null) {
+            return;
+        }
+        if (quantity > inventoryQuantity) {
+            throw new IllegalStateException("Not enough inventory for product: " + product.getProductName());
+        }
+        product.setInventoryQuantity(inventoryQuantity - quantity);
+        productRepository.save(product);
     }
 
     @Transactional

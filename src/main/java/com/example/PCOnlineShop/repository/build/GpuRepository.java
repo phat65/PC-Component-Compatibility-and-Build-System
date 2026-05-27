@@ -32,13 +32,17 @@ public interface GpuRepository extends JpaRepository<GPU, Integer> {
            "LEFT JOIN FETCH p.images " +
            "LEFT JOIN FETCH p.brand " +
            "WHERE p.status = true " +
-           "AND p.lifecycleStatus = com.example.PCOnlineShop.model.product.ProductLifecycleStatus.SELLING")
+           "AND p.lifecycleStatus = com.example.PCOnlineShop.model.product.ProductLifecycleStatus.SELLING " +
+           "AND (p.inventoryQuantity IS NULL OR p.inventoryQuantity > 0)")
     List<GPU> findAllWithImages();
 
     @Query("SELECT DISTINCT g FROM GPU g " +
            "LEFT JOIN FETCH g.product p " +
            "LEFT JOIN FETCH p.images " +
            "LEFT JOIN FETCH p.brand " +
-           "WHERE g.productId = :productId")
+           "WHERE g.productId = :productId " +
+           "AND p.status = true " +
+           "AND p.lifecycleStatus = com.example.PCOnlineShop.model.product.ProductLifecycleStatus.SELLING " +
+           "AND (p.inventoryQuantity IS NULL OR p.inventoryQuantity > 0)")
     Optional<GPU> findByIdWithImages(@Param("productId") int productId);
 }

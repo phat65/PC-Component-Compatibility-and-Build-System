@@ -18,6 +18,8 @@ import java.util.List;
 @RequestMapping("/build")
 public class CpuController {
     private static final String CPU_VIEW = "build/build-cpu";
+    private static final String REDIRECT_CPU = "redirect:/build/cpu";
+    private static final String REDIRECT_GPU = "redirect:/build/gpu";
 
     private final CpuService cpuService;
     private final BuildService buildService;
@@ -31,8 +33,7 @@ public class CpuController {
     @GetMapping("/cpu")
     public String showCpuPage(@ModelAttribute("buildItems") BuildItemDto buildItem, Model model) {
         List<CPU> cpus = buildService.getCompatibleCpus(buildItem);
-        model.addAttribute("cpus", cpus);
-        model.addAttribute("allBrands", cpuService.getAllBrands(cpus));
+        addCpuModel(model, cpus, cpus, null, null);
         return CPU_VIEW;
     }
 
@@ -42,41 +43,53 @@ public class CpuController {
                              @RequestParam(required = false) String sortBy,
                              @ModelAttribute("buildItems") BuildItemDto buildItem,
                              Model model) {
-        List<CPU> cpus = buildService.getCompatibleCpus(buildItem);
-        cpus = cpuService.filterCpus(cpus, brands, sortBy);
+        List<CPU> compatibleCpus = buildService.getCompatibleCpus(buildItem);
+        List<CPU> filteredCpus = cpuService.filterCpus(compatibleCpus, brands, sortBy);
 
-        model.addAttribute("cpus", cpus);
-        model.addAttribute("allBrands", cpuService.getAllBrands(buildService.getCompatibleCpus(buildItem)));
-        model.addAttribute("selectedBrands", brands);
-        model.addAttribute("selectedSort", sortBy);
+        addCpuModel(model, filteredCpus, compatibleCpus, brands, sortBy);
         return CPU_VIEW;
     }
 
     // Chọn CPU
     // Chọn CPU sẽ lưu vào buildItem và chuyển sang bước chọn linh kiện tiếp theo
     @PostMapping("/selectCpu")
-    public String selectCpu(@RequestParam(required = false) Integer cpuId,
+    public String selectCpu(@RequestParam(value = "cpuId", required = false) Integer cpuId,
                             @ModelAttribute("buildItems") BuildItemDto buildItem,
                             RedirectAttributes redirectAttributes) {
         // CPU is REQUIRED - must select one
         if (cpuId == null && buildItem.getCpu() == null) {
             redirectAttributes.addFlashAttribute("error", "Please select a CPU to continue.");
-            return "redirect:/build/cpu";
+            return REDIRECT_CPU;
         }
 
         // Only update if user selected a new CPU
-        if (cpuId != null) {
-            return cpuService.findSelectableCpuByProductId(cpuId)
-                    .map(cpu -> {
-                        buildItem.setCpu(cpu);
-                        return "redirect:/build/gpu";
-                    })
-                    .orElseGet(() -> {
-                        redirectAttributes.addFlashAttribute("error", "Selected CPU is not available.");
-                        return "redirect:/build/cpu";
-                    });
+        if (cpuId == null) {
+            return REDIRECT_GPU;
         }
-        // If cpuId is null but buildItem.cpu exists, keep it
-        return "redirect:/build/gpu";
+
+        return buildService.findSelectableCompatibleCpuByProductId(cpuId, buildItem)
+                .map(cpu -> selectAndContinue(buildItem, cpu))
+                .orElseGet(() -> rejectSelection(redirectAttributes));
+    }
+
+    private void addCpuModel(Model model,
+                             List<CPU> cpus,
+                             List<CPU> brandSource,
+                             List<String> selectedBrands,
+                             String selectedSort) {
+        model.addAttribute("cpus", cpus);
+        model.addAttribute("allBrands", cpuService.getAllBrands(brandSource));
+        model.addAttribute("selectedBrands", selectedBrands);
+        model.addAttribute("selectedSort", selectedSort);
+    }
+
+    private String selectAndContinue(BuildItemDto buildItem, CPU cpu) {
+        buildItem.setCpu(cpu);
+        return REDIRECT_GPU;
+    }
+
+    private String rejectSelection(RedirectAttributes redirectAttributes) {
+        redirectAttributes.addFlashAttribute("error", "Selected CPU is not available or compatible.");
+        return REDIRECT_CPU;
     }
 }

@@ -4,11 +4,13 @@ import java.util.Optional;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import com.example.PCOnlineShop.constant.RoleName;
 import com.example.PCOnlineShop.model.account.Account;
 import com.example.PCOnlineShop.repository.account.AccountRepository;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -28,6 +30,25 @@ public class AccountService {
 
     public Account saveCustomer(Account account) {
         return saveAccount(account, RoleName.Customer);
+    }
+
+    @Transactional
+    public Account updateCustomerProfile(String currentPhoneNumber, Account updatedAccount) {
+        Account existing = accountRepository.findByPhoneNumber(currentPhoneNumber)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy tài khoản!"));
+
+        String firstname = normalize(updatedAccount.getFirstname());
+        String lastname = normalize(updatedAccount.getLastname());
+
+        if (!StringUtils.hasText(firstname) || !StringUtils.hasText(lastname)) {
+            throw new IllegalArgumentException("Họ và tên không được để trống!");
+        }
+
+        existing.setFirstname(firstname);
+        existing.setLastname(lastname);
+        existing.setGender(updatedAccount.getGender());
+
+        return accountRepository.save(existing);
     }
 
     public void updatePassword(String email, String newPassword) {
@@ -84,5 +105,9 @@ public class AccountService {
         account.setPassword(passwordEncoder.encode(newPassword));
         accountRepository.save(account);
         return true;
+    }
+
+    private String normalize(String value) {
+        return value == null ? null : value.trim();
     }
 }

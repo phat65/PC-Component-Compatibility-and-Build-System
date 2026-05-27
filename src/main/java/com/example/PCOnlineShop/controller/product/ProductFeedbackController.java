@@ -1,7 +1,7 @@
 package com.example.PCOnlineShop.controller.product;
 
 import com.example.PCOnlineShop.model.account.Account;
-import com.example.PCOnlineShop.repository.account.AccountRepository;
+import com.example.PCOnlineShop.service.account.AccountService;
 import com.example.PCOnlineShop.service.feedback.FeedbackService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
@@ -16,7 +16,7 @@ import java.security.Principal;
 public class ProductFeedbackController {
 
     private final FeedbackService feedbackService;
-    private final AccountRepository accountRepository;
+    private final AccountService accountService;
 
     /**  Customer gửi feedback ở trang chi tiết sản phẩm */
     @PostMapping("/{id}")
@@ -35,8 +35,7 @@ public class ProductFeedbackController {
         }
 
         // Lấy account hiện tại
-        String phoneNumber = principal.getName();
-        Account account = accountRepository.findByPhoneNumber(phoneNumber).orElse(null);
+        Account account = accountService.getByPhoneNumber(principal.getName());
 
         if (account == null) {
             ra.addFlashAttribute("feedback_error", "Không tìm thấy tài khoản hợp lệ.");
@@ -54,7 +53,7 @@ public class ProductFeedbackController {
         // Gửi feedback
         try {
             feedbackService.createFeedback(id, accountId, rating, comment);
-            ra.addFlashAttribute("feedback_success", "Gửi đánh giá thành công! Cảm ơn bạn đã phản hồi ❤️");
+            ra.addFlashAttribute("feedback_success", "Feedback submitted. It will be shown after staff approval.");
         } catch (IllegalArgumentException e) {
             ra.addFlashAttribute("feedback_error", e.getMessage());
         }

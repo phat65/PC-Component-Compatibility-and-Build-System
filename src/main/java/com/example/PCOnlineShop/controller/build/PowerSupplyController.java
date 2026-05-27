@@ -18,6 +18,8 @@ import java.util.List;
 @RequestMapping("/build")
 public class PowerSupplyController {
     private static final String PSU_VIEW = "build/psu";
+    private static final String REDIRECT_PSU = "redirect:/build/psu";
+    private static final String REDIRECT_OTHER = "redirect:/build/other";
 
     private final PowerSupplyService powerSupplyService;
     private final BuildService buildService;
@@ -30,8 +32,7 @@ public class PowerSupplyController {
     @GetMapping("/psu")
     public String showPsuPage(@ModelAttribute("buildItems") BuildItemDto buildItem, Model model) {
         List<PowerSupply> psus = buildService.getCompatiblePowerSupplies(buildItem);
-        model.addAttribute("psus", psus);
-        model.addAttribute("allBrands", powerSupplyService.getAllBrands(psus));
+        addPowerSupplyModel(model, psus, psus, null, null);
         return PSU_VIEW;
     }
 
@@ -40,13 +41,11 @@ public class PowerSupplyController {
                                       @RequestParam(required = false) String sortBy,
                                       @ModelAttribute("buildItems") BuildItemDto buildItem,
                                       Model model) {
-        List<PowerSupply> powerSupplies = buildService.getCompatiblePowerSupplies(buildItem);
-        powerSupplies = powerSupplyService.filterPowerSupplies(powerSupplies, brands, sortBy);
+        List<PowerSupply> compatiblePowerSupplies = buildService.getCompatiblePowerSupplies(buildItem);
+        List<PowerSupply> filteredPowerSupplies = powerSupplyService.filterPowerSupplies(
+                compatiblePowerSupplies, brands, sortBy);
 
-        model.addAttribute("psus", powerSupplies);
-        model.addAttribute("allBrands", powerSupplyService.getAllBrands(buildService.getCompatiblePowerSupplies(buildItem)));
-        model.addAttribute("selectedBrands", brands);
-        model.addAttribute("selectedSort", sortBy);
+        addPowerSupplyModel(model, filteredPowerSupplies, compatiblePowerSupplies, brands, sortBy);
         return PSU_VIEW;
     }
 
@@ -55,18 +54,33 @@ public class PowerSupplyController {
                             @ModelAttribute("buildItems") BuildItemDto buildItem,
                             RedirectAttributes redirectAttributes) {
         // Only update if user selected new PSU
-        if (psuId != null) {
-            return powerSupplyService.findSelectablePowerSupplyByProductId(psuId)
-                    .map(psu -> {
-                        buildItem.setPowerSupply(psu);
-                        return "redirect:/build/other";
-                    })
-                    .orElseGet(() -> {
-                        redirectAttributes.addFlashAttribute("error", "Selected PSU is not available.");
-                        return "redirect:/build/psu";
-                    });
+        if (psuId == null) {
+            return REDIRECT_OTHER;
         }
-        // Stay on PSU page after selection
-        return "redirect:/build/other";
+
+        return buildService.findSelectableCompatiblePowerSupplyByProductId(psuId, buildItem)
+                .map(psu -> selectAndContinue(buildItem, psu))
+                .orElseGet(() -> rejectSelection(redirectAttributes));
+    }
+
+    private void addPowerSupplyModel(Model model,
+                                     List<PowerSupply> powerSupplies,
+                                     List<PowerSupply> brandSource,
+                                     List<String> selectedBrands,
+                                     String selectedSort) {
+        model.addAttribute("psus", powerSupplies);
+        model.addAttribute("allBrands", powerSupplyService.getAllBrands(brandSource));
+        model.addAttribute("selectedBrands", selectedBrands);
+        model.addAttribute("selectedSort", selectedSort);
+    }
+
+    private String selectAndContinue(BuildItemDto buildItem, PowerSupply powerSupply) {
+        buildItem.setPowerSupply(powerSupply);
+        return REDIRECT_OTHER;
+    }
+
+    private String rejectSelection(RedirectAttributes redirectAttributes) {
+        redirectAttributes.addFlashAttribute("error", "Selected PSU is not available or compatible.");
+        return REDIRECT_PSU;
     }
 }

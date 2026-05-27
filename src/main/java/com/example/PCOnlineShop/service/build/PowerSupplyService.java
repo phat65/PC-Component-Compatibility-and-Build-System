@@ -8,7 +8,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.Comparator;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -25,10 +24,6 @@ public class PowerSupplyService {
 
     public PowerSupply updatePowerSupply(PowerSupply powerSupply) {
         return powerSupplyRepository.save(powerSupply);
-    }
-
-    public Optional<PowerSupply> findSelectablePowerSupplyByProductId(int productId) {
-        return powerSupplyRepository.findByIdWithImages(productId);
     }
 
     public void deletePowerSupply(int id) {

@@ -18,6 +18,8 @@ import java.util.List;
 @RequestMapping("/build")
 public class StorageController {
     private static final String STORAGE_VIEW = "build/storage";
+    private static final String REDIRECT_STORAGE = "redirect:/build/storage";
+    private static final String REDIRECT_PSU = "redirect:/build/psu";
 
     private final StorageService storageService;
     private final BuildService buildService;
@@ -30,8 +32,7 @@ public class StorageController {
     @GetMapping("/storage")
     public String showStoragePage(@ModelAttribute("buildItems") BuildItemDto buildItem, Model model) {
         List<Storage> storages = buildService.getCompatibleStorage(buildItem);
-        model.addAttribute("storages", storages);
-        model.addAttribute("allBrands", storageService.getAllBrands(storages));
+        addStorageModel(model, storages, storages, null, null);
         return STORAGE_VIEW;
     }
 
@@ -40,13 +41,10 @@ public class StorageController {
                                  @RequestParam(required = false) String sortBy,
                                  @ModelAttribute("buildItems") BuildItemDto buildItem,
                                  Model model) {
-        List<Storage> storages = buildService.getCompatibleStorage(buildItem);
-        storages = storageService.filterStorages(storages, brands, sortBy);
+        List<Storage> compatibleStorages = buildService.getCompatibleStorage(buildItem);
+        List<Storage> filteredStorages = storageService.filterStorages(compatibleStorages, brands, sortBy);
 
-        model.addAttribute("storages", storages);
-        model.addAttribute("allBrands", storageService.getAllBrands(buildService.getCompatibleStorage(buildItem)));
-        model.addAttribute("selectedBrands", brands);
-        model.addAttribute("selectedSort", sortBy);
+        addStorageModel(model, filteredStorages, compatibleStorages, brands, sortBy);
         return STORAGE_VIEW;
     }
 
@@ -57,22 +55,37 @@ public class StorageController {
         // Storage is REQUIRED - must select one
         if (storageId == null && buildItem.getStorage() == null) {
             redirectAttributes.addFlashAttribute("error", "Please select storage to continue.");
-            return "redirect:/build/storage";
+            return REDIRECT_STORAGE;
         }
 
         // Only update if user selected new storage
-        if (storageId != null) {
-            return storageService.findSelectableStorageByProductId(storageId)
-                    .map(storage -> {
-                        buildItem.setStorage(storage);
-                        return "redirect:/build/psu";
-                    })
-                    .orElseGet(() -> {
-                        redirectAttributes.addFlashAttribute("error", "Selected storage is not available.");
-                        return "redirect:/build/storage";
-                    });
+        if (storageId == null) {
+            return REDIRECT_PSU;
         }
-        // If storageId is null but buildItem.storage exists, keep it
-        return "redirect:/build/psu";
+
+        return buildService.findSelectableCompatibleStorageByProductId(storageId, buildItem)
+                .map(storage -> selectAndContinue(buildItem, storage))
+                .orElseGet(() -> rejectSelection(redirectAttributes));
+    }
+
+    private void addStorageModel(Model model,
+                                 List<Storage> storages,
+                                 List<Storage> brandSource,
+                                 List<String> selectedBrands,
+                                 String selectedSort) {
+        model.addAttribute("storages", storages);
+        model.addAttribute("allBrands", storageService.getAllBrands(brandSource));
+        model.addAttribute("selectedBrands", selectedBrands);
+        model.addAttribute("selectedSort", selectedSort);
+    }
+
+    private String selectAndContinue(BuildItemDto buildItem, Storage storage) {
+        buildItem.setStorage(storage);
+        return REDIRECT_PSU;
+    }
+
+    private String rejectSelection(RedirectAttributes redirectAttributes) {
+        redirectAttributes.addFlashAttribute("error", "Selected storage is not available or compatible.");
+        return REDIRECT_STORAGE;
     }
 }

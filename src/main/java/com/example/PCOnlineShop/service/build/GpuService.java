@@ -8,7 +8,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.Comparator;
 import java.util.List;
-import java.util.Optional;
 
 @RequiredArgsConstructor
 @Service
@@ -25,10 +24,6 @@ public class GpuService {
 
     public GPU updateGpu(GPU gpu) {
         return gpuRepository.save(gpu);
-    }
-
-    public Optional<GPU> findSelectableGpuByProductId(int productId) {
-        return gpuRepository.findByIdWithImages(productId);
     }
 
     public void deleteGpu(int id) {

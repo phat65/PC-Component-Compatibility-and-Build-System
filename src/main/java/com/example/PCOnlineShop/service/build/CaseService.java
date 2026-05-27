@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Comparator;
 import java.util.List;
-import java.util.Optional;
+import java.util.Objects;
 
 @RequiredArgsConstructor
 @Service
@@ -27,18 +27,20 @@ public class CaseService {
         return caseRepository.save(pcCase);
     }
 
-    public Optional<Case> findSelectableCaseByProductId(int productId) {
-        return caseRepository.findByIdWithImages(productId);
-    }
-
     public void deleteCase(int id) {
         caseRepository.deleteById(id);
     }
 
     public List<Case> filterCases(List<Case> cases, List<String> brands, String sortBy) {
+        if (cases == null || cases.isEmpty()) {
+            return List.of();
+        }
+
         if (brands != null && !brands.isEmpty()) {
             cases = cases.stream()
-                    .filter(c -> brands.contains(c.getProduct().getBrand().getName()))
+                    .filter(c -> c.getProduct() != null
+                            && c.getProduct().getBrand() != null
+                            && brands.contains(c.getProduct().getBrand().getName()))
                     .toList();
         }
 
@@ -62,8 +64,15 @@ public class CaseService {
     }
 
     public List<Brand> getAllBrands(List<Case> cases) {
+        if (cases == null || cases.isEmpty()) {
+            return List.of();
+        }
+
         return cases.stream()
-                .map(c -> c.getProduct().getBrand())
+                .map(Case::getProduct)
+                .filter(Objects::nonNull)
+                .map(product -> product.getBrand())
+                .filter(Objects::nonNull)
                 .distinct()
                 .toList();
     }

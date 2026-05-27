@@ -55,7 +55,7 @@ public class SecurityConfig {
                 )
                 .addFilterAfter(csrfCookieFilter(), CsrfFilter.class)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/products/**").permitAll()
+                        .requestMatchers("/products/**", "/product/detail/**", "/category/**").permitAll()
                         .requestMatchers("/home").not().hasAnyRole("ADMIN", "STAFF")
                         .requestMatchers("/", "/auth/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/payment/callback/**").permitAll()
@@ -64,16 +64,21 @@ public class SecurityConfig {
                         .requestMatchers("/assets/**", "/css/**", "/js/**", "/image/**", "/images/**", "/static/**",
                                 "/webfonts/**", "/uploads/**", "/error").permitAll()
                         .requestMatchers("/blog/**", "/chat/**").permitAll()
+                        .requestMatchers("/dashboard/admin").hasRole("ADMIN")
+                        .requestMatchers("/dashboard/staff").hasAnyRole("STAFF", "ADMIN")
                         .requestMatchers("/staff/list/**", "/staff/add/**", "/staff/edit/**", "/staff/view/**",
                                 "/staff/delete/**").hasRole("ADMIN")
+                        .requestMatchers("/admin/brand/**").hasAnyRole("ADMIN", "STAFF")
                         .requestMatchers("/staff/products/**", "/staff/warranty/**", "/staff/shipping/**")
                                 .hasAnyRole("STAFF", "ADMIN")
+                        .requestMatchers("/orders/checkout").hasRole("CUSTOMER")
                         .requestMatchers("/orders/list", "/orders/detail/**", "/payment/info/**", "/payment/continue/**")
                                 .hasAnyRole("CUSTOMER", "STAFF", "ADMIN")
                         .requestMatchers("/cart/**", "/checkout/**").hasRole("CUSTOMER")
                         .requestMatchers("/profile/**").hasAnyRole("CUSTOMER", "STAFF")
                         .requestMatchers("/orders/update-all-status").hasAnyRole("STAFF", "ADMIN")
-                        .requestMatchers("/customer/list/**", "/customer/add/**", "/customer/view/**")
+                        .requestMatchers("/customer/list/**", "/customer/add/**", "/customer/view/**",
+                                "/customer/edit/**", "/customer/delete/**")
                                 .hasAnyRole("ADMIN", "STAFF")
                         .requestMatchers("/staff/feedback/**").hasRole("STAFF")
                         .anyRequest().authenticated()

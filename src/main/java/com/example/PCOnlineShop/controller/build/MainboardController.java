@@ -18,6 +18,8 @@ import java.util.List;
 @RequestMapping("/build")
 public class MainboardController {
     private static final String MAINBOARD_VIEW = "build/mainboards";
+    private static final String REDIRECT_MAINBOARD = "redirect:/build/mainboard";
+    private static final String REDIRECT_CPU = "redirect:/build/cpu";
 
     private final MainboardService mainboardService;
     private final BuildService buildService;
@@ -31,8 +33,7 @@ public class MainboardController {
     @GetMapping("/mainboard")
     public String showMainboardPage(@ModelAttribute("buildItems") BuildItemDto buildItem, Model model) {
         List<Mainboard> mainboards = buildService.getCompatibleMainboards(buildItem);
-        model.addAttribute("mainboards", mainboards);
-        model.addAttribute("allBrands", mainboardService.getAllBrands(mainboards));
+        addMainboardModel(model, mainboards, mainboards, null, null);
         return MAINBOARD_VIEW;
     }
 
@@ -42,13 +43,10 @@ public class MainboardController {
                                    @RequestParam(required = false) String sortBy,
                                    @ModelAttribute("buildItems") BuildItemDto buildItem,
                                    Model model) {
-        List<Mainboard> mainboards = buildService.getCompatibleMainboards(buildItem);
-        mainboards = mainboardService.filterMainboards(mainboards, brands, sortBy);
+        List<Mainboard> compatibleMainboards = buildService.getCompatibleMainboards(buildItem);
+        List<Mainboard> filteredMainboards = mainboardService.filterMainboards(compatibleMainboards, brands, sortBy);
 
-        model.addAttribute("mainboards", mainboards);
-        model.addAttribute("allBrands", mainboardService.getAllBrands(buildService.getCompatibleMainboards(buildItem)));
-        model.addAttribute("selectedBrands", brands);
-        model.addAttribute("selectedSort", sortBy);
+        addMainboardModel(model, filteredMainboards, compatibleMainboards, brands, sortBy);
         return MAINBOARD_VIEW;
     }
 
@@ -56,7 +54,7 @@ public class MainboardController {
     @Deprecated(forRemoval = true)
     @GetMapping("/mainboard/{id}")
     public String redirectMainboardDetail(@PathVariable int id) {
-        return "redirect:/build/mainboard";
+        return REDIRECT_MAINBOARD;
     }
 
     //Chọn motherboard
@@ -67,23 +65,39 @@ public class MainboardController {
         // Mainboard is REQUIRED - must select one
         if (mainboardId == null && buildItem.getMainboard() == null) {
             redirectAttributes.addFlashAttribute("error", "Please select a mainboard to continue.");
-            return "redirect:/build/mainboard";
+            return REDIRECT_MAINBOARD;
         }
 
         // Only update if user selected a new mainboard
-        if (mainboardId != null) {
-            return mainboardService.findSelectableMainboardByProductId(mainboardId)
-                    .map(mainboard -> {
-                        buildItem.setMainboard(mainboard);
-                        return "redirect:/build/cpu";
-                    })
-                    .orElseGet(() -> {
-                        redirectAttributes.addFlashAttribute("error", "Selected mainboard is not available.");
-                        return "redirect:/build/mainboard";
-                    });
+        if (mainboardId == null) {
+            return REDIRECT_CPU;
         }
-        // If mainboardId is null but buildItem.mainboard exists, keep it
-        return "redirect:/build/cpu";
+
+        return buildService.findSelectableCompatibleMainboardByProductId(mainboardId, buildItem)
+                .map(mainboard -> selectAndContinue(buildItem, mainboard))
+                .orElseGet(() -> rejectSelection(redirectAttributes));
     }
+
+    private void addMainboardModel(Model model,
+                                   List<Mainboard> mainboards,
+                                   List<Mainboard> brandSource,
+                                   List<String> selectedBrands,
+                                   String selectedSort) {
+        model.addAttribute("mainboards", mainboards);
+        model.addAttribute("allBrands", mainboardService.getAllBrands(brandSource));
+        model.addAttribute("selectedBrands", selectedBrands);
+        model.addAttribute("selectedSort", selectedSort);
+    }
+
+    private String selectAndContinue(BuildItemDto buildItem, Mainboard mainboard) {
+        buildItem.setMainboard(mainboard);
+        return REDIRECT_CPU;
+    }
+
+    private String rejectSelection(RedirectAttributes redirectAttributes) {
+        redirectAttributes.addFlashAttribute("error", "Selected mainboard is not available or compatible.");
+        return REDIRECT_MAINBOARD;
+    }
+
     // Adding, editing, and deleting motherboards will be done by the administrator via the admin page.
 }

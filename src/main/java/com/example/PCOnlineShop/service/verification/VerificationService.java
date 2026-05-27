@@ -4,32 +4,40 @@ import com.example.PCOnlineShop.model.account.Account;
 import com.example.PCOnlineShop.repository.account.AccountRepository;
 import com.example.PCOnlineShop.service.mail.MailService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
-import java.util.HashMap;
+import java.security.SecureRandom;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Random;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 @RequiredArgsConstructor
 public class VerificationService {
 
+    private static final Duration CODE_TTL = Duration.ofMinutes(5);
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+
     private final AccountRepository accountRepository;
     private final MailService mailService;
 
-    private final Map<String, String> verificationCodeMap = new HashMap<>();
+    private final Map<String, VerificationCode> verificationCodeMap = new ConcurrentHashMap<>();
 
-    @Async
     public void sendVerifyCode(String email) {
+        if (!StringUtils.hasText(email)) {
+            throw new IllegalArgumentException("Email is required!");
+        }
+
+        email = email.trim();
         Optional<Account> optionalAccount = accountRepository.findByEmail(email);
         if (optionalAccount.isEmpty()) {
             throw new IllegalArgumentException("No account found with the provided email!");
         }
 
-        String code = String.format("%06d", new Random().nextInt(999999));
-        verificationCodeMap.put(email, code);
+        String code = generateCode();
 
         Account acc = optionalAccount.get();
         String content =
@@ -40,11 +48,18 @@ public class VerificationService {
                         "Best regards,\nPC Online Shop";
 
         mailService.sendEmail(acc.getEmail(), "PC Online Shop account verification", content);
+        verificationCodeMap.put(email, new VerificationCode(code, expiresAt()));
     }
 
     public void verifyAccount(String email, String code) {
-        String storedCode = verificationCodeMap.get(email);
-        if (storedCode == null || !storedCode.equals(code)) {
+        if (!StringUtils.hasText(email) || !StringUtils.hasText(code)) {
+            throw new IllegalArgumentException("The verification code is invalid or has expired!");
+        }
+
+        email = email.trim();
+        VerificationCode storedCode = verificationCodeMap.get(email);
+        if (storedCode == null || storedCode.isExpired() || !storedCode.code().equals(code.trim())) {
+            verificationCodeMap.remove(email);
             throw new IllegalArgumentException("The verification code is invalid or has expired!");
         }
 
@@ -57,5 +72,19 @@ public class VerificationService {
         acc.setEnabled(true);
         accountRepository.save(acc);
         verificationCodeMap.remove(email);
+    }
+
+    private String generateCode() {
+        return String.format("%06d", SECURE_RANDOM.nextInt(1_000_000));
+    }
+
+    private Instant expiresAt() {
+        return Instant.now().plus(CODE_TTL);
+    }
+
+    private record VerificationCode(String code, Instant expiresAt) {
+        boolean isExpired() {
+            return Instant.now().isAfter(expiresAt);
+        }
     }
 }

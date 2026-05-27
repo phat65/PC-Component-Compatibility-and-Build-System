@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Comparator;
 import java.util.List;
-import java.util.Optional;
+import java.util.Objects;
 
 @RequiredArgsConstructor
 @Service
@@ -27,18 +27,20 @@ public class CoolingService {
         return coolingRepository.save(cooling);
     }
 
-    public Optional<Cooling> findSelectableCoolingByProductId(int productId) {
-        return coolingRepository.findByIdWithImages(productId);
-    }
-
     public void deleteCooling(int id) {
         coolingRepository.deleteById(id);
     }
 
     public List<Cooling> filterCoolings(List<Cooling> coolings, List<String> brands, String sortBy) {
+        if (coolings == null || coolings.isEmpty()) {
+            return List.of();
+        }
+
         if (brands != null && !brands.isEmpty()) {
             coolings = coolings.stream()
-                    .filter(c -> brands.contains(c.getProduct().getBrand().getName()))
+                    .filter(c -> c.getProduct() != null
+                            && c.getProduct().getBrand() != null
+                            && brands.contains(c.getProduct().getBrand().getName()))
                     .toList();
         }
 
@@ -62,8 +64,15 @@ public class CoolingService {
     }
 
     public List<Brand> getAllBrands(List<Cooling> coolings) {
+        if (coolings == null || coolings.isEmpty()) {
+            return List.of();
+        }
+
         return coolings.stream()
-                .map(cooling -> cooling.getProduct().getBrand())
+                .map(Cooling::getProduct)
+                .filter(Objects::nonNull)
+                .map(product -> product.getBrand())
+                .filter(Objects::nonNull)
                 .distinct()
                 .toList();
     }

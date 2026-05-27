@@ -8,16 +8,11 @@ import org.springframework.stereotype.Service;
 
 import java.util.Comparator;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
 public class StorageService {
     private final StorageRepository storageRepository;
-
-    public Optional<Storage> findSelectableStorageByProductId(int productId) {
-        return storageRepository.findByIdWithImages(productId);
-    }
 
     public List<Storage> getAllStorages() {
         return storageRepository.findAllWithImages();

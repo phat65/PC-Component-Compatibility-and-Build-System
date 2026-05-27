@@ -32,13 +32,17 @@ public interface StorageRepository extends JpaRepository<Storage,Integer> {
            "LEFT JOIN FETCH p.images " +
            "LEFT JOIN FETCH p.brand " +
            "WHERE p.status = true " +
-           "AND p.lifecycleStatus = com.example.PCOnlineShop.model.product.ProductLifecycleStatus.SELLING")
+           "AND p.lifecycleStatus = com.example.PCOnlineShop.model.product.ProductLifecycleStatus.SELLING " +
+           "AND (p.inventoryQuantity IS NULL OR p.inventoryQuantity > 0)")
     List<Storage> findAllWithImages();
 
     @Query("SELECT DISTINCT s FROM Storage s " +
            "LEFT JOIN FETCH s.product p " +
            "LEFT JOIN FETCH p.images " +
            "LEFT JOIN FETCH p.brand " +
-           "WHERE s.productId = :productId")
+           "WHERE s.productId = :productId " +
+           "AND p.status = true " +
+           "AND p.lifecycleStatus = com.example.PCOnlineShop.model.product.ProductLifecycleStatus.SELLING " +
+           "AND (p.inventoryQuantity IS NULL OR p.inventoryQuantity > 0)")
     Optional<Storage> findByIdWithImages(@Param("productId") int productId);
 }

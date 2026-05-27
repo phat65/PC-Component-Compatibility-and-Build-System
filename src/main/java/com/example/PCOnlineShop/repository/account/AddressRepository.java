@@ -13,6 +13,10 @@ import java.util.Optional;
 public interface AddressRepository extends JpaRepository<Address, Integer> {
     List<Address> findByAccount(Account account);
 
+    List<Address> findByAccountOrderByIsDefaultDescAddressIdAsc(Account account);
+
+    Optional<Address> findByAccountAndAddressId(Account account, int addressId);
+
     @Query("SELECT a FROM Address a WHERE a.account = :account AND a.isDefault = true")
     Optional<Address> findDefaultByAccount(Account account);
 

@@ -8,14 +8,14 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Controller
 @RequestMapping("/chat")
 public class AIChatController {
 
-    private final Map<Integer, ChatRoom> rooms = new HashMap<>(); // lưu tạm các phòng chat
+    private final Map<Integer, ChatRoom> rooms = new ConcurrentHashMap<>();
     private final AIChatService aiChatService;
 
     public AIChatController(AIChatService aiChatService) {

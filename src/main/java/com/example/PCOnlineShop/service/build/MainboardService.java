@@ -9,7 +9,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Comparator;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -27,11 +26,6 @@ public class MainboardService {
 
     public Mainboard updateMainboard(Mainboard mainboard) {
         return mainboardRepository.save(mainboard);
-    }
-
-    @Transactional(readOnly = true)
-    public Optional<Mainboard> findSelectableMainboardByProductId(int productId) {
-        return mainboardRepository.findByIdWithImages(productId);
     }
 
     public void deleteMainboard(int id) {

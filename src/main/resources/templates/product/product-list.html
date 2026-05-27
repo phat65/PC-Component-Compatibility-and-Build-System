@@ -52,6 +52,25 @@
             flex-wrap: wrap;
         }
 
+        .alert {
+            margin-bottom: 12px;
+            padding: 10px 12px;
+            border-radius: 6px;
+            font-weight: 600;
+        }
+
+        .alert-error {
+            background: #fdecea;
+            color: #842029;
+            border: 1px solid #f5c2c7;
+        }
+
+        .alert-success {
+            background: #eaf7ee;
+            color: #0f5132;
+            border: 1px solid #badbcc;
+        }
+
         .filter-bar label {
             font-weight: 600;
         }
@@ -152,6 +171,9 @@
     </h2>
 
     <!-- ✅ Filter bar -->
+    <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
+    <div th:if="${message}" class="alert alert-success" th:text="${message}"></div>
+
     <div class="filter-bar">
         <label>🔸 Category:</label>
         <select id="categoryFilter">

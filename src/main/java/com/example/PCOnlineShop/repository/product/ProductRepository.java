@@ -109,18 +109,6 @@ public interface ProductRepository extends JpaRepository<Product, Integer> {
             Pageable pageable
     );
 
-    @Query("""
-        SELECT DISTINCT p FROM Product p
-        JOIN p.categories c
-        WHERE c = :category
-          AND p.status = true
-          AND p.lifecycleStatus = :lifecycleStatus
-        ORDER BY function('RAND')
-    """)
-    List<Product> findRandomByCategoryAndStatusTrueAndLifecycleStatus(@Param("category") Category category,
-                                                                      @Param("lifecycleStatus") ProductLifecycleStatus lifecycleStatus,
-                                                                      Pageable pageable);
-
     @Query(value = """
             SELECT DISTINCT p.* FROM product p
             LEFT JOIN product_category pc ON p.product_id = pc.product_id

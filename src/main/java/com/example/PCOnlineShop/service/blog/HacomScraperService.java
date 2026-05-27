@@ -1,6 +1,7 @@
 package com.example.PCOnlineShop.service.blog;
 
 import com.example.PCOnlineShop.dto.blog.BlogLinkDto;
+import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -14,6 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Service
+@Slf4j
 public class HacomScraperService {
 
     private static final String HACOM_TIN_TUC = "https://hacom.vn/tin-tuc";
@@ -31,7 +33,7 @@ public class HacomScraperService {
                         cache.addAll(fresh);
                         lastFetch = System.currentTimeMillis();
                     } catch (Exception e) {
-                        e.printStackTrace();
+                        log.warn("Failed to refresh Hacom blog cache", e);
                     }
                 }
             }
@@ -49,7 +51,7 @@ public class HacomScraperService {
                 lastFetch = System.currentTimeMillis();
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            log.warn("Scheduled Hacom blog refresh failed", e);
         }
     }
 

@@ -7,7 +7,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.Comparator;
 import java.util.List;
-import java.util.Optional;
 
 @RequiredArgsConstructor
 @Service
@@ -24,10 +23,6 @@ public class CpuService {
 
     public CPU updateCpu(CPU cpu) {
         return cpuRepository.save(cpu);
-    }
-
-    public Optional<CPU> findSelectableCpuByProductId(int productId) {
-        return cpuRepository.findByIdWithImages(productId);
     }
 
     public void deleteCpu(int id) {

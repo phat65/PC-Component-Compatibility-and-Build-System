@@ -32,13 +32,17 @@ public interface PowerSupplyRepository extends JpaRepository<PowerSupply,Integer
            "LEFT JOIN FETCH pr.images " +
            "LEFT JOIN FETCH pr.brand " +
            "WHERE pr.status = true " +
-           "AND pr.lifecycleStatus = com.example.PCOnlineShop.model.product.ProductLifecycleStatus.SELLING")
+           "AND pr.lifecycleStatus = com.example.PCOnlineShop.model.product.ProductLifecycleStatus.SELLING " +
+           "AND (pr.inventoryQuantity IS NULL OR pr.inventoryQuantity > 0)")
     List<PowerSupply> findAllWithImages();
 
     @Query("SELECT DISTINCT p FROM PowerSupply p " +
            "LEFT JOIN FETCH p.product pr " +
            "LEFT JOIN FETCH pr.images " +
            "LEFT JOIN FETCH pr.brand " +
-           "WHERE p.productId = :productId")
+           "WHERE p.productId = :productId " +
+           "AND pr.status = true " +
+           "AND pr.lifecycleStatus = com.example.PCOnlineShop.model.product.ProductLifecycleStatus.SELLING " +
+           "AND (pr.inventoryQuantity IS NULL OR pr.inventoryQuantity > 0)")
     Optional<PowerSupply> findByIdWithImages(@Param("productId") int productId);
 }

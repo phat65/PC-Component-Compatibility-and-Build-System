@@ -57,13 +57,13 @@
     <h2>🔒 Verify Email</h2>
 
     <p style="text-align:center; color:#555;">
-        Code have sent to <strong th:text="${param.email}">example@gmail.com</strong>.
+        Code have sent to <strong th:text="${email != null ? email : param.email}">example@gmail.com</strong>.
         <br>Please enter the code.
     </p>
 
     <form th:action="@{/auth/verify}" method="post">
         <label for="code">Enter code:</label>
-        <input type="hidden" name="email" th:value="${param.email}">
+        <input type="hidden" name="email" th:value="${email != null ? email : param.email}">
         <input type="text" id="code" name="code" placeholder="Enter code with 6 number" required>
         <button type="submit">Submit</button>
     </form>
@@ -74,7 +74,7 @@
     </div>
 
     <p class="message" style="margin-top:15px;">
-        <a th:href="@{/auth/verify(email=${param.email})}">Send again</a> |
+        <a th:href="@{/auth/verify(email=${email != null ? email : param.email})}">Send again</a> |
         <a th:href="@{/auth/login}">Login with other account</a>
     </p>
 </div>

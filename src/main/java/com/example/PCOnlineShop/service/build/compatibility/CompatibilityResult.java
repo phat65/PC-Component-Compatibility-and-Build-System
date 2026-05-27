@@ -10,7 +10,7 @@ public record CompatibilityResult(boolean compatible, List<String> reasons) {
         reasons = reasons == null ? List.of() : List.copyOf(reasons);
     }
 
-    public static CompatibilityResult compatible() {
+    public static CompatibilityResult success() {
         return new CompatibilityResult(true, List.of());
     }
 
@@ -49,7 +49,7 @@ public record CompatibilityResult(boolean compatible, List<String> reasons) {
 
         public CompatibilityResult build() {
             if (reasons.isEmpty()) {
-                return CompatibilityResult.compatible();
+                return CompatibilityResult.success();
             }
             return CompatibilityResult.incompatible(Collections.unmodifiableList(reasons));
         }

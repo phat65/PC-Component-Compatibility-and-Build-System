@@ -16,7 +16,6 @@ import org.hibernate.Hibernate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.*;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 @Service
@@ -84,85 +83,40 @@ public class CartService {
 
     public void addToCart(Account account, int productId, int quantity) {
         Cart cart = getOrCreateCart(account);
-        Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new EntityNotFoundException("Product not found"));
-        if (!product.isStatus()) {
-            throw new IllegalArgumentException("Product is unavailable.");
-        }
-        Optional<CartItem> existingItem = cartItemRepository
-                .findByCartAndProduct(cart, product);
-        if (existingItem.isPresent()) {
-            CartItem item = existingItem.get();
-            item.setQuantity(item.getQuantity() + quantity);
-            cartItemRepository.save(item);
-        } else {
-            CartItem newItem = new CartItem();
-            newItem.setCart(cart);
-            newItem.setProduct(product);
-            newItem.setQuantity(quantity);
-            newItem.setSelected(true);
-            cartItemRepository.save(newItem);
-        }
+        Product product = getPurchasableProduct(productId);
+        addOrMergeCartItem(cart, product, quantity);
     }
 
     public void addBuildToCart(Account account, BuildItemDto buildItems) {
-        // Validate input
         if (buildItems == null) {
             throw new IllegalArgumentException("Build items cannot be null");
         }
 
+        List<Product> products = getBuildProducts(buildItems);
+        if (products.isEmpty()) {
+            throw new IllegalArgumentException("Please select at least one product before adding the build to cart.");
+        }
+
         Cart cart = getOrCreateCart(account);
-
-
-        Consumer<Product> addBuildItem = (product) -> {
-            if (product != null) {
-
-                addToCart(account, product.getProductId(), 1);
-            }
-        };
-
-        // Add components with null safety checks
-        if (buildItems.getMainboard() != null) {
-            addBuildItem.accept(buildItems.getMainboard().getProduct());
-        }
-        if (buildItems.getCpu() != null) {
-            addBuildItem.accept(buildItems.getCpu().getProduct());
-        }
-        if (buildItems.getGpu() != null) {
-            addBuildItem.accept(buildItems.getGpu().getProduct());
-        }
-        if (buildItems.getMemory() != null) {
-            addBuildItem.accept(buildItems.getMemory().getProduct());
-        }
-        if (buildItems.getStorage() != null) {
-            addBuildItem.accept(buildItems.getStorage().getProduct());
-        }
-        if (buildItems.getPowerSupply() != null) {
-            addBuildItem.accept(buildItems.getPowerSupply().getProduct());
-        }
-        if (buildItems.getPcCase() != null) {
-            addBuildItem.accept(buildItems.getPcCase().getProduct());
-        }
-        if (buildItems.getCooling() != null) {
-            addBuildItem.accept(buildItems.getCooling().getProduct());
-        }
-        if (buildItems.getOther() != null) {
-            addBuildItem.accept(buildItems.getOther());
-        }
+        products.forEach(product -> {
+            Product purchasableProduct = getPurchasableProduct(product.getProductId());
+            addOrMergeCartItem(cart, purchasableProduct, 1);
+        });
     }
 
     public void addListToCart(Account account, List<Integer> productIds, int quantity) {
-        Cart cart = getOrCreateCart(account);
-        for (Integer productId : productIds) {
-            Product product = productRepository.findById(productId)
-                    .orElseThrow(() -> new EntityNotFoundException("Product not found: " + productId));
-            CartItem newItem = new CartItem();
-            newItem.setCart(cart);
-            newItem.setProduct(product);
-            newItem.setQuantity(quantity);
-            newItem.setSelected(true);
-            cartItemRepository.save(newItem);
+        if (productIds == null || productIds.isEmpty()) {
+            throw new IllegalArgumentException("Product list is required.");
         }
+
+        Cart cart = getOrCreateCart(account);
+        Map<Integer, Integer> requestedQuantities = new LinkedHashMap<>();
+        productIds.forEach(productId -> requestedQuantities.merge(productId, quantity, Integer::sum));
+
+        requestedQuantities.forEach((productId, requestedQuantity) -> {
+            Product product = getPurchasableProduct(productId);
+            addOrMergeCartItem(cart, product, requestedQuantity);
+        });
     }
 
     public void updateQuantity(Account account, int cartItemId, int quantity) {
@@ -174,6 +128,7 @@ public class CartService {
         if (quantity <= 0) {
             cartItemRepository.delete(item);
         } else {
+            validatePurchasable(item.getProduct(), quantity);
             item.setQuantity(quantity);
             cartItemRepository.save(item);
         }
@@ -192,7 +147,12 @@ public class CartService {
         Cart cart = getOrCreateCart(account);
         return cartItemRepository.findByCartAndIsSelected(cart, true)
                 .stream()
-                .collect(Collectors.toMap(item -> item.getProduct().getProductId(), item -> item));
+                .peek(item -> validatePurchasable(item.getProduct(), item.getQuantity()))
+                .collect(Collectors.toMap(
+                        item -> item.getProduct().getProductId(),
+                        item -> item,
+                        this::mergeDuplicateCheckoutItems,
+                        LinkedHashMap::new));
     }
 
     public void toggleSelectItem(Account account, int cartItemId, boolean isSelected) {
@@ -213,5 +173,77 @@ public class CartService {
     public void clearCart(Account account) {
         Cart cart = getOrCreateCart(account);
         cartItemRepository.deleteByCart(cart);
+    }
+
+    private Product getPurchasableProduct(Integer productId) {
+        if (productId == null) {
+            throw new IllegalArgumentException("Product is required.");
+        }
+
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new EntityNotFoundException("Product not found: " + productId));
+        validatePurchasable(product, 1);
+        return product;
+    }
+
+    private void addOrMergeCartItem(Cart cart, Product product, int quantity) {
+        validatePurchasable(product, quantity);
+
+        Optional<CartItem> existingItem = cartItemRepository.findByCartAndProduct(cart, product);
+        if (existingItem.isPresent()) {
+            CartItem item = existingItem.get();
+            int mergedQuantity = item.getQuantity() + quantity;
+            validatePurchasable(product, mergedQuantity);
+            item.setQuantity(mergedQuantity);
+            cartItemRepository.save(item);
+            return;
+        }
+
+        CartItem newItem = new CartItem();
+        newItem.setCart(cart);
+        newItem.setProduct(product);
+        newItem.setQuantity(quantity);
+        newItem.setSelected(true);
+        cartItemRepository.save(newItem);
+    }
+
+    private void validatePurchasable(Product product, int requestedQuantity) {
+        if (product == null) {
+            throw new EntityNotFoundException("Product not found");
+        }
+        if (requestedQuantity <= 0) {
+            throw new IllegalArgumentException("Quantity must be greater than zero.");
+        }
+        if (!product.isSellableOnStorefront()) {
+            throw new IllegalArgumentException("Product is unavailable.");
+        }
+
+        Integer inventoryQuantity = product.getInventoryQuantity();
+        if (inventoryQuantity != null && requestedQuantity > inventoryQuantity) {
+            throw new IllegalArgumentException("Requested quantity exceeds available inventory.");
+        }
+    }
+
+    private CartItem mergeDuplicateCheckoutItems(CartItem existing, CartItem duplicate) {
+        int mergedQuantity = existing.getQuantity() + duplicate.getQuantity();
+        validatePurchasable(existing.getProduct(), mergedQuantity);
+        existing.setQuantity(mergedQuantity);
+        return existing;
+    }
+
+    private List<Product> getBuildProducts(BuildItemDto buildItems) {
+        List<Product> products = new ArrayList<>();
+        if (buildItems.getMainboard() != null) products.add(buildItems.getMainboard().getProduct());
+        if (buildItems.getCpu() != null) products.add(buildItems.getCpu().getProduct());
+        if (buildItems.getGpu() != null) products.add(buildItems.getGpu().getProduct());
+        if (buildItems.getMemory() != null) products.add(buildItems.getMemory().getProduct());
+        if (buildItems.getStorage() != null) products.add(buildItems.getStorage().getProduct());
+        if (buildItems.getPowerSupply() != null) products.add(buildItems.getPowerSupply().getProduct());
+        if (buildItems.getPcCase() != null) products.add(buildItems.getPcCase().getProduct());
+        if (buildItems.getCooling() != null) products.add(buildItems.getCooling().getProduct());
+        if (buildItems.getOther() != null) products.add(buildItems.getOther());
+        return products.stream()
+                .filter(Objects::nonNull)
+                .toList();
     }
 }

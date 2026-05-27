@@ -31,13 +31,17 @@ public interface MemoryRepository extends JpaRepository<Memory, Integer> {
            "LEFT JOIN FETCH p.images " +
            "LEFT JOIN FETCH p.brand " +
            "WHERE p.status = true " +
-           "AND p.lifecycleStatus = com.example.PCOnlineShop.model.product.ProductLifecycleStatus.SELLING")
+           "AND p.lifecycleStatus = com.example.PCOnlineShop.model.product.ProductLifecycleStatus.SELLING " +
+           "AND (p.inventoryQuantity IS NULL OR p.inventoryQuantity > 0)")
     List<Memory> findAllWithImages();
 
     @Query("SELECT DISTINCT m FROM Memory m " +
            "LEFT JOIN FETCH m.product p " +
            "LEFT JOIN FETCH p.images " +
            "LEFT JOIN FETCH p.brand " +
-           "WHERE m.productId = :productId")
+           "WHERE m.productId = :productId " +
+           "AND p.status = true " +
+           "AND p.lifecycleStatus = com.example.PCOnlineShop.model.product.ProductLifecycleStatus.SELLING " +
+           "AND (p.inventoryQuantity IS NULL OR p.inventoryQuantity > 0)")
     Optional<Memory> findByIdWithImages(@Param("productId") int productId);
 }

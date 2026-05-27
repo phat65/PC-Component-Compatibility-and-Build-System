@@ -1,344 +1,225 @@
 package com.example.PCOnlineShop.service.validation;
 
-import com.example.PCOnlineShop.model.build.*;
+import com.example.PCOnlineShop.model.build.CPU;
+import com.example.PCOnlineShop.model.build.Case;
+import com.example.PCOnlineShop.model.build.Cooling;
+import com.example.PCOnlineShop.model.build.GPU;
+import com.example.PCOnlineShop.model.build.Mainboard;
+import com.example.PCOnlineShop.model.build.Memory;
+import com.example.PCOnlineShop.model.build.PowerSupply;
+import com.example.PCOnlineShop.model.build.Storage;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
-/**
- * Service để validate các thông số kỹ thuật của linh kiện
- * Đảm bảo các giá trị số liệu nằm trong khoảng hợp lý
- */
 @Service
 public class ComponentSpecValidationService {
+    private static final Set<String> CPU_SOCKETS = Set.of("AM4", "AM5", "LGA1151", "LGA1200", "LGA1700", "TR4");
+    private static final Set<String> FORM_FACTORS = Set.of("Mini-ITX", "Micro-ATX", "ATX", "E-ATX");
+    private static final Set<String> MEMORY_TYPES = Set.of("DDR4", "DDR5");
+    private static final Set<String> GPU_MEMORY_TYPES = Set.of("GDDR5", "GDDR6", "GDDR6X");
+    private static final Set<String> PCIE_VERSIONS = Set.of("3.0", "4.0", "5.0");
+    private static final Set<String> GPU_INTERFACES = Set.of("PCIe x16", "PCIe x8");
+    private static final Set<String> STORAGE_TYPES = Set.of("SSD", "HDD", "NVMe");
+    private static final Set<String> STORAGE_INTERFACES = Set.of("SATA", "NVMe", "M.2");
+    private static final Set<String> PSU_EFFICIENCIES = Set.of(
+            "80+",
+            "80+ Bronze",
+            "80+ Silver",
+            "80+ Gold",
+            "80+ Platinum",
+            "80+ Titanium"
+    );
+    private static final Set<String> PSU_FORM_FACTORS = Set.of("ATX", "SFX", "SFX-L");
+    private static final Set<String> COOLING_TYPES = Set.of("Air", "AIO");
+    private static final Set<Integer> VALID_RADIATOR_SIZES = Set.of(0, 120, 240, 280, 360, 420, 480);
+    private static final Set<Integer> VALID_MEMORY_MODULES = Set.of(1, 2, 4);
 
-    // ================ GPU VALIDATION ================
     public List<String> validateGpu(GPU gpu) {
         List<String> errors = new ArrayList<>();
-
-        // Validate VRAM (2GB - 48GB)
-        if (gpu.getVram() < 2 || gpu.getVram() > 48) {
-            errors.add("GPU VRAM must be between 2GB and 48GB");
+        if (gpu == null) {
+            errors.add("GPU specification is required");
+            return errors;
         }
 
-        // Validate Length (150mm - 400mm)
-        if (gpu.getLength() < 150 || gpu.getLength() > 450) {
-            errors.add("GPU length must be between 150mm and 450mm");
-        }
-
-        // Validate TDP (50W - 600W)
-        if (gpu.getTdp() < 50 || gpu.getTdp() > 600) {
-            errors.add("GPU TDP must be between 50W and 600W");
-        }
-
-        // Validate Memory Type
-        if (gpu.getMemoryType() != null && !gpu.getMemoryType().isEmpty()) {
-            if (!gpu.getMemoryType().matches("GDDR[56]X?")) {
-                errors.add("GPU memory type must be GDDR5, GDDR6, or GDDR6X");
-            }
-        }
-
-        // Validate PCIe Version
-        if (gpu.getPcieVersion() != null && !gpu.getPcieVersion().isEmpty()) {
-            if (!gpu.getPcieVersion().matches("[345]\\.0")) {
-                errors.add("GPU PCIe version must be 3.0, 4.0, or 5.0");
-            }
-        }
-
+        requireRange(errors, "GPU VRAM", gpu.getVram(), 1, 48, "GB");
+        requireOneOf(errors, "GPU memory type", gpu.getMemoryType(), GPU_MEMORY_TYPES);
+        requireRange(errors, "GPU TDP", gpu.getTdp(), 10, 500, "W");
+        optionalRange(errors, "GPU length", gpu.getLength(), 50, 450, "mm");
+        optionalOneOf(errors, "GPU interface", gpu.getGpuInterface(), GPU_INTERFACES);
+        requireOneOf(errors, "GPU PCIe version", gpu.getPcieVersion(), PCIE_VERSIONS);
         return errors;
     }
 
-    // ================ CPU VALIDATION ================
     public List<String> validateCpu(CPU cpu) {
         List<String> errors = new ArrayList<>();
-
-        // Validate TDP (35W - 350W)
-        if (cpu.getTdp() < 35 || cpu.getTdp() > 350) {
-            errors.add("CPU TDP must be between 35W and 350W");
+        if (cpu == null) {
+            errors.add("CPU specification is required");
+            return errors;
         }
 
-        // Validate Max Memory Speed (1600 - 8000 MHz)
-        if (cpu.getMaxMemorySpeed() < 1600 || cpu.getMaxMemorySpeed() > 8000) {
-            errors.add("CPU max memory speed must be between 1600MHz and 8000MHz");
-        }
-
-        // Validate Memory Channels (1 - 8)
-        if (cpu.getMemoryChannels() != null) {
-            if (cpu.getMemoryChannels() < 1 || cpu.getMemoryChannels() > 8) {
-                errors.add("CPU memory channels must be between 1 and 8");
-            }
-        }
-
-        // Validate PCIe Version
-        if (cpu.getPcieVersion() != null && !cpu.getPcieVersion().isEmpty()) {
-            if (!cpu.getPcieVersion().matches("[345]\\.0")) {
-                errors.add("CPU PCIe version must be 3.0, 4.0, or 5.0");
-            }
-        }
-
-        // Validate Socket
-        if (cpu.getSocket() != null && !cpu.getSocket().isEmpty()) {
-            if (!cpu.getSocket().matches("(AM[45]|LGA\\d{4}|TR4)")) {
-                errors.add("CPU socket must be AM4, AM5, LGA1151, LGA1200, LGA1700, or TR4");
-            }
-        }
-
+        requireOneOf(errors, "CPU socket", cpu.getSocket(), CPU_SOCKETS);
+        requireRange(errors, "CPU TDP", cpu.getTdp(), 1, 500, "W");
+        optionalRange(errors, "CPU max memory speed", cpu.getMaxMemorySpeed(), 800, 10000, "MHz");
+        optionalRange(errors, "CPU memory channels", cpu.getMemoryChannels(), 1, 8, "");
+        requireOneOf(errors, "CPU PCIe version", cpu.getPcieVersion(), PCIE_VERSIONS);
         return errors;
     }
 
-    // ================ MAINBOARD VALIDATION ================
     public List<String> validateMainboard(Mainboard mainboard) {
         List<String> errors = new ArrayList<>();
-
-        // Validate Memory Slots (2 - 8)
-        if (mainboard.getMemorySlots() < 2 || mainboard.getMemorySlots() > 8) {
-            errors.add("Mainboard memory slots must be between 2 and 8");
+        if (mainboard == null) {
+            errors.add("Mainboard specification is required");
+            return errors;
         }
 
-        // Validate Max Memory Speed (1600 - 8000 MHz)
-        if (mainboard.getMaxMemorySpeed() < 1600 || mainboard.getMaxMemorySpeed() > 8000) {
-            errors.add("Mainboard max memory speed must be between 1600MHz and 8000MHz");
-        }
-
-        // Validate M.2 Slots (0 - 5)
-        if (mainboard.getM2Slots() < 0 || mainboard.getM2Slots() > 5) {
-            errors.add("Mainboard M.2 slots must be between 0 and 5");
-        }
-
-        // Validate SATA Ports (0 - 12)
-        if (mainboard.getSataPorts() < 0 || mainboard.getSataPorts() > 12) {
-            errors.add("Mainboard SATA ports must be between 0 and 12");
-        }
-
-        // Validate PCIe Version
-        if (mainboard.getPcieVersion() != null && !mainboard.getPcieVersion().isEmpty()) {
-            if (!mainboard.getPcieVersion().matches("[345]\\.0")) {
-                errors.add("Mainboard PCIe version must be 3.0, 4.0, or 5.0");
-            }
-        }
-
-        // Validate Socket
-        if (mainboard.getSocket() != null && !mainboard.getSocket().isEmpty()) {
-            if (!mainboard.getSocket().matches("(AM[45]|LGA\\d{4}|TR4)")) {
-                errors.add("Mainboard socket must be AM4, AM5, LGA1151, LGA1200, LGA1700, or TR4");
-            }
-        }
-
-        // Validate Memory Type
-        if (mainboard.getMemoryType() != null && !mainboard.getMemoryType().isEmpty()) {
-            if (!mainboard.getMemoryType().matches("DDR[45]")) {
-                errors.add("Mainboard memory type must be DDR4 or DDR5");
-            }
-        }
-
-        // Validate Form Factor
-        if (mainboard.getFormFactor() != null && !mainboard.getFormFactor().isEmpty()) {
-            if (!mainboard.getFormFactor().matches("(Mini-ITX|Micro-ATX|ATX|E-ATX)")) {
-                errors.add("Mainboard form factor must be Mini-ITX, Micro-ATX, ATX, or E-ATX");
-            }
-        }
-
+        requireOneOf(errors, "Mainboard socket", mainboard.getSocket(), CPU_SOCKETS);
+        requireText(errors, "Mainboard chipset", mainboard.getChipset());
+        requireOneOf(errors, "Mainboard form factor", mainboard.getFormFactor(), FORM_FACTORS);
+        requireOneOf(errors, "Mainboard memory type", mainboard.getMemoryType(), MEMORY_TYPES);
+        requireRange(errors, "Mainboard memory slots", mainboard.getMemorySlots(), 1, 8, "");
+        requireRange(errors, "Mainboard max memory speed", mainboard.getMaxMemorySpeed(), 800, 10000, "MHz");
+        requireOneOf(errors, "Mainboard PCIe version", mainboard.getPcieVersion(), PCIE_VERSIONS);
+        optionalRange(errors, "Mainboard M.2 slots", mainboard.getM2Slots(), 0, 5, "");
+        optionalRange(errors, "Mainboard SATA ports", mainboard.getSataPorts(), 0, 12, "");
         return errors;
     }
 
-    // ================ MEMORY VALIDATION ================
     public List<String> validateMemory(Memory memory) {
         List<String> errors = new ArrayList<>();
-
-        // Validate Capacity (4GB - 128GB per kit)
-        if (memory.getCapacity() < 4 || memory.getCapacity() > 128) {
-            errors.add("Memory capacity must be between 4GB and 128GB");
+        if (memory == null) {
+            errors.add("Memory specification is required");
+            return errors;
         }
 
-        // Validate Speed (1600 - 8000 MHz)
-        if (memory.getSpeed() < 1600 || memory.getSpeed() > 8000) {
-            errors.add("Memory speed must be between 1600MHz and 8000MHz");
-        }
-
-        // Validate TDP (2W - 20W)
-        if (memory.getTdp() < 2 || memory.getTdp() > 20) {
-            errors.add("Memory TDP must be between 2W and 20W");
-        }
-
-        // Validate Modules (1, 2, or 4)
-        if (memory.getModules() != 1 && memory.getModules() != 2 && memory.getModules() != 4) {
+        requireRange(errors, "Memory capacity", memory.getCapacity(), 1, 256, "GB");
+        requireOneOf(errors, "Memory type", memory.getType(), MEMORY_TYPES);
+        requireRange(errors, "Memory speed", memory.getSpeed(), 800, 10000, "MHz");
+        optionalRange(errors, "Memory TDP", memory.getTdp(), 0, 30, "W");
+        if (memory.getModules() > 0 && !VALID_MEMORY_MODULES.contains(memory.getModules())) {
             errors.add("Memory modules must be 1, 2, or 4");
         }
-
-        // Validate Type
-        if (memory.getType() != null && !memory.getType().isEmpty()) {
-            if (!memory.getType().matches("DDR[45]")) {
-                errors.add("Memory type must be DDR4 or DDR5");
-            }
-        }
-
         return errors;
     }
 
-    // ================ STORAGE VALIDATION ================
     public List<String> validateStorage(Storage storage) {
         List<String> errors = new ArrayList<>();
-
-        // Validate Capacity (128GB - 8TB = 8000GB)
-        if (storage.getCapacity() < 128 || storage.getCapacity() > 8000) {
-            errors.add("Storage capacity must be between 128GB and 8TB (8000GB)");
+        if (storage == null) {
+            errors.add("Storage specification is required");
+            return errors;
         }
 
-        // Validate Read Speed (100 - 14000 MB/s)
-        if (storage.getReadSpeed() < 100 || storage.getReadSpeed() > 14000) {
-            errors.add("Storage read speed must be between 100MB/s and 14000MB/s");
-        }
-
-        // Validate Write Speed (50 - 12000 MB/s)
-        if (storage.getWriteSpeed() < 50 || storage.getWriteSpeed() > 12000) {
-            errors.add("Storage write speed must be between 50MB/s and 12000MB/s");
-        }
-
-        // Validate Type
-        if (storage.getType() != null && !storage.getType().isEmpty()) {
-            if (!storage.getType().matches("(SSD|HDD|NVMe)")) {
-                errors.add("Storage type must be SSD, HDD, or NVMe");
-            }
-        }
-
-        // Validate Interface
-        if (storage.getInterfaceType() != null && !storage.getInterfaceType().isEmpty()) {
-            if (!storage.getInterfaceType().matches("(SATA|NVMe|M\\.2)")) {
-                errors.add("Storage interface must be SATA, NVMe, or M.2");
-            }
-        }
-
+        requireRange(errors, "Storage capacity", storage.getCapacity(), 1, 8000, "GB");
+        requireOneOf(errors, "Storage type", storage.getType(), STORAGE_TYPES);
+        requireOneOf(errors, "Storage interface", storage.getInterfaceType(), STORAGE_INTERFACES);
+        optionalRange(errors, "Storage read speed", storage.getReadSpeed(), 0, 14000, "MB/s");
+        optionalRange(errors, "Storage write speed", storage.getWriteSpeed(), 0, 12000, "MB/s");
         return errors;
     }
 
-    // ================ POWER SUPPLY VALIDATION ================
     public List<String> validatePowerSupply(PowerSupply psu) {
         List<String> errors = new ArrayList<>();
-
-        // Validate Wattage (300W - 2000W)
-        if (psu.getWattage() < 300 || psu.getWattage() > 2000) {
-            errors.add("PSU wattage must be between 300W and 2000W");
+        if (psu == null) {
+            errors.add("Power supply specification is required");
+            return errors;
         }
 
-        // Validate Efficiency
-        if (psu.getEfficiency() != null && !psu.getEfficiency().isEmpty()) {
-            if (!psu.getEfficiency().matches("80\\+( (Bronze|Silver|Gold|Platinum|Titanium))?")) {
-                errors.add("PSU efficiency must be 80+, 80+ Bronze, 80+ Silver, 80+ Gold, 80+ Platinum, or 80+ Titanium");
-            }
-        }
-
-        // Validate Form Factor
-        if (psu.getFormFactor() != null && !psu.getFormFactor().isEmpty()) {
-            if (!psu.getFormFactor().matches("(ATX|SFX|SFX-L)")) {
-                errors.add("PSU form factor must be ATX, SFX, or SFX-L");
-            }
-        }
-
+        requireRange(errors, "PSU wattage", psu.getWattage(), 100, 2000, "W");
+        requireOneOf(errors, "PSU efficiency", psu.getEfficiency(), PSU_EFFICIENCIES);
+        optionalOneOf(errors, "PSU form factor", psu.getFormFactor(), PSU_FORM_FACTORS);
         return errors;
     }
 
-    // ================ CASE VALIDATION ================
     public List<String> validateCase(Case pcCase) {
         List<String> errors = new ArrayList<>();
-
-        // Validate GPU Max Length (150mm - 500mm)
-        if (pcCase.getGpuMaxLength() < 150 || pcCase.getGpuMaxLength() > 500) {
-            errors.add("Case GPU max length must be between 150mm and 500mm");
+        if (pcCase == null) {
+            errors.add("Case specification is required");
+            return errors;
         }
 
-        // Validate CPU Max Cooler Height (50mm - 200mm)
-        if (pcCase.getCpuMaxCoolerHeight() < 50 || pcCase.getCpuMaxCoolerHeight() > 200) {
-            errors.add("Case CPU max cooler height must be between 50mm and 200mm");
-        }
-
-        // Validate Form Factor
-        if (pcCase.getFormFactor() != null && !pcCase.getFormFactor().isEmpty()) {
-            if (!pcCase.getFormFactor().matches("(Mini-ITX|Micro-ATX|ATX|E-ATX)")) {
-                errors.add("Case form factor must be Mini-ITX, Micro-ATX, ATX, or E-ATX");
-            }
-        }
-
-        // Validate PSU Form Factor
-        if (pcCase.getPsuFormFactor() != null && !pcCase.getPsuFormFactor().isEmpty()) {
-            if (!pcCase.getPsuFormFactor().matches("(ATX|SFX|SFX-L)")) {
-                errors.add("Case PSU form factor must be ATX, SFX, or SFX-L");
-            }
-        }
-
+        requireOneOf(errors, "Case form factor", pcCase.getFormFactor(), FORM_FACTORS);
+        requireRange(errors, "Case GPU max length", pcCase.getGpuMaxLength(), 1, 500, "mm");
+        optionalOneOf(errors, "Case PSU form factor", pcCase.getPsuFormFactor(), PSU_FORM_FACTORS);
+        optionalRange(errors, "Case CPU max cooler height", pcCase.getCpuMaxCoolerHeight(), 0, 300, "mm");
         return errors;
     }
 
-    // ================ COOLING VALIDATION ================
     public List<String> validateCooling(Cooling cooling) {
         List<String> errors = new ArrayList<>();
-
-        // Validate Fan Size (80mm - 200mm)
-        if (cooling.getFanSize() < 80 || cooling.getFanSize() > 200) {
-            errors.add("Cooling fan size must be between 80mm and 200mm");
+        if (cooling == null) {
+            errors.add("Cooling specification is required");
+            return errors;
         }
 
-        // Validate Radiator Size (0, 120, 240, 280, 360, 420)
-        if (cooling.getRadiatorSize() != 0 &&
-            cooling.getRadiatorSize() != 120 &&
-            cooling.getRadiatorSize() != 240 &&
-            cooling.getRadiatorSize() != 280 &&
-            cooling.getRadiatorSize() != 360 &&
-            cooling.getRadiatorSize() != 420) {
-            errors.add("Cooling radiator size must be 0 (N/A), 120, 240, 280, 360, or 420mm");
+        requireOneOf(errors, "Cooling type", cooling.getType(), COOLING_TYPES);
+        optionalRange(errors, "Cooling fan size", cooling.getFanSize(), 40, 200, "mm");
+        if (!VALID_RADIATOR_SIZES.contains(cooling.getRadiatorSize())) {
+            errors.add("Cooling radiator size must be 0, 120, 240, 280, 360, 420, or 480mm");
         }
-
-        // Validate TDP (5W - 300W for cooling solution itself)
-        if (cooling.getTdp() < 5 || cooling.getTdp() > 300) {
-            errors.add("Cooling TDP must be between 5W and 300W");
-        }
-
-        // Validate Type
-        if (cooling.getType() != null && !cooling.getType().isEmpty()) {
-            if (!cooling.getType().matches("(Air|AIO)")) {
-                errors.add("Cooling type must be Air or AIO");
-            }
-        }
-
+        requireRange(errors, "Cooling TDP", cooling.getTdp(), 1, 500, "W");
         return errors;
     }
 
-    // ================ VALIDATE ALL ================
-    /**
-     * Validate tất cả các component trong một build
-     */
     public List<String> validateAllComponents(
             GPU gpu, CPU cpu, Mainboard mainboard, Memory memory,
             Storage storage, PowerSupply psu, Case pcCase, Cooling cooling) {
 
         List<String> allErrors = new ArrayList<>();
-
-        if (gpu != null) {
-            allErrors.addAll(validateGpu(gpu));
-        }
-        if (cpu != null) {
-            allErrors.addAll(validateCpu(cpu));
-        }
-        if (mainboard != null) {
-            allErrors.addAll(validateMainboard(mainboard));
-        }
-        if (memory != null) {
-            allErrors.addAll(validateMemory(memory));
-        }
-        if (storage != null) {
-            allErrors.addAll(validateStorage(storage));
-        }
-        if (psu != null) {
-            allErrors.addAll(validatePowerSupply(psu));
-        }
-        if (pcCase != null) {
-            allErrors.addAll(validateCase(pcCase));
-        }
-        if (cooling != null) {
-            allErrors.addAll(validateCooling(cooling));
-        }
-
+        if (gpu != null) allErrors.addAll(validateGpu(gpu));
+        if (cpu != null) allErrors.addAll(validateCpu(cpu));
+        if (mainboard != null) allErrors.addAll(validateMainboard(mainboard));
+        if (memory != null) allErrors.addAll(validateMemory(memory));
+        if (storage != null) allErrors.addAll(validateStorage(storage));
+        if (psu != null) allErrors.addAll(validatePowerSupply(psu));
+        if (pcCase != null) allErrors.addAll(validateCase(pcCase));
+        if (cooling != null) allErrors.addAll(validateCooling(cooling));
         return allErrors;
     }
-}
 
+    private void requireText(List<String> errors, String fieldName, String value) {
+        if (isBlank(value)) {
+            errors.add(fieldName + " is required");
+        }
+    }
+
+    private void requireOneOf(List<String> errors, String fieldName, String value, Set<String> allowedValues) {
+        requireText(errors, fieldName, value);
+        if (!isBlank(value) && !allowedValues.contains(value.trim())) {
+            errors.add(fieldName + " must be one of: " + String.join(", ", allowedValues));
+        }
+    }
+
+    private void optionalOneOf(List<String> errors, String fieldName, String value, Set<String> allowedValues) {
+        if (!isBlank(value) && !allowedValues.contains(value.trim())) {
+            errors.add(fieldName + " must be one of: " + String.join(", ", allowedValues));
+        }
+    }
+
+    private void requireRange(List<String> errors, String fieldName, Integer value, int min, int max, String unit) {
+        if (value == null || value <= 0) {
+            errors.add(fieldName + " is required");
+            return;
+        }
+        range(errors, fieldName, value, min, max, unit);
+    }
+
+    private void optionalRange(List<String> errors, String fieldName, Integer value, int min, int max, String unit) {
+        if (value == null || value == 0) {
+            return;
+        }
+        range(errors, fieldName, value, min, max, unit);
+    }
+
+    private void range(List<String> errors, String fieldName, int value, int min, int max, String unit) {
+        if (value < min || value > max) {
+            String suffix = isBlank(unit) ? "" : unit;
+            errors.add(fieldName + " must be between " + min + suffix + " and " + max + suffix);
+        }
+    }
+
+    private boolean isBlank(String value) {
+        return value == null || value.trim().isEmpty();
+    }
+}

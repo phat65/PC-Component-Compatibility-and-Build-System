@@ -32,13 +32,17 @@ public interface CoolingRepository extends JpaRepository<Cooling,Integer> {
            "LEFT JOIN FETCH p.images " +
            "LEFT JOIN FETCH p.brand " +
            "WHERE p.status = true " +
-           "AND p.lifecycleStatus = com.example.PCOnlineShop.model.product.ProductLifecycleStatus.SELLING")
+           "AND p.lifecycleStatus = com.example.PCOnlineShop.model.product.ProductLifecycleStatus.SELLING " +
+           "AND (p.inventoryQuantity IS NULL OR p.inventoryQuantity > 0)")
     List<Cooling> findAllWithImages();
 
     @Query("SELECT DISTINCT c FROM Cooling c " +
            "LEFT JOIN FETCH c.product p " +
            "LEFT JOIN FETCH p.images " +
            "LEFT JOIN FETCH p.brand " +
-           "WHERE c.productId = :productId")
+           "WHERE c.productId = :productId " +
+           "AND p.status = true " +
+           "AND p.lifecycleStatus = com.example.PCOnlineShop.model.product.ProductLifecycleStatus.SELLING " +
+           "AND (p.inventoryQuantity IS NULL OR p.inventoryQuantity > 0)")
     Optional<Cooling> findByIdWithImages(@Param("productId") int productId);
 }

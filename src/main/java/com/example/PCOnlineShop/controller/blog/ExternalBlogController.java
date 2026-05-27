@@ -14,23 +14,30 @@ import java.util.List;
 @RequiredArgsConstructor
 @RequestMapping("/blog")
 public class ExternalBlogController {
+    private static final String HACOM_VIEW = "blog/hacom-list";
+    private static final String REDIRECT_HACOM = "redirect:/blog/hacom";
+    private static final String HACOM_SOURCE_NAME = "HACOM";
+    private static final String HACOM_SOURCE_URL = "https://hacom.vn/tin-tuc";
 
     private final HacomScraperService scraperService;
 
-    // 🔹 Hiển thị danh sách bài viết HACOM
     @GetMapping("/hacom")
     public String showHacom(Model model) {
-        List<BlogLinkDto> links = scraperService.getLatest();
-        model.addAttribute("links", links);
-        model.addAttribute("sourceName", "HACOM");
-        model.addAttribute("sourceUrl", "https://hacom.vn/tin-tuc");
-        return "blog/hacom-list";
+        try {
+            List<BlogLinkDto> links = scraperService.getLatest();
+            model.addAttribute("links", links);
+        } catch (Exception e) {
+            model.addAttribute("links", List.of());
+            model.addAttribute("error", "Unable to load blog posts at this time.");
+        }
+
+        model.addAttribute("sourceName", HACOM_SOURCE_NAME);
+        model.addAttribute("sourceUrl", HACOM_SOURCE_URL);
+        return HACOM_VIEW;
     }
 
-    // 🔹 Mapping /blog để nút header dẫn vào
     @GetMapping
-    public String showBlogHome(Model model) {
-        // Redirect tạm thời sang HACOM, hoặc bạn có thể tạo trang blog tổng hợp riêng
-        return "redirect:/blog/hacom";
+    public String showBlogHome() {
+        return REDIRECT_HACOM;
     }
 }

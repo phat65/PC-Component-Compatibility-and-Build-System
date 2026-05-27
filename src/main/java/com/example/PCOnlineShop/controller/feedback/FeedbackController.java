@@ -5,11 +5,13 @@ import com.example.PCOnlineShop.service.feedback.FeedbackService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 @Controller
@@ -19,22 +21,11 @@ public class FeedbackController {
 
     private final FeedbackService feedbackService;
 
-    /** ================= LIST FEEDBACK ================= */
     @GetMapping
-    public String list(
-            @RequestParam(required = false) String dateSort,
-            @RequestParam(required = false) String ratingSort,
-            Model model
-    ) {
-
-        String sortKey = "pendingFirst";   // default
-
-   /*     if (ratingSort != null && !ratingSort.isBlank()) {
-            sortKey = ratingSort;
-        } else if (dateSort != null && !dateSort.isBlank()) {
-            sortKey = dateSort;
-        }*/
-
+    public String list(@RequestParam(required = false) String dateSort,
+                       @RequestParam(required = false) String ratingSort,
+                       Model model) {
+        String sortKey = resolveSortKey(dateSort, ratingSort);
         List<Feedback> data = feedbackService.findAllNoPaging(sortKey);
 
         model.addAttribute("data", data);
@@ -44,30 +35,43 @@ public class FeedbackController {
         return "feedback/feedback-list";
     }
 
-
-    /** ================= VIEW FEEDBACK ================= */
     @GetMapping("/{id}")
     public String detail(@PathVariable Integer id,
                          @RequestParam(required = false) String back,
-                         Model model) {
-
-        Feedback fb = feedbackService.get(id);
-        model.addAttribute("fb", fb);
-        model.addAttribute("back", back);
-        return "feedback/feedback-detail";
+                         Model model,
+                         RedirectAttributes redirectAttributes) {
+        try {
+            Feedback feedback = feedbackService.get(id);
+            model.addAttribute("fb", feedback);
+            model.addAttribute("back", back);
+            return "feedback/feedback-detail";
+        } catch (IllegalArgumentException e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+            return "redirect:/staff/feedback";
+        }
     }
 
-    /** ================= REPLY ================= */
     @PostMapping("/{id}/reply")
     public String reply(@PathVariable Integer id,
                         @RequestParam String reply,
-                        @RequestParam(required = false) String back,
-                        RedirectAttributes ra) {
-        // Gọi service để cập nhật reply
-        feedbackService.updateReply(id, reply);
-        ra.addFlashAttribute("msg", "Đã phản hồi feedback thành công.");
+                        RedirectAttributes redirectAttributes) {
+        try {
+            feedbackService.updateReply(id, reply);
+            redirectAttributes.addFlashAttribute("msg", "Feedback reply saved successfully.");
+        } catch (IllegalArgumentException e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+        }
 
         return "redirect:/staff/feedback";
     }
 
+    private String resolveSortKey(String dateSort, String ratingSort) {
+        if (ratingSort != null && !ratingSort.isBlank()) {
+            return ratingSort;
+        }
+        if (dateSort != null && !dateSort.isBlank()) {
+            return dateSort;
+        }
+        return "pendingFirst";
+    }
 }
