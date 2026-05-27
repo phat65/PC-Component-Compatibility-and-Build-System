@@ -1,13 +1,14 @@
 package com.example.PCOnlineShop.repository.build;
 
-import com.example.PCOnlineShop.model.build.Storage;
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
-import java.util.Optional;
+import com.example.PCOnlineShop.model.build.Storage;
 
 @Repository
 public interface StorageRepository extends JpaRepository<Storage,Integer> {
@@ -31,13 +32,17 @@ public interface StorageRepository extends JpaRepository<Storage,Integer> {
            "LEFT JOIN FETCH p.images " +
            "LEFT JOIN FETCH p.brand " +
            "WHERE p.status = true " +
-           "AND p.lifecycleStatus = com.example.PCOnlineShop.model.product.ProductLifecycleStatus.SELLING")
+           "AND p.lifecycleStatus = com.example.PCOnlineShop.model.product.ProductLifecycleStatus.SELLING " +
+           "AND (p.inventoryQuantity IS NULL OR p.inventoryQuantity > 0)")
     List<Storage> findAllWithImages();
 
     @Query("SELECT DISTINCT s FROM Storage s " +
            "LEFT JOIN FETCH s.product p " +
            "LEFT JOIN FETCH p.images " +
            "LEFT JOIN FETCH p.brand " +
-           "WHERE s.id = :id")
-    Optional<Storage> findByIdWithImages(@Param("id") int id);
+           "WHERE s.productId = :productId " +
+           "AND p.status = true " +
+           "AND p.lifecycleStatus = com.example.PCOnlineShop.model.product.ProductLifecycleStatus.SELLING " +
+           "AND (p.inventoryQuantity IS NULL OR p.inventoryQuantity > 0)")
+    Optional<Storage> findByIdWithImages(@Param("productId") int productId);
 }

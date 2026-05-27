@@ -1,36 +1,94 @@
 package com.example.PCOnlineShop.service.address;
 
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.stereotype.Service;
+
 import com.example.PCOnlineShop.model.account.Account;
 import com.example.PCOnlineShop.model.account.Address;
 import com.example.PCOnlineShop.repository.account.AddressRepository;
+
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
-import java.util.List;
-import java.util.Optional;
 
 @Service
 public class AddressService {
 
-    @Autowired
-    private AddressRepository addressRepository;
+    private final AddressRepository addressRepository;
+
+    public AddressService(AddressRepository addressRepository) {
+        this.addressRepository = addressRepository;
+    }
 
     public List<Address> getAddressesForAccount(Account account) {
-        return addressRepository.findByAccount(account);
+        if (account == null) {
+            return List.of();
+        }
+        return addressRepository.findByAccountOrderByIsDefaultDescAddressIdAsc(account);
     }
 
     public Optional<Address> getDefaultAddress(Account account) {
+        if (account == null) {
+            return Optional.empty();
+        }
         return addressRepository.findDefaultByAccount(account);
     }
+    
+    @Transactional
+    public void saveDefaultAddress(Account account, String fullName, String phone, String address) {
+        fullName = normalize(fullName);
+        phone = normalize(phone);
+        address = normalize(address);
 
+        if (account == null || address == null || address.isEmpty()) {
+            return;
+        }
+
+        addressRepository.clearDefaultByAccount(account);
+
+        Address addr = new Address();
+        addr.setAccount(account);
+        addr.setFullName(fullName);
+        addr.setPhone(phone);
+        addr.setAddress(address);
+        addr.setDefault(true);
+        addressRepository.save(addr);
+    }
+
+    @Transactional
+    public void updateDefaultAddress(Account account, String fullName, String phone, String address) {
+        fullName = normalize(fullName);
+        phone = normalize(phone);
+        address = normalize(address);
+
+        if (account == null || address == null || address.isEmpty()) {
+            return;
+        }
+
+        Address defaultAddress = addressRepository.findDefaultByAccount(account).orElse(new Address());
+
+        addressRepository.clearDefaultByAccount(account);
+
+        defaultAddress.setAccount(account);
+        defaultAddress.setFullName(fullName);
+        defaultAddress.setPhone(phone);
+        defaultAddress.setAddress(address);
+        defaultAddress.setDefault(true);
+
+        addressRepository.save(defaultAddress);
+    }
+
+    @Transactional
     public Address addNewAddress(Account account, String fullName, String phone, String address)
-            throws IllegalArgumentException { // Báo lỗi cụ thể
+            throws IllegalArgumentException {
+
+        fullName = normalize(fullName);
+        phone = normalize(phone);
+        address = normalize(address);
 
         if (addressRepository.existsByAccountAndPhone(account, phone)) {
-            // Ném ra lỗi để Controller bắt được
-            throw new IllegalArgumentException("Số điện thoại này đã được sử dụng cho một địa chỉ khác.");
+            throw new IllegalArgumentException("This phone number is already being used for a different address.");
         }
 
         Address newAddress = new Address();
@@ -47,26 +105,21 @@ public class AddressService {
         return addressRepository.save(newAddress);
     }
 
-    // Phương thức cập nhật địa chỉ
     @Transactional
     public Address updateAddress(Account account, int addressId, String fullName, String phone, String address)
             throws IllegalArgumentException {
 
-        // 1. Tìm địa chỉ
-        Address existingAddress = addressRepository.findById(addressId)
-                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy địa chỉ với ID: " + addressId));
+        fullName = normalize(fullName);
+        phone = normalize(phone);
+        address = normalize(address);
 
-        // 2. Kiểm tra bảo mật: Địa chỉ này có thuộc tài khoản đang đăng nhập không?
-        if (existingAddress.getAccount().getAccountId() != account.getAccountId()) {
-            throw new SecurityException("Bạn không có quyền sửa địa chỉ này.");
-        }
+        Address existingAddress = addressRepository.findByAccountAndAddressId(account, addressId)
+                .orElseThrow(() -> new EntityNotFoundException("Address with ID not found: " + addressId));
 
-        // 3. Kiểm tra SĐT trùng (loại trừ chính nó)
         if (addressRepository.existsByAccountAndPhoneAndAddressIdNot(account, phone, addressId)) {
-            throw new IllegalArgumentException("Số điện thoại này đã được sử dụng cho một địa chỉ khác.");
+            throw new IllegalArgumentException("This phone number is already being used for a different address.");
         }
 
-        // 4. Cập nhật thông tin
         existingAddress.setFullName(fullName);
         existingAddress.setPhone(phone);
         existingAddress.setAddress(address);
@@ -74,23 +127,18 @@ public class AddressService {
         return addressRepository.save(existingAddress);
     }
 
-    // Phương thức đặt làm mặc định
     @Transactional
     public void setDefaultAddress(Account account, int addressId) {
-        // 1. Tìm địa chỉ muốn đặt làm mặc định
-        Address newDefault = addressRepository.findById(addressId)
-                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy địa chỉ với ID: " + addressId));
+        Address newDefault = addressRepository.findByAccountAndAddressId(account, addressId)
+                .orElseThrow(() -> new EntityNotFoundException("Address with ID not found: " + addressId));
 
-        // 2. Kiểm tra bảo mật
-        if (newDefault.getAccount().getAccountId() != account.getAccountId()) {
-            throw new SecurityException("Bạn không có quyền thay đổi địa chỉ này.");
-        }
-
-        // 3. Bỏ tất cả mặc định cũ (dùng query mới trong Repository)
         addressRepository.clearDefaultByAccount(account);
 
-        // 4. Đặt địa chỉ này làm mặc định và lưu
         newDefault.setDefault(true);
         addressRepository.save(newDefault);
+    }
+
+    private String normalize(String value) {
+        return value == null ? null : value.trim();
     }
 }

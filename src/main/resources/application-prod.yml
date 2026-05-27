@@ -1,0 +1,33 @@
+server:
+  port: ${SERVER_PORT:8080}
+  servlet:
+    session:
+      cookie:
+        secure: true
+
+app:
+  base-url: ${APP_BASE_URL}
+
+spring:
+  config:
+    import: optional:configtree:/run/secrets/
+  payos:
+    client-id: ${PAYOS_CLIENT_ID:${payos.client-id}}
+    api-key: ${PAYOS_API_KEY:${payos.api-key}}
+    checksum-key: ${PAYOS_CHECKSUM_KEY:${payos.checksum-key}}
+    log-level: ${PAYOS_LOG_LEVEL:INFO}
+    base-url: ${PAYOS_BASE_URL:https://api.payos.vn}
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD:${db.password}}
+  jpa:
+    show-sql: ${JPA_SHOW_SQL:false}
+    properties:
+      hibernate:
+        format_sql: ${HIBERNATE_FORMAT_SQL:false}
+  mail:
+    host: ${MAIL_HOST}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:${mail.username}}
+    password: ${MAIL_PASSWORD:${mail.password}}

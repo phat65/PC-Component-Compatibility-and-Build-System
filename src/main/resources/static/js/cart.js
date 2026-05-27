@@ -1,8 +1,18 @@
 document.addEventListener("DOMContentLoaded", function () {
+    function getCsrfToken() {
+        const cookieMatch = document.cookie.match(/(?:^|; )XSRF-TOKEN=([^;]+)/);
+        if (cookieMatch) {
+            return decodeURIComponent(cookieMatch[1]);
+        }
 
-    // Lấy token CSRF (nếu bạn dùng Spring Security)
-    const csrfToken = document.querySelector('meta[name="_csrf"]') ? document.querySelector('meta[name="_csrf"]').getAttribute('content') : '';
-    const csrfHeader = document.querySelector('meta[name="_csrf_header"]') ? document.querySelector('meta[name="_csrf_header"]').getAttribute('content') : 'X-CSRF-TOKEN';
+        const csrfMeta = document.querySelector('meta[name="_csrf"]');
+        return csrfMeta ? csrfMeta.getAttribute('content') : '';
+    }
+
+    function getCsrfHeader() {
+        const csrfHeaderMeta = document.querySelector('meta[name="_csrf_header"]');
+        return csrfHeaderMeta ? csrfHeaderMeta.getAttribute('content') : 'X-XSRF-TOKEN';
+    }
 
     const cartContainer = document.querySelector(".cart-container");
     if (!cartContainer) return;
@@ -27,8 +37,9 @@ document.addEventListener("DOMContentLoaded", function () {
             'Accept': 'application/json',
         };
         // Thêm CSRF token nếu có
+        const csrfToken = getCsrfToken();
         if (csrfToken) {
-            headers[csrfHeader] = csrfToken;
+            headers[getCsrfHeader()] = csrfToken;
         }
 
         fetch(url, {
@@ -293,3 +304,4 @@ document.addEventListener("DOMContentLoaded", function () {
 
     initializeCartState();
 });
+

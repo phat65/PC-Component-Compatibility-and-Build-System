@@ -32,7 +32,7 @@ public class CartItemDTO {
                     !product.getImages().isEmpty()) {
                 this.imageUrl = product.getImages().get(0).getImageUrl();
             } else {
-                this.imageUrl = "/images/no-image.png";
+                this.imageUrl = "/images/no-image.svg";
             }
             calculateSubtotal();
         }

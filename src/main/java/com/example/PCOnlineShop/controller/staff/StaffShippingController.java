@@ -5,7 +5,11 @@ import com.example.PCOnlineShop.service.order.OrderService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
@@ -14,6 +18,8 @@ import java.util.List;
 @RequestMapping("/staff/shipping")
 @RequiredArgsConstructor
 public class StaffShippingController {
+    private static final String SHIPPING_LIST_VIEW = "staffshipping/shipping-list";
+    private static final String REDIRECT_SHIPPING_LIST = "redirect:/staff/shipping/list";
 
     private final OrderService orderService;
 
@@ -21,27 +27,30 @@ public class StaffShippingController {
     public String viewShippingList(Model model) {
         List<Order> shippingQueueOrders = orderService.getShippingQueueOrders();
         model.addAttribute("shippingOrders", shippingQueueOrders);
-        return "staffshipping/shipping-list";
+        return SHIPPING_LIST_VIEW;
     }
 
     @PostMapping("/update-status/{orderId}")
     public String updateShippingOrderStatus(@PathVariable int orderId,
-                                            @RequestParam String newStatus,
+                                            @RequestParam("newStatus") String newStatus,
                                             RedirectAttributes redirectAttributes) {
         try {
-            // Service trả về message kết quả (Success, No Change, hoặc Error)
             String result = orderService.processShippingStatusUpdate(orderId, newStatus);
-
-            if (result.startsWith("Success")) {
-                redirectAttributes.addFlashAttribute("success", result);
-            } else if (result.startsWith("No change")) {
-                redirectAttributes.addFlashAttribute("info", result);
-            } else {
-                redirectAttributes.addFlashAttribute("error", result);
-            }
+            addStatusMessage(redirectAttributes, result);
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "Error: " + e.getMessage());
         }
-        return "redirect:/staff/shipping/list";
+
+        return REDIRECT_SHIPPING_LIST;
+    }
+
+    private void addStatusMessage(RedirectAttributes redirectAttributes, String result) {
+        if (result.startsWith("Success")) {
+            redirectAttributes.addFlashAttribute("success", result);
+        } else if (result.startsWith("No change")) {
+            redirectAttributes.addFlashAttribute("info", result);
+        } else {
+            redirectAttributes.addFlashAttribute("error", result);
+        }
     }
 }

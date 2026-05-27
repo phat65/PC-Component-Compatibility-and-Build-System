@@ -4,11 +4,9 @@ import com.example.PCOnlineShop.model.account.Account;
 import com.example.PCOnlineShop.model.product.Brand;
 import com.example.PCOnlineShop.model.product.Category;
 import com.example.PCOnlineShop.model.product.Product;
-import com.example.PCOnlineShop.repository.account.AccountRepository;
-import com.example.PCOnlineShop.repository.product.BrandRepository;
-import com.example.PCOnlineShop.repository.product.CategoryRepository;
-import com.example.PCOnlineShop.service.feedback.FeedbackService;
+import com.example.PCOnlineShop.service.account.AccountService;
 import com.example.PCOnlineShop.service.product.CategoryService;
+import com.example.PCOnlineShop.service.product.BrandService;
 import com.example.PCOnlineShop.service.product.ProductService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -16,62 +14,63 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
+import java.util.Set;
 import java.util.stream.IntStream;
 
 @Controller
 @RequiredArgsConstructor
 public class HomeController {
+    private static final int DEFAULT_PAGE_SIZE = 12;
+    private static final int MAX_PAGE_SIZE = 48;
+    private static final String DEFAULT_SORT_FIELD = "price";
+    private static final String DEFAULT_SORT_DIRECTION = "desc";
+    private static final Set<String> ALLOWED_SORT_FIELDS = Set.of(
+            "productId",
+            "productName",
+            "price",
+            "createAt",
+            "performanceScore"
+    );
 
     private final ProductService productService;
     private final CategoryService categoryService;
-    private final CategoryRepository categoryRepository;
-    private final BrandRepository brandRepository;
-    private final AccountRepository accountRepository;
-    private final FeedbackService feedbackService;
-    /**
-     * ✅ Trang landing (trang chủ đầu tiên)
-     */
+    private final BrandService brandService;
+    private final AccountService accountService;
 
-   @GetMapping("/")
+    @GetMapping("/")
     public String landing() {
         return "landing";
     }
 
-    /**
-     * ✅ Trang Home (hiển thị sản phẩm nổi bật, lọc theo brand/category)
-     */
     @GetMapping("/home")
-    public String home(
-            @RequestParam(required = false) Integer category,
-            @RequestParam(required = false) Integer brand,
-            Authentication authentication,
-            Model model
-    ) {
+    public String home(@RequestParam(required = false) Integer category,
+                       @RequestParam(required = false) Integer brand,
+                       Authentication authentication,
+                       Model model) {
         if (authentication != null && authentication.isAuthenticated()) {
-            String email = authentication.getName();
-            Account user = accountRepository.findByEmail(email).orElse(null);
+            String phoneNumber = authentication.getName();
+            Account user = accountService.getByPhoneNumber(phoneNumber);
             model.addAttribute("currentUser", user);
         }
 
-        // Get only main categories (Mainboard, CPU, GPU, Memory, Storage, Case, Power Supply, Cooling, Other)
-        List<Category> categories = categoryRepository.findMainCategories();
-        List<Brand> brands = brandRepository.findAll();
+        List<Category> categories = categoryService.getMainCategories();
+        List<Brand> brands = brandService.getAllBrands();
         List<Product> products;
 
         if (category != null) {
-            products = productService.getProductsByCategory(category);
+            products = productService.getStorefrontProductsByCategory(category);
             model.addAttribute("selectedCategory", category);
         } else if (brand != null) {
-            products = productService.getProductsByBrand(brand);
+            products = productService.getStorefrontProductsByBrand(brand);
             model.addAttribute("selectedBrand", brand);
         } else {
-            products = productService.getFeaturedProducts();
+            products = productService.getFeaturedStorefrontProducts();
         }
 
         model.addAttribute("categories", categories);
@@ -81,93 +80,81 @@ public class HomeController {
         return "home";
     }
 
-    /**
-     *  Trang Product Home - hiển thị toàn bộ sản phẩm (phân trang + lọc)
-     */
     @GetMapping("/products")
-    public String productHome(
-            @RequestParam(required = false) Integer category,
-            @RequestParam(required = false) Integer brand,
-            @RequestParam(required = false) Double minPrice,
-            @RequestParam(required = false) Double maxPrice,
-            @RequestParam(required = false) String keyword,
-            @RequestParam(defaultValue = "price") String sortField,
-            @RequestParam(defaultValue = "desc") String sortDir,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "12") int size,
-            Model model
-    ) {
-        if (keyword != null) {
-            keyword = keyword.trim().replaceAll("\\s+", " ");
-        }
-        Sort sort = sortDir.equalsIgnoreCase("asc")
-                ? Sort.by(sortField).ascending()
-                : Sort.by(sortField).descending();
+    public String productHome(@RequestParam(required = false) Integer category,
+                              @RequestParam(required = false) Integer brand,
+                              @RequestParam(required = false) Double minPrice,
+                              @RequestParam(required = false) Double maxPrice,
+                              @RequestParam(required = false) String keyword,
+                              @RequestParam(defaultValue = DEFAULT_SORT_FIELD) String sortField,
+                              @RequestParam(defaultValue = DEFAULT_SORT_DIRECTION) String sortDir,
+                              @RequestParam(defaultValue = "0") int page,
+                              @RequestParam(defaultValue = "" + DEFAULT_PAGE_SIZE) int size,
+                              Model model) {
+        String normalizedKeyword = normalizeKeyword(keyword);
+        int resolvedPage = Math.max(page, 0);
+        int resolvedSize = resolvePageSize(size);
+        String resolvedSortField = resolveSortField(sortField);
+        String resolvedSortDir = resolveSortDirection(sortDir);
+        Pageable pageable = PageRequest.of(
+                resolvedPage,
+                resolvedSize,
+                createSort(resolvedSortField, resolvedSortDir)
+        );
 
-        Pageable pageable = PageRequest.of(page, size, sort);
-
-        Page<Product> productPage = productService.searchVisibleCatalogProducts(
+        Page<Product> productPage = productService.searchVisibleSellingProducts(
                 category,
                 brand,
                 minPrice,
                 maxPrice,
-                keyword,
+                normalizedKeyword,
                 pageable
         );
 
         model.addAttribute("products", productPage.getContent());
-        model.addAttribute("currentPage", page);
+        model.addAttribute("currentPage", resolvedPage);
         model.addAttribute("totalPages", productPage.getTotalPages());
         model.addAttribute("pageNumbers",
-                java.util.stream.IntStream.range(0, productPage.getTotalPages()).boxed().toList());
-
-        // Truyền các giá trị filter về view
-        // Truyền các giá trị filter về view - only main categories
-        model.addAttribute("categories", categoryRepository.findMainCategories());
+                IntStream.range(0, productPage.getTotalPages()).boxed().toList());
+        model.addAttribute("categories", categoryService.getMainCategories());
         model.addAttribute("selectedCategory", category);
         model.addAttribute("selectedBrand", brand);
-        model.addAttribute("brands", brandRepository.findAll());
+        model.addAttribute("brands", brandService.getAllBrands());
         model.addAttribute("minPrice", minPrice);
         model.addAttribute("maxPrice", maxPrice);
-        model.addAttribute("keyword", keyword);
-        model.addAttribute("sortDir", sortDir);
+        model.addAttribute("keyword", normalizedKeyword);
+        model.addAttribute("sortField", resolvedSortField);
+        model.addAttribute("sortDir", resolvedSortDir);
+        model.addAttribute("size", resolvedSize);
 
         return "product/product-home";
     }
 
-
-    /**
-     * ✅ Trang chi tiết sản phẩm
-     */
-    @GetMapping("products/{id}")
-    public String showProductDetail(@PathVariable("id") Integer id, Model model) {
-        Product product = productService.getVisibleSellingProductById(id);
-        if (product == null) return "redirect:/home";
-
-        model.addAttribute("product", product);
-        model.addAttribute("categories", categoryService.getAllCategories());
-        model.addAttribute("images", product.getImages());
-
-        //  Lấy sản phẩm liên quan
-        List<Category> productCategories = product.getCategories();
-        if (productCategories != null && !productCategories.isEmpty()) {
-            // Use primary category (first one) for related products
-            Category primaryCategory = productCategories.getFirst();
-            List<Product> related = productService.getTopRelatedProducts(
-                    primaryCategory.getCategoryId(), id);
-            model.addAttribute("relatedProducts", related);
+    private int resolvePageSize(int size) {
+        if (size <= 0) {
+            return DEFAULT_PAGE_SIZE;
         }
+        return Math.min(size, MAX_PAGE_SIZE);
+    }
 
-        //  Lấy toàn bộ feedback đã được duyệt (Allow) — không phân trang
-        var feedbackPage = feedbackService.getAllowedByProduct(id, 0, Integer.MAX_VALUE);
-        model.addAttribute("feedbackPage", feedbackPage);
+    private String resolveSortField(String sortField) {
+        return ALLOWED_SORT_FIELDS.contains(sortField) ? sortField : DEFAULT_SORT_FIELD;
+    }
 
-        Double avgRating = feedbackService.getAverageRating(id);
-        model.addAttribute("avgRating", avgRating);
+    private String resolveSortDirection(String sortDir) {
+        return "asc".equalsIgnoreCase(sortDir) ? "asc" : DEFAULT_SORT_DIRECTION;
+    }
 
-        long feedbackCount = feedbackPage.getTotalElements();
-        model.addAttribute("feedbackCount", feedbackCount);
+    private Sort createSort(String sortField, String sortDir) {
+        Sort sort = Sort.by(sortField);
+        return "asc".equals(sortDir) ? sort.ascending() : sort.descending();
+    }
 
-        return "product/product-details";
+    private String normalizeKeyword(String keyword) {
+        if (keyword == null) {
+            return null;
+        }
+        String normalized = keyword.trim().replaceAll("\\s+", " ");
+        return normalized.isEmpty() ? null : normalized;
     }
 }

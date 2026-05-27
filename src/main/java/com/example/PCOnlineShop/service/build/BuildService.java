@@ -5,6 +5,7 @@ import com.example.PCOnlineShop.model.build.*;
 import com.example.PCOnlineShop.model.product.Product;
 import com.example.PCOnlineShop.repository.build.*;
 import com.example.PCOnlineShop.repository.product.ProductRepository;
+import com.example.PCOnlineShop.service.build.compatibility.CompatibilityResult;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -13,6 +14,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -179,77 +181,142 @@ public class BuildService {
         return sortByTdpAndPrice(compatible);
     }
 
+    public Optional<Mainboard> findSelectableCompatibleMainboardByProductId(Integer productId, BuildItemDto buildItem) {
+        return findSelectableCompatible(
+                productId,
+                mainboardRepository::findByIdWithImages,
+                mainboard -> compatibilityService.validateMainboardCompatibility(buildItem, mainboard));
+    }
+
+    public Optional<CPU> findSelectableCompatibleCpuByProductId(Integer productId, BuildItemDto buildItem) {
+        return findSelectableCompatible(
+                productId,
+                cpuRepository::findByIdWithImages,
+                cpu -> compatibilityService.validateCpuCompatibility(buildItem, cpu));
+    }
+
+    public Optional<GPU> findSelectableCompatibleGpuByProductId(Integer productId, BuildItemDto buildItem) {
+        return findSelectableCompatible(
+                productId,
+                gpuRepository::findByIdWithImages,
+                gpu -> compatibilityService.validateGpuCompatibility(buildItem, gpu));
+    }
+
+    public Optional<Case> findSelectableCompatibleCaseByProductId(Integer productId, BuildItemDto buildItem) {
+        return findSelectableCompatible(
+                productId,
+                caseRepository::findByIdWithImages,
+                pcCase -> compatibilityService.validateCaseCompatibility(buildItem, pcCase));
+    }
+
+    public Optional<Memory> findSelectableCompatibleMemoryByProductId(Integer productId, BuildItemDto buildItem) {
+        return findSelectableCompatible(
+                productId,
+                memoryRepository::findByIdWithImages,
+                memory -> compatibilityService.validateMemoryCompatibility(buildItem, memory));
+    }
+
+    public Optional<Storage> findSelectableCompatibleStorageByProductId(Integer productId, BuildItemDto buildItem) {
+        return findSelectableCompatible(
+                productId,
+                storageRepository::findByIdWithImages,
+                storage -> compatibilityService.validateStorageCompatibility(buildItem, storage));
+    }
+
+    public Optional<PowerSupply> findSelectableCompatiblePowerSupplyByProductId(Integer productId, BuildItemDto buildItem) {
+        return findSelectableCompatible(
+                productId,
+                powerSupplyRepository::findByIdWithImages,
+                psu -> compatibilityService.validatePowerSupplyCompatibility(buildItem, psu));
+    }
+
+    public Optional<Cooling> findSelectableCompatibleCoolingByProductId(Integer productId, BuildItemDto buildItem) {
+        return findSelectableCompatible(
+                productId,
+                coolingRepository::findByIdWithImages,
+                cooling -> compatibilityService.validateCoolingCompatibility(buildItem, cooling));
+    }
+
     // Helper methods for sorting
 
+    private <T> Optional<T> findSelectableCompatible(Integer productId,
+                                                     Function<Integer, Optional<T>> finder,
+                                                     Function<T, CompatibilityResult> validator) {
+        if (productId == null) {
+            return Optional.empty();
+        }
+
+        return finder.apply(productId)
+                .filter(component -> validator.apply(component).compatible());
+    }
+
     private <T> List<T> sortByPerformanceAndPrice(List<T> items) {
-        return items.stream()
-                .sorted(Comparator
-                        .comparing((T item) -> getPerformanceScore(item), Comparator.reverseOrder())
-                        .thenComparing(this::getPrice))
-                .collect(Collectors.toList());
+        return sortBy(items, byPerformanceDescThenPrice());
     }
 
     private <T> List<T> sortByPrice(List<T> items) {
-        return items.stream()
-                .sorted(Comparator.comparing(this::getPrice))
-                .collect(Collectors.toList());
+        return sortBy(items, byPriceAsc());
     }
 
     private List<PowerSupply> sortByWattageAndPrice(List<PowerSupply> items) {
-        return items.stream()
-                .sorted(Comparator
-                        .comparing(PowerSupply::getWattage, Comparator.reverseOrder())
-                        .thenComparing(this::getPrice))
-                .collect(Collectors.toList());
+        return sortBy(items, byMetricDescThenPrice(PowerSupply::getWattage));
     }
 
     private List<Cooling> sortByTdpAndPrice(List<Cooling> items) {
+        return sortBy(items, byMetricDescThenPrice(Cooling::getTdp));
+    }
+
+    private <T> List<T> sortBy(List<T> items, Comparator<T> comparator) {
         return items.stream()
-                .sorted(Comparator
-                        .comparing(Cooling::getTdp, Comparator.reverseOrder())
-                        .thenComparing(this::getPrice))
+                .sorted(comparator)
                 .collect(Collectors.toList());
     }
 
+    private <T> Comparator<T> byPerformanceDescThenPrice() {
+        return Comparator
+                .comparing((T item) -> getPerformanceScore(item), Comparator.reverseOrder())
+                .thenComparing(this::getPrice);
+    }
+
+    private <T> Comparator<T> byPriceAsc() {
+        return Comparator.comparing(this::getPrice);
+    }
+
+    private <T, U extends Comparable<? super U>> Comparator<T> byMetricDescThenPrice(Function<T, U> metric) {
+        return Comparator
+                .comparing(metric, Comparator.reverseOrder())
+                .thenComparing(this::getPrice);
+    }
+
     private <T> Integer getPerformanceScore(T item) {
-        if (item instanceof Mainboard) {
-            return ((Mainboard) item).getProduct().getPerformanceScore() != null
-                    ? ((Mainboard) item).getProduct().getPerformanceScore() : 0;
-        } else if (item instanceof CPU) {
-            return ((CPU) item).getProduct().getPerformanceScore() != null
-                    ? ((CPU) item).getProduct().getPerformanceScore() : 0;
-        } else if (item instanceof GPU) {
-            return ((GPU) item).getProduct().getPerformanceScore() != null
-                    ? ((GPU) item).getProduct().getPerformanceScore() : 0;
-        } else if (item instanceof Memory) {
-            return ((Memory) item).getProduct().getPerformanceScore() != null
-                    ? ((Memory) item).getProduct().getPerformanceScore() : 0;
-        } else if (item instanceof Storage) {
-            return ((Storage) item).getProduct().getPerformanceScore() != null
-                    ? ((Storage) item).getProduct().getPerformanceScore() : 0;
-        }
-        return 0;
+        Product product = getComponentProduct(item);
+        return product != null && product.getPerformanceScore() != null ? product.getPerformanceScore() : 0;
     }
 
     private <T> Double getPrice(T item) {
-        if (item instanceof Mainboard) {
-            return ((Mainboard) item).getProduct().getPrice();
-        } else if (item instanceof CPU) {
-            return ((CPU) item).getProduct().getPrice();
-        } else if (item instanceof GPU) {
-            return ((GPU) item).getProduct().getPrice();
-        } else if (item instanceof Memory) {
-            return ((Memory) item).getProduct().getPrice();
-        } else if (item instanceof Storage) {
-            return ((Storage) item).getProduct().getPrice();
-        } else if (item instanceof Case) {
-            return ((Case) item).getProduct().getPrice();
-        } else if (item instanceof PowerSupply) {
-            return ((PowerSupply) item).getProduct().getPrice();
-        } else if (item instanceof Cooling) {
-            return ((Cooling) item).getProduct().getPrice();
+        Product product = getComponentProduct(item);
+        return product != null ? product.getPrice() : 0.0;
+    }
+
+    private Product getComponentProduct(Object item) {
+        if (item instanceof Mainboard mainboard) {
+            return mainboard.getProduct();
+        } else if (item instanceof CPU cpu) {
+            return cpu.getProduct();
+        } else if (item instanceof GPU gpu) {
+            return gpu.getProduct();
+        } else if (item instanceof Memory memory) {
+            return memory.getProduct();
+        } else if (item instanceof Storage storage) {
+            return storage.getProduct();
+        } else if (item instanceof Case pcCase) {
+            return pcCase.getProduct();
+        } else if (item instanceof PowerSupply powerSupply) {
+            return powerSupply.getProduct();
+        } else if (item instanceof Cooling cooling) {
+            return cooling.getProduct();
         }
-        return 0.0;
+        return null;
     }
     // Other (generic product)
     public List<Product> getOtherProducts() {

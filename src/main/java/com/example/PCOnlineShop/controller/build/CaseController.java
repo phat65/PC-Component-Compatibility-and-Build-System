@@ -4,25 +4,25 @@ import com.example.PCOnlineShop.dto.build.BuildItemDto;
 import com.example.PCOnlineShop.model.build.Case;
 import com.example.PCOnlineShop.service.build.BuildService;
 import com.example.PCOnlineShop.service.build.CaseService;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
-@Deprecated(forRemoval = true)
+@RequiredArgsConstructor
+@Controller
 @RequestMapping("/build")
 @SessionAttributes({"buildItems"})
 public class CaseController {
+    private static final String CASE_VIEW = "build/cases";
+    private static final String REDIRECT_CASE = "redirect:/build/case";
+    private static final String REDIRECT_COOLING = "redirect:/build/cooling";
 
-    @Autowired
-    private CaseService caseService;
-
-    @Autowired
-    private BuildService buildService;
+    private final CaseService caseService;
+    private final BuildService buildService;
 
     @ModelAttribute("buildItems")
     public BuildItemDto buildItems() {
@@ -30,11 +30,10 @@ public class CaseController {
     }
 
     @GetMapping("/case")
-    public String showCases(Model model, @ModelAttribute("buildItems") BuildItemDto buildItem) {
+    public String showCaseSelectionPage(Model model, @ModelAttribute("buildItems") BuildItemDto buildItem) {
         List<Case> cases = buildService.getCompatibleCases(buildItem);
-        model.addAttribute("cases", cases);
-        model.addAttribute("allBrands", caseService.getAllBrands(cases));
-        return "build/cases";
+        addCaseModel(model, cases, cases, null, null);
+        return CASE_VIEW;
     }
 
     @PostMapping("/case/filter")
@@ -42,33 +41,49 @@ public class CaseController {
                               @RequestParam(required = false) String sortBy,
                               @ModelAttribute("buildItems") BuildItemDto buildItem,
                               Model model) {
-        List<Case> cases = buildService.getCompatibleCases(buildItem);
-        Map<String,List<String>> filters = new HashMap<>();
-        filters.put("brands", brands);
-        cases = caseService.filterCases(cases, filters, sortBy);
+        List<Case> compatibleCases = buildService.getCompatibleCases(buildItem);
+        List<Case> filteredCases = caseService.filterCases(compatibleCases, brands, sortBy);
 
-        model.addAttribute("cases", cases);
-        model.addAttribute("allBrands", caseService.getAllBrands(buildService.getCompatibleCases(buildItem)));
-        model.addAttribute("selectedBrands", brands);
-        model.addAttribute("selectedSort", sortBy);
-        return "build/cases";
+        addCaseModel(model, filteredCases, compatibleCases, brands, sortBy);
+        return CASE_VIEW;
     }
 
     @PostMapping("/selectCase")
     public String selectCase(@RequestParam(value = "caseId", required = false) Integer caseId,
-                           @ModelAttribute("buildItems") BuildItemDto buildItem,
-                           org.springframework.web.servlet.mvc.support.RedirectAttributes redirectAttributes) {
-        // Case is REQUIRED - must select one
+                             @ModelAttribute("buildItems") BuildItemDto buildItem,
+                             RedirectAttributes redirectAttributes) {
         if (caseId == null && buildItem.getPcCase() == null) {
             redirectAttributes.addFlashAttribute("error", "Please select a case to continue.");
-            return "redirect:/build/case";
+            return REDIRECT_CASE;
         }
 
-        // Only update if user selected a new case
-        if (caseId != null) {
-            buildItem.setPcCase(caseService.getCaseById(caseId));
+        if (caseId == null) {
+            return REDIRECT_COOLING;
         }
-        // If caseId is null but buildItem.pcCase exists, keep it
-        return "redirect:/build/cooling";
+
+        return buildService.findSelectableCompatibleCaseByProductId(caseId, buildItem)
+                .map(pcCase -> selectAndContinue(buildItem, pcCase))
+                .orElseGet(() -> rejectSelection(redirectAttributes));
+    }
+
+    private void addCaseModel(Model model,
+                              List<Case> cases,
+                              List<Case> brandSource,
+                              List<String> selectedBrands,
+                              String selectedSort) {
+        model.addAttribute("cases", cases);
+        model.addAttribute("allBrands", caseService.getAllBrands(brandSource));
+        model.addAttribute("selectedBrands", selectedBrands);
+        model.addAttribute("selectedSort", selectedSort);
+    }
+
+    private String selectAndContinue(BuildItemDto buildItem, Case pcCase) {
+        buildItem.setPcCase(pcCase);
+        return REDIRECT_COOLING;
+    }
+
+    private String rejectSelection(RedirectAttributes redirectAttributes) {
+        redirectAttributes.addFlashAttribute("error", "Selected case is not available or compatible.");
+        return REDIRECT_CASE;
     }
 }

@@ -26,7 +26,7 @@ public class BuildSuggestionController {
 
     @GetMapping("/presets")
     public ResponseEntity<List<PresetInfo>> getPresets() {
-        log.info("📋 Fetching all build presets");
+        log.info("Fetching all build presets");
 
         List<PresetInfo> presets = Arrays.stream(BuildPreset.values())
             .map(preset -> new PresetInfo(
@@ -42,8 +42,13 @@ public class BuildSuggestionController {
 
     @PostMapping("/suggest")
     public ResponseEntity<?> suggestBuild(@RequestBody BuildRequestDto request) {
-        log.info("🎯 Received build suggestion request: preset={}, budget={}",
-                 request.getPreset(), request.getBudget());
+        String validationError = validateSuggestRequest(request);
+        if (validationError != null) {
+            return ResponseEntity.badRequest().body(validationError);
+        }
+
+        log.info("Received build suggestion request: preset={}, budget={}",
+                request.getPreset(), request.getBudget());
 
         try {
             BuildPlanDto plan = buildService.suggestBuild(
@@ -52,7 +57,7 @@ public class BuildSuggestionController {
             );
 
             // Log the results
-            log.info("✅ Build suggestion successful");
+            log.info("Build suggestion successful");
             log.info("   - CPU: {}", plan.getCpu() != null ? plan.getCpu().getProductName() : "Not found");
             log.info("   - GPU: {}", plan.getGpu() != null ? plan.getGpu().getProductName() : "Not found");
             log.info("   - Mainboard: {}", plan.getMainboard() != null ? plan.getMainboard().getProductName() : "Not found");
@@ -65,12 +70,12 @@ public class BuildSuggestionController {
             return ResponseEntity.ok(plan);
 
         } catch (IllegalArgumentException e) {
-            log.error("❌ Invalid preset: {}", request.getPreset());
+            log.error("Invalid build suggestion request: {}", request.getPreset());
             return ResponseEntity.badRequest()
                 .body("Invalid preset: " + request.getPreset());
 
         } catch (Exception e) {
-            log.error("❌ Error generating build suggestion", e);
+            log.error("Error generating build suggestion", e);
             return ResponseEntity.internalServerError()
                 .body("Error generating build suggestion: " + e.getMessage());
         }
@@ -78,24 +83,60 @@ public class BuildSuggestionController {
 
     @PostMapping("/apply")
     public ResponseEntity<?> applyBuild(@RequestBody BuildPlanDto plan, HttpSession session) {
-        log.info("🔧 Applying suggested build to session");
+        log.info("Applying suggested build to session");
 
         try {
+            if (!hasAnyComponent(plan)) {
+                return ResponseEntity.badRequest()
+                    .body("Build plan must contain at least one component");
+            }
+
             // Convert BuildPlanDto to BuildItemDto
             BuildItemDto buildItems = buildService.convertPlanToItems(plan);
 
             // Store in session
             session.setAttribute("buildItems", buildItems);
 
-            log.info("✅ Build applied to session successfully");
+            log.info("Build applied to session successfully");
             return ResponseEntity.ok()
                 .body(Map.of("message", "Build applied successfully", "redirect", "/build/mainboard"));
 
+        } catch (IllegalArgumentException e) {
+            log.error("Invalid build plan", e);
+            return ResponseEntity.badRequest()
+                .body("Invalid build plan: " + e.getMessage());
+
         } catch (Exception e) {
-            log.error("❌ Error applying build to session", e);
+            log.error("Error applying build to session", e);
             return ResponseEntity.internalServerError()
                 .body("Error applying build: " + e.getMessage());
         }
+    }
+
+    private String validateSuggestRequest(BuildRequestDto request) {
+        if (request == null) {
+            return "Build request is required";
+        }
+        if (request.getPreset() == null || request.getPreset().isBlank()) {
+            return "Preset is required";
+        }
+        if (request.getBudget() <= 0) {
+            return "Budget must be greater than 0";
+        }
+        return null;
+    }
+
+    private boolean hasAnyComponent(BuildPlanDto plan) {
+        return plan != null && (
+            plan.getMainboard() != null
+                || plan.getCpu() != null
+                || plan.getGpu() != null
+                || plan.getMemory() != null
+                || plan.getStorage() != null
+                || plan.getPowerSupply() != null
+                || plan.getPcCase() != null
+                || plan.getCooling() != null
+        );
     }
 
     // Inner DTO class for preset information

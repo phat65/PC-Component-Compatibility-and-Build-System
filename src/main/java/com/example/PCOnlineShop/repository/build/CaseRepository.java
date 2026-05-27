@@ -1,13 +1,14 @@
 package com.example.PCOnlineShop.repository.build;
 
-import com.example.PCOnlineShop.model.build.Case;
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
-import java.util.Optional;
+import com.example.PCOnlineShop.model.build.Case;
 
 @Repository
 public interface CaseRepository extends JpaRepository<Case, Integer> {
@@ -37,13 +38,17 @@ public interface CaseRepository extends JpaRepository<Case, Integer> {
            "LEFT JOIN FETCH p.images " +
            "LEFT JOIN FETCH p.brand " +
            "WHERE p.status = true " +
-           "AND p.lifecycleStatus = com.example.PCOnlineShop.model.product.ProductLifecycleStatus.SELLING")
+           "AND p.lifecycleStatus = com.example.PCOnlineShop.model.product.ProductLifecycleStatus.SELLING " +
+           "AND (p.inventoryQuantity IS NULL OR p.inventoryQuantity > 0)")
     List<Case> findAllWithImages();
 
     @Query("SELECT DISTINCT c FROM Case c " +
            "LEFT JOIN FETCH c.product p " +
            "LEFT JOIN FETCH p.images " +
            "LEFT JOIN FETCH p.brand " +
-           "WHERE c.id = :id")
-    Optional<Case> findByIdWithImages(@Param("id") int id);
+           "WHERE c.productId = :productId " +
+           "AND p.status = true " +
+           "AND p.lifecycleStatus = com.example.PCOnlineShop.model.product.ProductLifecycleStatus.SELLING " +
+           "AND (p.inventoryQuantity IS NULL OR p.inventoryQuantity > 0)")
+    Optional<Case> findByIdWithImages(@Param("productId") int productId);
 }

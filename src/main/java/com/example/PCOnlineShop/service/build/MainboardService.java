@@ -1,5 +1,5 @@
 package com.example.PCOnlineShop.service.build;
-import com.example.PCOnlineShop.dto.build.BuildItemDto;
+
 import com.example.PCOnlineShop.model.build.Mainboard;
 import com.example.PCOnlineShop.model.product.Brand;
 import com.example.PCOnlineShop.repository.build.MainboardRepository;
@@ -7,15 +7,13 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
 
-@Deprecated(forRemoval = true)
+@Service
 @RequiredArgsConstructor
 public class MainboardService {
     private final MainboardRepository mainboardRepository;
-    private final BuildService buildService;
-
 
     @Transactional(readOnly = true)
     public List<Mainboard> getAllMainboards() {
@@ -30,53 +28,37 @@ public class MainboardService {
         return mainboardRepository.save(mainboard);
     }
 
-    @Transactional(readOnly = true)
-    public Mainboard getMainboardById(int id) {
-        return mainboardRepository.findByIdWithImages(id).orElse(null);
-    }
-
     public void deleteMainboard(int id) {
         mainboardRepository.deleteById(id);
     }
 
-    public List<Mainboard> filterMainboards(List<Mainboard> mainboards, Map<String,List<String>> filters, String sortBy) {
-        // Filter by brands if selected
-        if (filters.get("brands") != null && !filters.get("brands").isEmpty()) {
+    public List<Mainboard> filterMainboards(List<Mainboard> mainboards, List<String> brands, String sortBy) {
+        if (brands != null && !brands.isEmpty()) {
             mainboards = mainboards.stream()
-                    .filter(mb -> filters.get("brands").contains(mb.getProduct().getBrand().getName()))
+                    .filter(mb -> brands.contains(mb.getProduct().getBrand().getName()))
                     .toList();
         }
 
-        // Sort if specified
-        if (sortBy != null) {
-            switch (sortBy) {
-                case "priceAsc":
-                    mainboards = mainboards.stream()
-                            .sorted((a, b) -> Double.compare(a.getProduct().getPrice(), b.getProduct().getPrice()))
-                            .toList();
-                    break;
-                case "priceDesc":
-                    mainboards = mainboards.stream()
-                            .sorted((a, b) -> Double.compare(b.getProduct().getPrice(), a.getProduct().getPrice()))
-                            .toList();
-                    break;
-                case "nameAsc":
-                    mainboards = mainboards.stream()
-                            .sorted((a, b) -> a.getProduct().getProductName().compareTo(b.getProduct().getProductName()))
-                            .toList();
-                    break;
-                case "nameDesc":
-                    mainboards = mainboards.stream()
-                            .sorted((a, b) -> b.getProduct().getProductName().compareTo(a.getProduct().getProductName()))
-                            .toList();
-                    break;
-            }
+        Comparator<Mainboard> comparator = getMainboardComparator(sortBy);
+        if (comparator != null) {
+            mainboards = mainboards.stream()
+                    .sorted(comparator)
+                    .toList();
         }
         return mainboards;
     }
 
-    public List<Brand> getAllBrands(BuildItemDto buildItem) {
-        List<Mainboard> mainboards =buildService.getCompatibleMainboards(buildItem);
+    private Comparator<Mainboard> getMainboardComparator(String sortBy) {
+        return switch (sortBy == null ? "" : sortBy) {
+            case "priceAsc" -> Comparator.comparing(mb -> mb.getProduct().getPrice());
+            case "priceDesc" -> Comparator.comparing((Mainboard mb) -> mb.getProduct().getPrice()).reversed();
+            case "nameAsc" -> Comparator.comparing(mb -> mb.getProduct().getProductName(), String.CASE_INSENSITIVE_ORDER);
+            case "nameDesc" -> Comparator.comparing((Mainboard mb) -> mb.getProduct().getProductName(), String.CASE_INSENSITIVE_ORDER).reversed();
+            default -> null;
+        };
+    }
+
+    public List<Brand> getAllBrands(List<Mainboard> mainboards) {
         return mainboards.stream()
                 .map(mb -> mb.getProduct().getBrand())
                 .distinct()

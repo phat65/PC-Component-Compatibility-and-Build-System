@@ -7,7 +7,7 @@ This repository is a Spring Boot PC online shop with a custom PC build flow.
 Important characteristics of the current codebase:
 
 - It is not REST-only. The main application style is Spring MVC + Thymeleaf server-rendered pages.
-- Some features are JSON/API based, especially build suggestion and external component import.
+- Some features are JSON/API based, especially build suggestion.
 - Root package: `com.example.PCOnlineShop`
 - Main stack: Java 21, Spring Boot 3.5.x, Maven, MySQL, Flyway, Spring Security, Thymeleaf, Mail, PayOS, Jsoup
 - Application entry enables both scheduling and async execution.
@@ -26,8 +26,6 @@ Use the current package layout as the source of truth:
   JPA entities grouped by domain: `account`, `product`, `build`, `order`, `payment`, `cart`, `chat`, `feedback`
 - `src/main/java/com/example/PCOnlineShop/dto`
   DTOs used mainly for `build`, `order`, `cart`, `payment`, `warranty`, `ai`, `blog`
-- `src/main/java/com/example/PCOnlineShop/integration/component`
-  External component catalog provider, mapping, fetch, and persistence flow
 - `src/main/resources/templates`
   Thymeleaf views
 - `src/main/resources/static`
@@ -70,7 +68,6 @@ This repo is primarily MVC:
 Current API-style areas include:
 
 - `controller.build.BuildSuggestionController`
-- `controller.product.ExternalComponentCatalogController`
 
 Do not assume every new feature should be a REST endpoint.
 
@@ -142,14 +139,6 @@ Important patterns:
 
 If you add or change endpoints, check whether the security configuration also needs an update.
 
-## External Integration Rules
-
-The repo already contains external component catalog import logic:
-
-- Use `integration.component` for provider/client/mapper/import work
-- `ExternalComponentCatalogController` is feature-flagged with `app.catalog.external-import.enabled`
-- Do not place provider-specific import logic directly inside product controllers or generic product services
-
 ## Database Rules
 
 - Database name: `pconlineshop`
@@ -189,7 +178,7 @@ When adding features:
 - Identify whether the feature belongs to MVC pages, JSON API, or both
 - Update only the affected layers
 - Keep business logic out of controllers
-- Respect current domain boundaries such as `product`, `build`, `order`, `auth`, `integration`
+- Respect current domain boundaries such as `product`, `build`, `order`, and `auth`
 
 When fixing bugs:
 

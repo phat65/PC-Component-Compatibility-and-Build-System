@@ -3,7 +3,7 @@
 <head>
     <title>Feedback Detail</title>
     <link rel="stylesheet" th:href="@{/css/bootstrap.min.css}">
-    <link rel="stylesheet" th:href="@{/css/FeedBack.css}">
+    <link rel="stylesheet" th:href="@{/css/Feedback.css}">
 </head>
 
 <body class="bg-light">
@@ -52,6 +52,8 @@
 
             <textarea class="feedback-reply-box"
                       name="reply"
+                      maxlength="500"
+                      required
                       placeholder="Type here..."
                       th:text="${fb.reply}"></textarea>
 

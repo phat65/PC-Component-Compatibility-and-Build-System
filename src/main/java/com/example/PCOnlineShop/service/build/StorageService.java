@@ -3,20 +3,16 @@ package com.example.PCOnlineShop.service.build;
 import com.example.PCOnlineShop.model.build.Storage;
 import com.example.PCOnlineShop.model.product.Brand;
 import com.example.PCOnlineShop.repository.build.StorageRepository;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
 
-@Deprecated(forRemoval = true)
-@AllArgsConstructor
+@Service
+@RequiredArgsConstructor
 public class StorageService {
-    private StorageRepository storageRepository;
-
-    public Storage getStorageById(int id) {
-        return storageRepository.findByIdWithImages(id).orElse(null);
-    }
+    private final StorageRepository storageRepository;
 
     public List<Storage> getAllStorages() {
         return storageRepository.findAllWithImages();
@@ -35,40 +31,30 @@ public class StorageService {
         storageRepository.deleteById(id);
     }
 
-    public List<Storage> filterStorages(List<Storage> storages, Map<String,List<String>> filters, String sortBy) {
-        // Filter by brands if selected
-        if (filters.get("brands") != null && !filters.get("brands").isEmpty()) {
+    public List<Storage> filterStorages(List<Storage> storages, List<String> brands, String sortBy) {
+        if (brands != null && !brands.isEmpty()) {
             storages = storages.stream()
-                    .filter(s -> filters.get("brands").contains(s.getProduct().getBrand().getName()))
+                    .filter(storage -> brands.contains(storage.getProduct().getBrand().getName()))
                     .toList();
         }
 
-        // Sort if specified
-        if (sortBy != null) {
-            switch (sortBy) {
-                case "priceAsc":
-                    storages = storages.stream()
-                            .sorted((a, b) -> Double.compare(a.getProduct().getPrice(), b.getProduct().getPrice()))
-                            .toList();
-                    break;
-                case "priceDesc":
-                    storages = storages.stream()
-                            .sorted((a, b) -> Double.compare(b.getProduct().getPrice(), a.getProduct().getPrice()))
-                            .toList();
-                    break;
-                case "nameAsc":
-                    storages = storages.stream()
-                            .sorted((a, b) -> a.getProduct().getProductName().compareTo(b.getProduct().getProductName()))
-                            .toList();
-                    break;
-                case "nameDesc":
-                    storages = storages.stream()
-                            .sorted((a, b) -> b.getProduct().getProductName().compareTo(a.getProduct().getProductName()))
-                            .toList();
-                    break;
-            }
+        Comparator<Storage> comparator = getStorageComparator(sortBy);
+        if (comparator != null) {
+            storages = storages.stream()
+                    .sorted(comparator)
+                    .toList();
         }
         return storages;
+    }
+
+    private Comparator<Storage> getStorageComparator(String sortBy) {
+        return switch (sortBy == null ? "" : sortBy) {
+            case "priceAsc" -> Comparator.comparing(storage -> storage.getProduct().getPrice());
+            case "priceDesc" -> Comparator.comparing((Storage storage) -> storage.getProduct().getPrice()).reversed();
+            case "nameAsc" -> Comparator.comparing(storage -> storage.getProduct().getProductName(), String.CASE_INSENSITIVE_ORDER);
+            case "nameDesc" -> Comparator.comparing((Storage storage) -> storage.getProduct().getProductName(), String.CASE_INSENSITIVE_ORDER).reversed();
+            default -> null;
+        };
     }
 
     public List<Brand> getAllBrands(List<Storage> storages) {

@@ -2,23 +2,36 @@ package com.example.PCOnlineShop.controller.category;
 
 import com.example.PCOnlineShop.model.product.Category;
 import com.example.PCOnlineShop.model.product.Product;
-import com.example.PCOnlineShop.repository.product.CategoryRepository;
-import com.example.PCOnlineShop.repository.product.ProductRepository;
+import com.example.PCOnlineShop.service.product.CategoryService;
+import com.example.PCOnlineShop.service.product.ProductService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import java.util.Set;
+import java.util.stream.IntStream;
 
 @Controller
 @RequiredArgsConstructor
 @RequestMapping("/category")
 public class CategoryController {
 
-    private final CategoryRepository categoryRepository;
-    private final ProductRepository productRepository;
+    private static final int DEFAULT_PAGE_SIZE = 12;
+    private static final int MAX_PAGE_SIZE = 48;
+    private static final String DEFAULT_SORT_FIELD = "productId";
+    private static final String DEFAULT_SORT_DIRECTION = "desc";
+    private static final Set<String> ALLOWED_SORT_FIELDS = Set.of(
+            "productId",
+            "productName",
+            "price",
+            "createAt",
+            "performanceScore"
+    );
+
+    private final CategoryService categoryService;
+    private final ProductService productService;
 
     /**
      * ✅ Hiển thị tất cả sản phẩm thuộc một category
@@ -27,32 +40,59 @@ public class CategoryController {
     public String viewCategoryProducts(
             @PathVariable Integer id,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "12") int size,
-            @RequestParam(defaultValue = "productId") String sortField,
-            @RequestParam(defaultValue = "desc") String sortDir,
+            @RequestParam(defaultValue = "" + DEFAULT_PAGE_SIZE) int size,
+            @RequestParam(defaultValue = DEFAULT_SORT_FIELD) String sortField,
+            @RequestParam(defaultValue = DEFAULT_SORT_DIRECTION) String sortDir,
             Model model
     ) {
-        Category category = categoryRepository.findById(id).orElse(null);
+        Category category = categoryService.findById(id).orElse(null);
         if (category == null) {
             model.addAttribute("error", "Category not found!");
             return "error/404";
         }
 
-        Sort sort = sortDir.equalsIgnoreCase("asc") ?
-                Sort.by(sortField).ascending() :
-                Sort.by(sortField).descending();
+        int resolvedPage = Math.max(page, 0);
+        int resolvedSize = resolvePageSize(size);
+        String resolvedSortField = resolveSortField(sortField);
+        String resolvedSortDir = resolveSortDirection(sortDir);
+        Pageable pageable = PageRequest.of(
+                resolvedPage,
+                resolvedSize,
+                createSort(resolvedSortField, resolvedSortDir)
+        );
+        Page<Product> productPage = productService.searchVisibleSellingProducts(id, null, pageable);
 
-        Pageable pageable = PageRequest.of(page, size, sort);
-        Page<Product> productPage = productRepository.findByCategory_CategoryId(id, pageable);
-
-        model.addAttribute("categories", categoryRepository.findAll());
+        model.addAttribute("categories", categoryService.getAllCategories());
         model.addAttribute("category", category);
         model.addAttribute("products", productPage.getContent());
-        model.addAttribute("currentPage", page);
+        model.addAttribute("currentPage", resolvedPage);
         model.addAttribute("totalPages", productPage.getTotalPages());
         model.addAttribute("pageNumbers",
-                java.util.stream.IntStream.range(0, productPage.getTotalPages()).boxed().toList());
+                IntStream.range(0, productPage.getTotalPages()).boxed().toList());
+        model.addAttribute("size", resolvedSize);
+        model.addAttribute("sortField", resolvedSortField);
+        model.addAttribute("sortDir", resolvedSortDir);
 
         return "product/category-products";
+    }
+
+    private int resolvePageSize(int size) {
+        if (size <= 0) {
+            return DEFAULT_PAGE_SIZE;
+        }
+        return Math.min(size, MAX_PAGE_SIZE);
+    }
+
+    private String resolveSortField(String sortField) {
+        return ALLOWED_SORT_FIELDS.contains(sortField) ? sortField : DEFAULT_SORT_FIELD;
+    }
+
+    private String resolveSortDirection(String sortDir) {
+        return "asc".equalsIgnoreCase(sortDir) ? "asc" : DEFAULT_SORT_DIRECTION;
+    }
+
+    private Sort createSort(String sortField, String sortDir) {
+        Sort sort = Sort.by(sortField);
+        return "asc".equals(sortDir) ? sort.ascending() : sort.descending();
     }
 }

@@ -2,76 +2,131 @@ package com.example.PCOnlineShop.service.staff;
 
 import com.example.PCOnlineShop.constant.RoleName;
 import com.example.PCOnlineShop.model.account.Account;
-import com.example.PCOnlineShop.model.account.Address;
 import com.example.PCOnlineShop.repository.account.AccountRepository;
-import com.example.PCOnlineShop.repository.account.AddressRepository;
+import com.example.PCOnlineShop.service.account.AccountService;
+import com.example.PCOnlineShop.service.address.AddressService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Locale;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
 public class StaffService {
+    private static final String STATUS_ACTIVE = "active";
+    private static final String STATUS_INACTIVE = "inactive";
 
     private final AccountRepository accountRepository;
-    private final AddressRepository addressRepository;
+    private final AccountService accountService;
+    private final AddressService addressService;
 
-    //  Lấy ALL staff bao gồm địa chỉ (client-side paging bằng DataTables)
     public List<Account> getAllStaff(String statusFilter) {
-
-        if ("active".equalsIgnoreCase(statusFilter)) {
-            return accountRepository.findByRoleAndEnabledWithAddresses(RoleName.Staff, true);
+        Boolean enabled = parseStatusFilter(statusFilter);
+        if (enabled == null) {
+            return accountRepository.findAllByRoleWithAddresses(RoleName.Staff);
         }
 
-        if ("inactive".equalsIgnoreCase(statusFilter)) {
-            return accountRepository.findByRoleAndEnabledWithAddresses(RoleName.Staff, false);
+        return accountRepository.findByRoleAndEnabledWithAddresses(RoleName.Staff, enabled);
+    }
+
+    public Optional<Account> findStaffById(Integer id) {
+        if (id == null) {
+            return Optional.empty();
         }
 
-        // ALL
-        return accountRepository.findAllByRoleWithAddresses(RoleName.Staff);
+        return accountRepository.findById(id)
+                .filter(account -> account.getRole() == RoleName.Staff);
     }
 
     public Account getById(int id) {
-        return accountRepository.findById(id).orElse(null);
+        return findStaffById(id).orElse(null);
     }
 
-    // Bật / tắt tài khoản
+    public Account getRequiredStaff(Integer id) {
+        return findStaffById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Staff account not found"));
+    }
+
+    @Transactional
+    public Account createStaff(Account account, String addressStr) {
+        if (account.getAccountId() != 0) {
+            throw new IllegalArgumentException("New staff account must not have an id");
+        }
+        Account saved = accountService.saveStaff(account);
+        saveDefaultAddress(saved, addressStr);
+        return saved;
+    }
+
+    @Transactional
+    public Account updateStaff(Account account, String addressStr) {
+        getRequiredStaff(account.getAccountId());
+        Boolean requestedEnabled = account.getEnabled();
+        Account saved = accountService.saveStaff(account);
+        if (requestedEnabled != null && !requestedEnabled.equals(saved.getEnabled())) {
+            saved.setEnabled(requestedEnabled);
+            saved = accountRepository.save(saved);
+        }
+        updateDefaultAddress(saved, addressStr);
+        return saved;
+    }
+
+    @Transactional
+    public boolean toggleStaffEnabled(int id) {
+        return findStaffById(id)
+                .map(account -> {
+                    account.setEnabled(!Boolean.TRUE.equals(account.getEnabled()));
+                    accountRepository.save(account);
+                    return true;
+                })
+                .orElse(false);
+    }
+
     public void deactivateStaff(int id) {
-        accountRepository.findById(id).ifPresent(acc -> {
-            acc.setEnabled(!acc.getEnabled());
-            accountRepository.save(acc);
-        });
+        toggleStaffEnabled(id);
     }
 
-    // Lưu địa chỉ mặc định khi tạo staff
     public void saveDefaultAddress(Account account, String addressStr) {
-        if (account == null || addressStr == null || addressStr.trim().isEmpty()) return;
+        if (account == null || isBlank(addressStr)) {
+            return;
+        }
 
-        // Hạ default cũ
-        addressRepository.findByAccount(account).forEach(a -> a.setDefault(false));
-
-        Address addr = new Address();
-        addr.setAccount(account);
-        addr.setFullName(account.getFullName());
-        addr.setPhone(account.getPhoneNumber());
-        addr.setAddress(addressStr.trim());
-        addr.setDefault(true);
-
-        addressRepository.save(addr);
+        addressService.saveDefaultAddress(
+                account,
+                account.getFullName(),
+                account.getPhoneNumber(),
+                addressStr.trim()
+        );
     }
 
-    // Cập nhật địa chỉ mặc định
     public void updateDefaultAddress(Account account, String addressStr) {
-        if (account == null || addressStr == null || addressStr.trim().isEmpty()) return;
+        if (account == null || isBlank(addressStr)) {
+            return;
+        }
 
-        Address defaultAddr = addressRepository.findDefaultByAccount(account).orElse(new Address());
-        defaultAddr.setAccount(account);
-        defaultAddr.setFullName(account.getFullName());
-        defaultAddr.setPhone(account.getPhoneNumber());
-        defaultAddr.setAddress(addressStr.trim());
-        defaultAddr.setDefault(true);
+        addressService.updateDefaultAddress(
+                account,
+                account.getFullName(),
+                account.getPhoneNumber(),
+                addressStr.trim()
+        );
+    }
 
-        addressRepository.save(defaultAddr);
+    private Boolean parseStatusFilter(String statusFilter) {
+        if (statusFilter == null) {
+            return null;
+        }
+
+        return switch (statusFilter.trim().toLowerCase(Locale.ROOT)) {
+            case STATUS_ACTIVE -> true;
+            case STATUS_INACTIVE -> false;
+            default -> null;
+        };
+    }
+
+    private boolean isBlank(String value) {
+        return value == null || value.trim().isEmpty();
     }
 }

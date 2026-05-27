@@ -1,51 +1,40 @@
 package com.example.PCOnlineShop.scheduler;
 
-import com.example.PCOnlineShop.model.order.Order;
 import com.example.PCOnlineShop.model.payment.Payment;
-import com.example.PCOnlineShop.repository.order.OrderRepository;
 import com.example.PCOnlineShop.repository.payment.PaymentRepository;
-import com.example.PCOnlineShop.service.order.OrderService;
+import com.example.PCOnlineShop.service.payment.PaymentService;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.Date;
 import java.util.List;
 
 @Component
 public class OrderScheduler {
 
-    private final PaymentRepository paymentRepository;
-    private final OrderRepository orderRepository; // (Có thể xóa nếu không dùng)
-    private final OrderService orderService; // ✅ THÊM
+    private static final int PAYMENT_TIMEOUT_MINUTES = 15;
 
-    // ✅ CẬP NHẬT CONSTRUCTOR
-    public OrderScheduler(PaymentRepository paymentRepository, OrderRepository orderRepository,
-                          OrderService orderService) {
+    private final PaymentRepository paymentRepository;
+    private final PaymentService paymentService;
+
+    public OrderScheduler(PaymentRepository paymentRepository,
+                          PaymentService paymentService) {
         this.paymentRepository = paymentRepository;
-        this.orderRepository = orderRepository;
-        this.orderService = orderService; // ✅ THÊM
+        this.paymentService = paymentService;
     }
 
-    /**
-     * Chạy mỗi 60 giây (60000ms) để tìm và hủy các đơn hàng quá hạn 15 phút.
-     */
     @Scheduled(fixedRate = 60000)
-    @Transactional
     public void cancelExpiredPendingOrders() {
-        LocalDateTime fifteenMinutesAgo = LocalDateTime.now().minusMinutes(3);
-        List<Payment> expiredPayments = paymentRepository.findPendingPaymentsOlderThan(fifteenMinutesAgo);
+        Date paymentDeadline = Date.from(Instant.now().minus(PAYMENT_TIMEOUT_MINUTES, ChronoUnit.MINUTES));
+        List<Payment> expiredPayments = paymentRepository.findPendingPaymentsOlderThan(paymentDeadline);
 
-        if (!expiredPayments.isEmpty()) {
-            System.out.println("Scheduler: Tìm thấy " + expiredPayments.size() + " đơn hàng quá hạn 3 phút.");
-
-            for (Payment payment : expiredPayments) {
-                // ✅ GỌI LOGIC HỦY VÀ HOÀN KHO TẬP TRUNG
-                try {
-                    orderService.cancelOrderFromPaymentId(payment.getPaymentId());
-                } catch (Exception e) {
-                    System.err.println("Lỗi khi Scheduler hủy đơn: " + e.getMessage());
-                }
+        for (Payment payment : expiredPayments) {
+            try {
+                paymentService.cancelExpiredPayment(payment.getPaymentId());
+            } catch (Exception e) {
+                System.err.println("Unable to cancel expired payment " + payment.getPaymentId() + ": " + e.getMessage());
             }
         }
     }

@@ -4,34 +4,37 @@ import com.example.PCOnlineShop.dto.build.BuildItemDto;
 import com.example.PCOnlineShop.model.build.Mainboard;
 import com.example.PCOnlineShop.service.build.BuildService;
 import com.example.PCOnlineShop.service.build.MainboardService;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
-@AllArgsConstructor
-@Deprecated(forRemoval = true)
+@RequiredArgsConstructor
+@Controller
 @SessionAttributes({"buildItems"})
 @RequestMapping("/build")
 public class MainboardController {
+    private static final String MAINBOARD_VIEW = "build/mainboards";
+    private static final String REDIRECT_MAINBOARD = "redirect:/build/mainboard";
+    private static final String REDIRECT_CPU = "redirect:/build/cpu";
+
     private final MainboardService mainboardService;
-    private  final BuildService buildService;
+    private final BuildService buildService;
 
     @ModelAttribute("buildItems")
     public BuildItemDto buildItems() {
         return new BuildItemDto();
     }
 
-    // Hiển thị danh sách motherboard
+    // show list motherboard
     @GetMapping("/mainboard")
     public String showMainboardPage(@ModelAttribute("buildItems") BuildItemDto buildItem, Model model) {
-        model.addAttribute("mainboards", buildService.getCompatibleMainboards(buildItem));
-        model.addAttribute("allBrands", mainboardService.getAllBrands(buildItem));
-        return "build/mainboards";
+        List<Mainboard> mainboards = buildService.getCompatibleMainboards(buildItem);
+        addMainboardModel(model, mainboards, mainboards, null, null);
+        return MAINBOARD_VIEW;
     }
 
     // Filter motherboard by brands
@@ -40,44 +43,61 @@ public class MainboardController {
                                    @RequestParam(required = false) String sortBy,
                                    @ModelAttribute("buildItems") BuildItemDto buildItem,
                                    Model model) {
-        List<Mainboard> mainboards = buildService.getCompatibleMainboards(buildItem);
-        Map<String,List<String>> filters = new HashMap<>();
-        filters.put("brands", brands);
-        mainboards = mainboardService.filterMainboards(mainboards, filters, sortBy);
+        List<Mainboard> compatibleMainboards = buildService.getCompatibleMainboards(buildItem);
+        List<Mainboard> filteredMainboards = mainboardService.filterMainboards(compatibleMainboards, brands, sortBy);
 
-
-        model.addAttribute("mainboards", mainboards);
-        model.addAttribute("allBrands", mainboardService.getAllBrands(buildItem));
-        model.addAttribute("selectedBrands", brands);
-        model.addAttribute("selectedSort", sortBy);
-        return "build/mainboards";
+        addMainboardModel(model, filteredMainboards, compatibleMainboards, brands, sortBy);
+        return MAINBOARD_VIEW;
     }
 
     // Hiển thị chi tiết motherboard
+    @Deprecated(forRemoval = true)
     @GetMapping("/mainboard/{id}")
-    public String showMainboardDetail(@PathVariable int id, Model model) {
-        Mainboard mainboard = mainboardService.getMainboardById(id);
-        model.addAttribute("mainboard", mainboard);
-        return "/build/mainboard/mainboard-detail";
+    public String redirectMainboardDetail(@PathVariable int id) {
+        return REDIRECT_MAINBOARD;
     }
 
     //Chọn motherboard
     @PostMapping("/selectMainboard")
     public String selectMainboard(@RequestParam(required = false) Integer mainboardId,
                                   @ModelAttribute("buildItems") BuildItemDto buildItem,
-                                  org.springframework.web.servlet.mvc.support.RedirectAttributes redirectAttributes) {
+                                  RedirectAttributes redirectAttributes) {
         // Mainboard is REQUIRED - must select one
         if (mainboardId == null && buildItem.getMainboard() == null) {
             redirectAttributes.addFlashAttribute("error", "Please select a mainboard to continue.");
-            return "redirect:/build/mainboard";
+            return REDIRECT_MAINBOARD;
         }
 
         // Only update if user selected a new mainboard
-        if (mainboardId != null) {
-            buildItem.setMainboard(mainboardService.getMainboardById(mainboardId));
+        if (mainboardId == null) {
+            return REDIRECT_CPU;
         }
-        // If mainboardId is null but buildItem.mainboard exists, keep it
-        return "redirect:/build/cpu";
+
+        return buildService.findSelectableCompatibleMainboardByProductId(mainboardId, buildItem)
+                .map(mainboard -> selectAndContinue(buildItem, mainboard))
+                .orElseGet(() -> rejectSelection(redirectAttributes));
     }
-    // Thêm, sửa, xóa motherboard sẽ do admin thực hiện qua trang admin
+
+    private void addMainboardModel(Model model,
+                                   List<Mainboard> mainboards,
+                                   List<Mainboard> brandSource,
+                                   List<String> selectedBrands,
+                                   String selectedSort) {
+        model.addAttribute("mainboards", mainboards);
+        model.addAttribute("allBrands", mainboardService.getAllBrands(brandSource));
+        model.addAttribute("selectedBrands", selectedBrands);
+        model.addAttribute("selectedSort", selectedSort);
+    }
+
+    private String selectAndContinue(BuildItemDto buildItem, Mainboard mainboard) {
+        buildItem.setMainboard(mainboard);
+        return REDIRECT_CPU;
+    }
+
+    private String rejectSelection(RedirectAttributes redirectAttributes) {
+        redirectAttributes.addFlashAttribute("error", "Selected mainboard is not available or compatible.");
+        return REDIRECT_MAINBOARD;
+    }
+
+    // Adding, editing, and deleting motherboards will be done by the administrator via the admin page.
 }

@@ -1,56 +1,137 @@
 package com.example.PCOnlineShop.service.customer;
 
-import com.example.PCOnlineShop.constant.RoleName;
-import com.example.PCOnlineShop.model.account.Account;
-import com.example.PCOnlineShop.model.account.Address;
-import com.example.PCOnlineShop.repository.account.AccountRepository;
-import com.example.PCOnlineShop.repository.account.AddressRepository;
-import lombok.RequiredArgsConstructor;
+import java.util.List;
+import java.util.Locale;
+import java.util.Optional;
+
 import org.springframework.stereotype.Service;
 
-import java.util.List;
+import com.example.PCOnlineShop.constant.RoleName;
+import com.example.PCOnlineShop.model.account.Account;
+import com.example.PCOnlineShop.repository.account.AccountRepository;
+import com.example.PCOnlineShop.service.account.AccountService;
+import com.example.PCOnlineShop.service.address.AddressService;
+
+import lombok.RequiredArgsConstructor;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
 public class CustomerService {
 
+    private static final String STATUS_ACTIVE = "active";
+    private static final String STATUS_INACTIVE = "inactive";
+
     private final AccountRepository accountRepository;
-    private final AddressRepository addressRepository;
+    private final AccountService accountService;
+    private final AddressService addressService;
 
-    // Lấy ALL customer (client-side paging bằng DataTables)
     public List<Account> getAllCustomers(String statusFilter) {
+        Boolean enabled = parseStatusFilter(statusFilter);
 
-        if ("active".equalsIgnoreCase(statusFilter)) {
-            return accountRepository.findByRoleAndEnabledWithAddresses(RoleName.Customer, true);
+        if (enabled == null) {
+            return accountRepository.findAllByRoleWithAddresses(RoleName.Customer);
         }
 
-        if ("inactive".equalsIgnoreCase(statusFilter)) {
-            return accountRepository.findByRoleAndEnabledWithAddresses(RoleName.Customer, false);
-        }
-
-        // ALL
-        return accountRepository.findAllByRoleWithAddresses(RoleName.Customer);
+        return accountRepository.findByRoleAndEnabledWithAddresses(
+                RoleName.Customer,
+                enabled
+        );
     }
 
     public Account getById(int id) {
-        return accountRepository.findById(id).orElse(null);
+        return findCustomerById(id).orElse(null);
     }
 
-    // Lưu địa chỉ mặc định khi tạo customer
-    public void saveDefaultAddress(Account account, String addressStr) {
-        if (account == null || addressStr == null || addressStr.trim().isEmpty()) return;
+    public Optional<Account> findCustomerById(Integer id) {
+        if (id == null) {
+            return Optional.empty();
+        }
 
-        // Hạ default cũ
-        addressRepository.findByAccount(account).forEach(a -> a.setDefault(false));
-
-        Address addr = new Address();
-        addr.setAccount(account);
-        addr.setFullName(account.getFullName());
-        addr.setPhone(account.getPhoneNumber());
-        addr.setAddress(addressStr.trim());
-        addr.setDefault(true);
-
-        addressRepository.save(addr);
+        return accountRepository.findById(id)
+                .filter(account -> account.getRole() == RoleName.Customer);
     }
 
+    public Account getRequiredCustomer(Integer id) {
+        return findCustomerById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Customer account not found"));
+    }
+
+    @Transactional
+    public Account createCustomer(Account account, String addressStr) {
+        if (account.getAccountId() != 0) {
+            throw new IllegalArgumentException("New customer account must not have an id");
+        }
+
+        Account saved = accountService.saveCustomer(account);
+        saveDefaultAddress(saved, addressStr);
+        return saved;
+    }
+
+    @Transactional
+    public Account updateCustomer(Account account, String addressStr) {
+        getRequiredCustomer(account.getAccountId());
+        Boolean requestedEnabled = account.getEnabled();
+        Account saved = accountService.saveCustomer(account);
+        if (requestedEnabled != null && !requestedEnabled.equals(saved.getEnabled())) {
+            saved.setEnabled(requestedEnabled);
+            saved = accountRepository.save(saved);
+        }
+
+        updateDefaultAddress(saved, addressStr);
+        return saved;
+    }
+
+    @Transactional
+    public boolean toggleCustomerEnabled(int id) {
+        return findCustomerById(id)
+                .map(account -> {
+                    account.setEnabled(!Boolean.TRUE.equals(account.getEnabled()));
+                    accountRepository.save(account);
+                    return true;
+                })
+                .orElse(false);
+    }
+
+    public void saveDefaultAddress(Account account, String address) {
+        if (account == null || isBlank(address)) {
+            return;
+        }
+
+        addressService.saveDefaultAddress(
+                account,
+                account.getFullName(),
+                account.getPhoneNumber(),
+                address.trim()
+        );
+    }
+
+    public void updateDefaultAddress(Account account, String address) {
+        if (account == null || isBlank(address)) {
+            return;
+        }
+
+        addressService.updateDefaultAddress(
+                account,
+                account.getFullName(),
+                account.getPhoneNumber(),
+                address.trim()
+        );
+    }
+
+    private Boolean parseStatusFilter(String statusFilter) {
+        if (statusFilter == null) {
+            return null;
+        }
+
+        return switch (statusFilter.trim().toLowerCase(Locale.ROOT)) {
+            case STATUS_ACTIVE -> true;
+            case STATUS_INACTIVE -> false;
+            default -> null;
+        };
+    }
+
+    private boolean isBlank(String value) {
+        return value == null || value.trim().isEmpty();
+    }
 }

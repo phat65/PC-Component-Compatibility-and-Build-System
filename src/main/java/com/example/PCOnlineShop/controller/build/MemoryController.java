@@ -4,20 +4,23 @@ import com.example.PCOnlineShop.dto.build.BuildItemDto;
 import com.example.PCOnlineShop.model.build.Memory;
 import com.example.PCOnlineShop.service.build.BuildService;
 import com.example.PCOnlineShop.service.build.MemoryService;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
-@AllArgsConstructor
-@Deprecated(forRemoval = true)
+@RequiredArgsConstructor
+@Controller
 @SessionAttributes({"buildItems"})
 @RequestMapping("/build")
 public class MemoryController {
+    private static final String MEMORY_VIEW = "build/memory";
+    private static final String REDIRECT_MEMORY = "redirect:/build/memory";
+    private static final String REDIRECT_STORAGE = "redirect:/build/storage";
+
     private final MemoryService memoryService;
     private final BuildService buildService;
 
@@ -29,9 +32,8 @@ public class MemoryController {
     @GetMapping("/memory")
     public String showMemoryPage(@ModelAttribute("buildItems") BuildItemDto buildItem, Model model) {
         List<Memory> memories = buildService.getCompatibleMemory(buildItem);
-        model.addAttribute("memories", memories);
-        model.addAttribute("allBrands", memoryService.getAllBrands(memories));
-        return "/build/memory";
+        addMemoryModel(model, memories, memories, null, null);
+        return MEMORY_VIEW;
     }
 
     @PostMapping("/memory/filter")
@@ -39,33 +41,51 @@ public class MemoryController {
                                  @RequestParam(required = false) String sortBy,
                                  @ModelAttribute("buildItems") BuildItemDto buildItem,
                                  Model model) {
-        List<Memory> memories = buildService.getCompatibleMemory(buildItem);
-        Map<String,List<String>> filters = new HashMap<>();
-        filters.put("brands", brands);
-        memories = memoryService.filterMemories(memories, filters, sortBy);
+        List<Memory> compatibleMemories = buildService.getCompatibleMemory(buildItem);
+        List<Memory> filteredMemories = memoryService.filterMemories(compatibleMemories, brands, sortBy);
 
-        model.addAttribute("memories", memories);
-        model.addAttribute("allBrands", memoryService.getAllBrands(buildService.getCompatibleMemory(buildItem)));
-        model.addAttribute("selectedBrands", brands);
-        model.addAttribute("selectedSort", sortBy);
-        return "/build/memory";
+        addMemoryModel(model, filteredMemories, compatibleMemories, brands, sortBy);
+        return MEMORY_VIEW;
     }
 
     @PostMapping("/selectMemory")
     public String selectMemory(@RequestParam(value = "memoryId", required = false) Integer memoryId,
                                @ModelAttribute("buildItems") BuildItemDto buildItem,
-                               org.springframework.web.servlet.mvc.support.RedirectAttributes redirectAttributes) {
+                               RedirectAttributes redirectAttributes) {
         // Memory is REQUIRED - must select one
         if (memoryId == null && buildItem.getMemory() == null) {
             redirectAttributes.addFlashAttribute("error", "Please select memory to continue.");
-            return "redirect:/build/memory";
+            return REDIRECT_MEMORY;
         }
 
         // Only update if user selected new memory
-        if (memoryId != null) {
-            buildItem.setMemory(memoryService.getMemoryById(memoryId));
+        if (memoryId == null) {
+            return REDIRECT_STORAGE;
         }
-        // If memoryId is null but buildItem.memory exists, keep it
-        return "redirect:/build/storage";
+
+        return buildService.findSelectableCompatibleMemoryByProductId(memoryId, buildItem)
+                .map(memory -> selectAndContinue(buildItem, memory))
+                .orElseGet(() -> rejectSelection(redirectAttributes));
+    }
+
+    private void addMemoryModel(Model model,
+                                List<Memory> memories,
+                                List<Memory> brandSource,
+                                List<String> selectedBrands,
+                                String selectedSort) {
+        model.addAttribute("memories", memories);
+        model.addAttribute("allBrands", memoryService.getAllBrands(brandSource));
+        model.addAttribute("selectedBrands", selectedBrands);
+        model.addAttribute("selectedSort", selectedSort);
+    }
+
+    private String selectAndContinue(BuildItemDto buildItem, Memory memory) {
+        buildItem.setMemory(memory);
+        return REDIRECT_STORAGE;
+    }
+
+    private String rejectSelection(RedirectAttributes redirectAttributes) {
+        redirectAttributes.addFlashAttribute("error", "Selected memory is not available or compatible.");
+        return REDIRECT_MEMORY;
     }
 }

@@ -1,76 +1,41 @@
 package com.example.PCOnlineShop.controller.dashboard;
 
-import com.example.PCOnlineShop.constant.RoleName;
-import com.example.PCOnlineShop.repository.account.AccountRepository;
-import com.example.PCOnlineShop.repository.order.OrderRepository;
-import com.example.PCOnlineShop.repository.product.ProductRepository;
-import com.example.PCOnlineShop.repository.feedback.FeedbackRepository; // nếu có
+import com.example.PCOnlineShop.dto.dashboard.AdminDashboardStatsDTO;
+import com.example.PCOnlineShop.dto.dashboard.StaffDashboardStatsDTO;
+import com.example.PCOnlineShop.service.dashboard.DashboardService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 
 @Controller
+@RequiredArgsConstructor
 public class DashboardController {
+    private static final String ADMIN_DASHBOARD_VIEW = "dashboard-admin";
+    private static final String STAFF_DASHBOARD_VIEW = "dashboard-staff";
 
-    private final AccountRepository accountRepository;
-    private final ProductRepository productRepository;
-    private final OrderRepository orderRepository;
-    private final FeedbackRepository feedbackRepository;
+    private final DashboardService dashboardService;
 
-    public DashboardController(AccountRepository accountRepository,
-                               ProductRepository productRepository,
-                               OrderRepository orderRepository,
-                               FeedbackRepository feedbackRepository) {
-        this.accountRepository = accountRepository;
-        this.productRepository = productRepository;
-        this.orderRepository = orderRepository;
-        this.feedbackRepository = feedbackRepository;
-    }
-
-    // Dashboard Admin
     @GetMapping("/dashboard/admin")
     public String adminDashboard(Model model) {
+        AdminDashboardStatsDTO stats = dashboardService.getAdminStats();
+        model.addAttribute("totalUsers", stats.totalUsers());
+        model.addAttribute("totalStaff", stats.totalStaff());
+        model.addAttribute("totalOrders", stats.totalOrders());
+        model.addAttribute("totalProducts", stats.totalProducts());
+        model.addAttribute("revenue", stats.revenue());
 
-        long totalUsers = accountRepository.count();
-        long totalStaff = accountRepository.countByRole(RoleName.Staff);
-        long totalOrders = orderRepository.count();
-        long totalProducts = productRepository.count();
-
-        double revenue = orderRepository.findAll()
-                .stream()
-                .mapToDouble(order -> order.getTotalAmount())
-                .sum();
-
-        model.addAttribute("totalUsers", totalUsers);
-        model.addAttribute("totalStaff", totalStaff);
-        model.addAttribute("totalOrders", totalOrders);
-        model.addAttribute("totalProducts", totalProducts);
-        model.addAttribute("revenue", revenue);
-
-        return "dashboard-admin";
+        return ADMIN_DASHBOARD_VIEW;
     }
 
-    // Dashboard Staff
     @GetMapping("/dashboard/staff")
     public String staffDashboard(Model model) {
+        StaffDashboardStatsDTO stats = dashboardService.getStaffStats();
+        model.addAttribute("pendingOrders", stats.pendingOrders());
+        model.addAttribute("shippedOrders", stats.shippedOrders());
+        model.addAttribute("productsInStock", stats.productsInStock());
+        model.addAttribute("feedbackCount", stats.feedbackCount());
 
-        // Đơn hàng chờ xử lý
-        long pendingOrders = orderRepository.countByStatus("PENDING");
-
-        // Đơn hàng đã giao
-        long shippedOrders = orderRepository.countByStatus("SHIPPED");
-
-        // Sản phẩm trong kho
-        long productsInStock = productRepository.count(); // nếu muốn lấy số lượng chính xác, có thể tạo method sumQuantityInStock()
-
-        // Feedback / Review
-        long feedbackCount = feedbackRepository.count(); // tổng feedback hiện có
-
-        model.addAttribute("pendingOrders", pendingOrders);
-        model.addAttribute("shippedOrders", shippedOrders);
-        model.addAttribute("productsInStock", productsInStock);
-        model.addAttribute("feedbackCount", feedbackCount);
-
-        return "dashboard-staff";
+        return STAFF_DASHBOARD_VIEW;
     }
 }

@@ -24,6 +24,11 @@
 
     <!-- Main content -->
     <div class="main-content">
+        <!-- Error message -->
+        <div th:if="${error}" style="background-color: #f44336; color: white; padding: 10px; margin-bottom: 10px; border-radius: 4px;">
+            <strong>⚠️ Error:</strong> <span th:text="${error}"></span>
+        </div>
+
         <!-- Filter -->
         <div class="filter-bar">
             <input type="text" placeholder="Search..." id="searchBox"/>

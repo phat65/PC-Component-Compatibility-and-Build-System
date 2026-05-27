@@ -2,7 +2,7 @@ package com.example.PCOnlineShop.controller.cart;
 
 import com.example.PCOnlineShop.dto.cart.CartSummaryDTO;
 import com.example.PCOnlineShop.model.account.Account;
-import com.example.PCOnlineShop.repository.account.AccountRepository;
+import com.example.PCOnlineShop.service.account.AccountService;
 import com.example.PCOnlineShop.service.cart.CartService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -17,24 +17,32 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
 @Controller
 @RequestMapping("/cart")
 @RequiredArgsConstructor
 public class CartController {
 
+    private static final String LOGIN_REQUIRED_REDIRECT = "redirect:/auth/login?required";
+    private static final String DEFAULT_REFERER_REDIRECT = "/";
+
     private final CartService cartService;
-    private final AccountRepository accountRepository;
+    private final AccountService accountService;
 
     private Account getCurrentAccount(UserDetails userDetails) {
-        if (userDetails == null) return null;
-        return accountRepository.findByPhoneNumber(userDetails.getUsername()).orElse(null);
+        if (userDetails == null) {
+            return null;
+        }
+        return accountService.getByPhoneNumber(userDetails.getUsername());
     }
 
     @GetMapping
     public String viewCart(@AuthenticationPrincipal UserDetails currentUser, Model model) {
         Account account = getCurrentAccount(currentUser);
-        if (account == null) return "redirect:/auth/login";
+        if (account == null) {
+            return "redirect:/auth/login";
+        }
 
         CartSummaryDTO cartSummary = cartService.getCartDetails(account);
 
@@ -51,15 +59,17 @@ public class CartController {
                             RedirectAttributes redirectAttributes,
                             HttpServletRequest request) {
         Account account = getCurrentAccount(currentUser);
-        if (account == null) return "redirect:/auth/login?required";
+        if (account == null) {
+            return LOGIN_REQUIRED_REDIRECT;
+        }
 
         try {
             cartService.addToCart(account, productId, quantity);
-            redirectAttributes.addFlashAttribute("success", "Product added to cart!");
+            addSuccess(redirectAttributes, "Product added to cart!");
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", e.getMessage());
+            addError(redirectAttributes, e);
         }
-        return "redirect:" + (request.getHeader("Referer") != null ? request.getHeader("Referer") : "/");
+        return redirectToReferer(request);
     }
 
     @GetMapping("/addListItem")
@@ -68,7 +78,9 @@ public class CartController {
                                     @AuthenticationPrincipal UserDetails currentUser,
                                     RedirectAttributes redirectAttributes) {
         Account account = getCurrentAccount(currentUser);
-        if (account == null) return "redirect:/auth/login?required";
+        if (account == null) {
+            return LOGIN_REQUIRED_REDIRECT;
+        }
 
         if (productIds == null || productIds.isEmpty()) {
             return "redirect:/build/start";
@@ -76,9 +88,9 @@ public class CartController {
 
         try {
             cartService.addListToCart(account, productIds, quantity);
-            redirectAttributes.addFlashAttribute("success", "Products added!");
+            addSuccess(redirectAttributes, "Products added!");
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", e.getMessage());
+            addError(redirectAttributes, e);
         }
         return "redirect:/cart";
     }
@@ -88,28 +100,32 @@ public class CartController {
     public ResponseEntity<?> updateQuantityAjax(@PathVariable int cartItemId,
                                                 @RequestParam int quantity,
                                                 @AuthenticationPrincipal UserDetails currentUser) {
-        return handleCartAction(currentUser, () -> cartService.updateQuantity(getCurrentAccount(currentUser), cartItemId, quantity));
+        return handleCartAction(currentUser,
+                account -> cartService.updateQuantity(account, cartItemId, quantity));
     }
 
     @PostMapping("/remove/{cartItemId}")
     @ResponseBody
     public ResponseEntity<?> removeFromCartAjax(@PathVariable int cartItemId,
                                                 @AuthenticationPrincipal UserDetails currentUser) {
-        return handleCartAction(currentUser, () -> cartService.removeFromCart(getCurrentAccount(currentUser), cartItemId));
+        return handleCartAction(currentUser,
+                account -> cartService.removeFromCart(account, cartItemId));
     }
 
     @PostMapping("/select/{cartItemId}")
     @ResponseBody
     public ResponseEntity<?> selectItem(@PathVariable int cartItemId,
                                         @AuthenticationPrincipal UserDetails currentUser) {
-        return handleCartAction(currentUser, () -> cartService.toggleSelectItem(getCurrentAccount(currentUser), cartItemId, true));
+        return handleCartAction(currentUser,
+                account -> cartService.toggleSelectItem(account, cartItemId, true));
     }
 
     @PostMapping("/deselect/{cartItemId}")
     @ResponseBody
     public ResponseEntity<?> deselectItem(@PathVariable int cartItemId,
                                           @AuthenticationPrincipal UserDetails currentUser) {
-        return handleCartAction(currentUser, () -> cartService.toggleSelectItem(getCurrentAccount(currentUser), cartItemId, false));
+        return handleCartAction(currentUser,
+                account -> cartService.toggleSelectItem(account, cartItemId, false));
     }
 
     @PostMapping("/clear")
@@ -122,15 +138,55 @@ public class CartController {
         return "redirect:/cart";
     }
 
-    private ResponseEntity<?> handleCartAction(UserDetails currentUser, Runnable action) {
+    private ResponseEntity<?> handleCartAction(UserDetails currentUser, Consumer<Account> action) {
         Account account = getCurrentAccount(currentUser);
-        if (account == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Please log in."));
+        if (account == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Please log in."));
+        }
+
         try {
-            action.run();
+            action.accept(account);
             double newTotal = cartService.calculateSelectedTotalForAccount(account);
             return ResponseEntity.ok(Map.of("message", "Success", "newGrandTotal", newTotal));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
+    }
+
+    private String redirectToReferer(HttpServletRequest request) {
+        String referer = request.getHeader("Referer");
+        if (referer == null || referer.isBlank()) {
+            return "redirect:" + DEFAULT_REFERER_REDIRECT;
+        }
+
+        String contextPath = request.getContextPath();
+        String baseUrl = request.getScheme() + "://" + request.getServerName()
+                + (isDefaultPort(request) ? "" : ":" + request.getServerPort())
+                + contextPath;
+
+        if (referer.startsWith(baseUrl)) {
+            String localPath = referer.substring(baseUrl.length());
+            return "redirect:" + (localPath.isBlank() ? DEFAULT_REFERER_REDIRECT : localPath);
+        }
+
+        if (!referer.startsWith("//") && (referer.startsWith(contextPath + "/") || referer.startsWith("/"))) {
+            return "redirect:" + referer;
+        }
+
+        return "redirect:" + DEFAULT_REFERER_REDIRECT;
+    }
+
+    private boolean isDefaultPort(HttpServletRequest request) {
+        int port = request.getServerPort();
+        return ("http".equals(request.getScheme()) && port == 80)
+                || ("https".equals(request.getScheme()) && port == 443);
+    }
+
+    private void addSuccess(RedirectAttributes redirectAttributes, String message) {
+        redirectAttributes.addFlashAttribute("success", message);
+    }
+
+    private void addError(RedirectAttributes redirectAttributes, Exception e) {
+        redirectAttributes.addFlashAttribute("error", e.getMessage());
     }
 }
