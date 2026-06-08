@@ -1,16 +1,16 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="https://www.thymeleaf.org/extras/spring-security" lang="vi">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login</title>
-    <style>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="https://www.thymeleaf.org/extras/spring-security"
+      th:replace="~{layout/app :: page('Login', null, ~{::content})}">
+<body>
+<th:block th:fragment="content">
+<style>
         /* 🌈 Reset & Layout */
         * {
             box-sizing: border-box;
         }
 
-        body {
+        .page-body {
             font-family: "Poppins", "Segoe UI", Arial, sans-serif;
             background: linear-gradient(135deg, #e0f7fa, #f8faff);
             display: flex;
@@ -163,10 +163,6 @@
             }
         }
     </style>
-</head>
-
-<body>
-<div th:replace="layout/header-default :: header-default"></div>
 
 <div class="container">
     <h2>Login</h2>
@@ -204,5 +200,6 @@
         No account? <a th:href="@{/auth/register}">Register now</a>
     </p>
 </div>
+</th:block>
 </body>
 </html>

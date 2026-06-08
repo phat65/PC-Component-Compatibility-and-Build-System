@@ -1,26 +1,16 @@
 <!DOCTYPE html>
-<html lang="en"
-      xmlns:th="http://www.thymeleaf.org"
-      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
-<head>
-    <meta charset="UTF-8">
-    <title>Feedback List</title>
-
-    <link rel="stylesheet" th:href="@{/css/Feedback.css}">
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="https://www.thymeleaf.org/extras/spring-security"
+      th:replace="~{layout/app :: page('Feedback List', null, ~{::content})}">
+<body>
+<th:block th:fragment="content">
+<link rel="stylesheet" th:href="@{/css/Feedback.css}">
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css">
 
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
-</head>
 
-<body class="bg-light">
-
-<!-- HEADER -->
-<div sec:authorize="!isAuthenticated()" th:replace="layout/header-default :: header-default"></div>
-<div sec:authorize="hasRole('ADMIN')" th:replace="layout/header-admin :: header-admin"></div>
-<div sec:authorize="hasRole('STAFF')" th:replace="layout/header-staff :: header-staff"></div>
-<div sec:authorize="hasRole('CUSTOMER')" th:replace="layout/header-customer :: header-customer"></div>
-
+<div class="page-body bg-light">
 <div class="container py-4">
     <h3 class="mb-3">Feedback List</h3>
 
@@ -134,6 +124,7 @@
         });
     });
 </script>
-
+</div>
+</th:block>
 </body>
 </html>

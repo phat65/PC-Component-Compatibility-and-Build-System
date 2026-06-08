@@ -1,41 +1,21 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org"
-      xmlns:sec="https://www.thymeleaf.org/extras/spring-security" lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <title>Select Other Components</title>
-    <link rel="stylesheet" th:href="@{/css/BuildStyle.css}">
-</head>
-
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="https://www.thymeleaf.org/extras/spring-security"
+      th:replace="~{layout/app :: page('Select Other Components', null, ~{::content})}">
 <body>
-
-<div sec:authorize="!isAuthenticated()"
-     th:replace="layout/header-default :: header-default"></div>
-<div sec:authorize="hasRole('ADMIN')"
-     th:replace="layout/header-admin :: header-admin"></div>
-
-<div sec:authorize="hasRole('STAFF')"
-     th:replace="layout/header-staff :: header-staff"></div>
-
-<div sec:authorize="hasRole('CUSTOMER')"
-     th:replace="layout/header-customer :: header-customer"></div>
-<div class="layout">
-    <div class="container">
+<th:block th:fragment="content">
+<section class="build-page">
+<div class="build-shell">
         <!-- Sidebar -->
         <div th:replace="~{layout/build-sidebar :: buildSidebar('other')}"></div>
 
         <!-- Main content -->
         <div class="main-content">
             <!-- Error message -->
-            <div th:if="${error}" style="background-color: #f44336; color: white; padding: 10px; margin-bottom: 10px; border-radius: 4px;">
-                <strong>⚠️ Error:</strong> <span th:text="${error}"></span>
-            </div>
+            <div th:if="${error}" class="build-alert build-alert-danger"><strong>Error:</strong> <span th:text="${error}"></span></div>
 
             <!-- Success message -->
-            <div th:if="${message}" style="background-color: #4CAF50; color: white; padding: 10px; margin-bottom: 10px; border-radius: 4px;">
-                <strong>✓</strong> <span th:text="${message}"></span>
-            </div>
+            <div th:if="${message}" class="build-alert build-alert-success"><strong>Success:</strong> <span th:text="${message}"></span></div>
 
             <!-- Filter -->
             <div class="filter-bar">
@@ -45,7 +25,7 @@
             </div>
 
             <!-- Filter Popup -->
-            <div id="filterPopup" class="popup" style="display:none;">
+            <div id="filterPopup" class="popup">
                 <div class="popup-content">
                     <div>
                         <h4>Filter By Category:</h4>
@@ -70,7 +50,7 @@
                             <label for="cat-addon">Add-on</label>
                         </div>
 
-                        <h4 style="margin-top: 20px;">Sort By:</h4>
+                        <h4 class="build-popup-subtitle">Sort By:</h4>
                         <select id="sortSelect" onchange="sortProducts(this.value)">
                             <option value="">-- No Sort --</option>
                             <option value="priceAsc">Price: Low to High</option>
@@ -79,7 +59,7 @@
                             <option value="nameDesc">Name: Z-A</option>
                         </select>
 
-                        <button type="button" id="closeFilterPopup" style="margin-top: 10px;">Close</button>
+                        <button type="button" id="closeFilterPopup">Close</button>
                     </div>
                 </div>
             </div>
@@ -101,19 +81,14 @@
                             <img th:if="${other.images != null && !other.images.isEmpty()}"
                                  th:src="@{${other.images[0].imageUrl}}"
                                  th:alt="${other.productName}"/>
-                            <div th:unless="${other.images != null && !other.images.isEmpty()}"
-                                 style="display:flex;align-items:center;justify-content:center;height:100%;color:#999;font-size:12px;">
-                                No Image
-                            </div>
+                            <div th:unless="${other.images != null && !other.images.isEmpty()}" class="build-no-image">No Image</div>
                         </div>
                         <h4 th:text="${other.productName}"></h4>
-                        <p th:text="${other.description}" style="font-size: 12px; color: #666;"></p>
+                        <p th:text="${other.description}"></p>
                         <strong th:text="'$' + ${other.price}"></strong>
                     </div>
                 </div>
-
-                <!-- Footer -->
-                <div class="footer-bar">
+<div class="footer-bar">
                     <span>Total Price: <strong id="priceTotal" th:text="'$' + ${buildItems.formattedTotalPrice}"></strong></span>
                     <button type="submit" class="next-btn">Choose</button>
                 </div>
@@ -129,12 +104,12 @@
                 <div class="detail-spec">
                     <h4>DESCRIPTION</h4>
                     <p id="detailDescription">...</p>
-                    <p id="detailPrice" style="font-size: 18px; font-weight: bold; color: #007bff;">Price: $0.00</p>
+                    <p id="detailPrice" class="build-detail-price">Price: $0.00</p>
                 </div>
             </div>
         </div>
     </div>
-</div>
+</section>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script th:src="@{/js/BuildJs.js}"></script>
 <script>
@@ -197,12 +172,13 @@
 
             const detailImage = document.querySelector('.detail-image');
             if (imgSrc) {
-                detailImage.innerHTML = '<img src="' + imgSrc + '" alt="' + name + '" style="max-width: 100%; border-radius: 8px;">';
+                detailImage.innerHTML = '<img src="' + imgSrc + '" alt="' + name + '">';
             } else {
-                detailImage.innerHTML = '<div style="padding: 20px; text-align: center; color: #999;">No Image</div>';
+                detailImage.innerHTML = '<div class="build-no-image">No Image</div>';
             }
         });
     });
 </script>
+</th:block>
 </body>
 </html>

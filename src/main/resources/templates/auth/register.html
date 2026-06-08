@@ -1,14 +1,15 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="https://www.thymeleaf.org/extras/spring-security" lang="vi">
-<head>
-    <meta charset="UTF-8">
-    <title>Register</title>
-    <style>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="https://www.thymeleaf.org/extras/spring-security"
+      th:replace="~{layout/app :: page('Register', null, ~{::content})}">
+<body>
+<th:block th:fragment="content">
+<style>
 
         * {
             box-sizing: border-box;
         }
-        body {
+        .page-body {
             font-family: 'Segoe UI', sans-serif;
             background: linear-gradient(135deg, #eef2f3, #ffffff);
             margin: 0;
@@ -77,9 +78,6 @@
             margin-top: 10px;
         }
     </style>
-</head>
-<body>
-<div th:replace="layout/header-default :: header-default"></div>
 
 <div class="register-container">
     <h2>Register</h2>
@@ -144,5 +142,6 @@
 
 
 </script>
+</th:block>
 </body>
 </html>

@@ -1,10 +1,11 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="vi">
-<head>
-    <meta charset="UTF-8">
-    <title>Verify Email</title>
-    <style>
-        body {
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="https://www.thymeleaf.org/extras/spring-security"
+      th:replace="~{layout/app :: page('Verify Email', null, ~{::content})}">
+<body>
+<th:block th:fragment="content">
+<style>
+        .page-body {
             font-family: 'Segoe UI', sans-serif;
             background: #f5f5f5;
             display: flex;
@@ -51,8 +52,7 @@
         }
         a:hover { text-decoration: underline; }
     </style>
-</head>
-<body>
+
 <div class="container">
     <h2>🔒 Verify Email</h2>
 
@@ -78,5 +78,6 @@
         <a th:href="@{/auth/login}">Login with other account</a>
     </p>
 </div>
+</th:block>
 </body>
 </html>

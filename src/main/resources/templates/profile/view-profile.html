@@ -1,13 +1,12 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org"
-      xmlns:sec="https://www.thymeleaf.org/extras/spring-security" lang="vi">
-
-<head>
-    <meta charset="UTF-8">
-    <title>My Profile</title>
-    <link rel="stylesheet" th:href="@{/css/profile.css}">
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="https://www.thymeleaf.org/extras/spring-security"
+      th:replace="~{layout/app :: page('My Profile', null, ~{::content})}">
+<body>
+<th:block th:fragment="content">
+<link rel="stylesheet" th:href="@{/css/profile.css}">
     <style>
-        body {
+        .page-body {
             background-color: #f9f9f9;
             font-family: "Segoe UI", sans-serif;
             margin: 0;
@@ -110,20 +109,6 @@
             }
         }
     </style>
-</head>
-
-<body>
-
-
-<div sec:authorize="!isAuthenticated()"
-     th:replace="~{layout/header-default :: header-default}"></div>
-<div sec:authorize="hasRole('ADMIN')"
-     th:replace="~{layout/header-admin :: header-admin}"></div>
-<div sec:authorize="hasRole('STAFF')"
-     th:replace="~{layout/header-staff :: header-staff}"></div>
-<div sec:authorize="hasRole('CUSTOMER')"
-     th:replace="~{layout/header-customer :: header-customer}"></div>
-
 
 <div class="profile-wrapper">
 
@@ -201,6 +186,6 @@
     </div>
 
 </div>
-
+</th:block>
 </body>
 </html>

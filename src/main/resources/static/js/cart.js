@@ -23,6 +23,14 @@ document.addEventListener("DOMContentLoaded", function () {
     const checkoutLink = document.getElementById("checkout-link");
     const selectAllCheckbox = document.getElementById("select-all-checkbox");
 
+    function formatMoney(value) {
+        return new Intl.NumberFormat('en-US', {
+            style: 'currency',
+            currency: 'USD',
+            maximumFractionDigits: 0
+        }).format(value || 0);
+    }
+
     // --- HÀM CHUNG ---
 
     /**
@@ -75,8 +83,7 @@ document.addEventListener("DOMContentLoaded", function () {
      * @param {number} newGrandTotal - Tổng tiền mới (từ server)
      */
     function updateTotals(newGrandTotal) {
-        const formatter = new Intl.NumberFormat('vi-VN', {style: 'currency', currency: 'VND'});
-        const formattedTotal = formatter.format(newGrandTotal).replace(/\s/g, ' '); // Định dạng "1.234.567 ₫"
+        const formattedTotal = formatMoney(newGrandTotal);
 
         if (grandTotalElement) {
             grandTotalElement.textContent = formattedTotal;
@@ -126,9 +133,8 @@ document.addEventListener("DOMContentLoaded", function () {
         if (!messagesContainer) return;
 
         const alert = `
-            <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+            <div class="alert alert-${type}" role="alert">
                 ${message}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>`;
         messagesContainer.innerHTML = alert;
     }
@@ -231,8 +237,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     // Cập nhật subtotal
                     const price = parseFloat(cartItemElement.getAttribute("data-price"));
                     const subtotal = price * quantity;
-                    const formatter = new Intl.NumberFormat('vi-VN', {style: 'currency', currency: 'VND'});
-                    cartItemElement.querySelector(".item-subtotal").textContent = formatter.format(subtotal).replace(/\s/g, ' ');
+                    cartItemElement.querySelector(".item-subtotal").textContent = formatMoney(subtotal);
 
                     // Cập nhật nút
                     cartItemElement.querySelector(".decrease-qty-btn").disabled = (quantity <= 1);
@@ -304,4 +309,3 @@ document.addEventListener("DOMContentLoaded", function () {
 
     initializeCartState();
 });
-

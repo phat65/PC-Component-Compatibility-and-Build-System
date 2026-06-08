@@ -1,317 +1,151 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org"
-      xmlns:sec="https://www.thymeleaf.org/extras/spring-security" lang="en"><head>
-    <meta charset="UTF-8" />
-    <title>Product Management</title>
-
-    <!-- ✅ DataTables CSS -->
-    <link rel="stylesheet"
-          href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
-
-    <style>
-        body {
-            margin: 0;
-            font-family: Arial, sans-serif;
-            background: #f6f7fb;
-        }
-
-        .content {
-            padding: 20px;
-            margin-left: 260px;
-        }
-
-        h2 {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .add-btn {
-            background: #007bff;
-            color: #fff;
-            border: none;
-            padding: 8px 14px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 14px;
-        }
-
-        .add-btn:hover {
-            background: #0056b3;
-        }
-
-        .filter-bar {
-            margin-bottom: 12px;
-            background: #fff;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            padding: 12px;
-            display: flex;
-            align-items: center;
-            gap: 20px;
-            flex-wrap: wrap;
-        }
-
-        .alert {
-            margin-bottom: 12px;
-            padding: 10px 12px;
-            border-radius: 6px;
-            font-weight: 600;
-        }
-
-        .alert-error {
-            background: #fdecea;
-            color: #842029;
-            border: 1px solid #f5c2c7;
-        }
-
-        .alert-success {
-            background: #eaf7ee;
-            color: #0f5132;
-            border: 1px solid #badbcc;
-        }
-
-        .filter-bar label {
-            font-weight: 600;
-        }
-
-        .filter-bar select {
-            padding: 6px 10px;
-            border: 1px solid #ccc;
-            border-radius: 6px;
-            min-width: 160px;
-            background-color: #fff;
-        }
-
-        table.dataTable {
-            width: 100%;
-            background: #fff;
-            border-collapse: collapse;
-        }
-
-        table.dataTable th, table.dataTable td {
-            text-align: center;
-            padding: 8px;
-            vertical-align: middle;
-        }
-
-        .product-image {
-            width: 60px;
-            height: 60px;
-            object-fit: cover;
-            border-radius: 6px;
-            box-shadow: 0 0 4px rgba(0, 0, 0, 0.15);
-        }
-
-        .product-link {
-            color: #007bff;
-            text-decoration: none;
-        }
-
-        .product-link:hover {
-            text-decoration: underline;
-        }
-
-        .btn-action {
-            border: none;
-            padding: 6px 10px;
-            border-radius: 6px;
-            color: white;
-            cursor: pointer;
-            font-size: 13px;
-        }
-
-        .btn-hide {
-            background-color: #dc3545;
-        }
-
-        .btn-unhide {
-            background-color: #28a745;
-        }
-
-        .btn-edit {
-            background-color: #007bff;
-        }
-
-        .btn-action:hover {
-            opacity: 0.85;
-        }
-
-        .status-active {
-            color: #198754;
-            font-weight: 600;
-        }
-
-        .status-hidden {
-            color: #dc3545;
-            font-weight: 600;
-        }
-    </style>
-</head>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="https://www.thymeleaf.org/extras/spring-security"
+      th:replace="~{layout/app :: page('Product Management', null, ~{::content})}">
 <body>
+<th:block th:fragment="content">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
 
-<!-- Header -->
-<div sec:authorize="!isAuthenticated()"
-     th:replace="layout/header-default :: header-default"></div>
-<div sec:authorize="hasRole('ADMIN')"
-     th:replace="layout/header-admin :: header-admin"></div>
+    <section class="commerce-page admin-page">
+        <div class="container">
+            <div class="section-header">
+                <h1 class="commerce-title app-mb-0">Product Management</h1>
+                <a th:href="@{/staff/products/add}" class="btn btn-app-primary">Add Product</a>
+            </div>
 
-<div sec:authorize="hasRole('STAFF')"
-     th:replace="layout/header-staff :: header-staff"></div>
+            <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+            <div th:if="${message}" class="alert alert-success" th:text="${message}"></div>
 
-<div sec:authorize="hasRole('CUSTOMER')"
-     th:replace="layout/header-customer :: header-customer"></div>
-<!-- Main content -->
-<div class="content">
-    <h2>
-        Product List
-        <a th:href="@{/staff/products/add}">
-            <button class="add-btn">➕ Add New</button>
-        </a>
-    </h2>
+            <div class="commerce-card admin-table-card">
+                <div class="admin-filter-bar product-filter-bar">
+                    <div>
+                        <label for="categoryFilter">Category</label>
+                        <select id="categoryFilter" class="form-control">
+                            <option value="">All</option>
+                            <option th:each="c : ${categories}"
+                                    th:value="${c.categoryName}"
+                                    th:text="${c.categoryName}"></option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="brandFilter">Brand</label>
+                        <select id="brandFilter" class="form-control">
+                            <option value="">All</option>
+                            <option th:each="b : ${brands}"
+                                    th:value="${b.name}"
+                                    th:text="${b.name}"></option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="statusFilter">Catalog State</label>
+                        <select id="statusFilter" class="form-control">
+                            <option value="">All</option>
+                            <option value="Selling">Selling</option>
+                            <option value="Draft">Draft</option>
+                            <option value="Discontinued">Discontinued</option>
+                            <option value="Visible">Visible</option>
+                            <option value="Hidden">Hidden</option>
+                        </select>
+                    </div>
+                </div>
 
-    <!-- ✅ Filter bar -->
-    <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
-    <div th:if="${message}" class="alert alert-success" th:text="${message}"></div>
+                <div class="table-responsive">
+                    <table id="productTable" class="table table-hover order-table admin-table product-admin-table" style="width:100%">
+                        <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Image</th>
+                            <th>Category</th>
+                            <th>Brand</th>
+                            <th>Product Name</th>
+                            <th>Price ($)</th>
+                            <th>Inventory</th>
+                            <th>Description</th>
+                            <th>Catalog State</th>
+                            <th class="admin-actions-col">Actions</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:if="${products == null or #lists.isEmpty(products)}">
+                            <td colspan="10" class="text-center text-muted">No results found</td>
+                        </tr>
 
-    <div class="filter-bar">
-        <label>🔸 Category:</label>
-        <select id="categoryFilter">
-            <option value="">All</option>
-            <option th:each="c : ${categories}"
-                    th:value="${c.categoryName}"
-                    th:text="${c.categoryName}"></option>
-        </select>
+                        <tr th:each="product : ${products}">
+                            <td th:text="${product.productId}"></td>
+                            <td>
+                                <img th:if="${product.images != null and !product.images.isEmpty()}"
+                                     th:src="@{${product.images[0].imageUrl}}"
+                                     alt="Product Image" class="product-admin-image">
+                                <img th:if="${product.images == null or product.images.isEmpty()}"
+                                     th:src="@{/image/default-product.png}"
+                                     alt="No Image" class="product-admin-image">
+                            </td>
+                            <td th:text="${product.categories != null and !product.categories.isEmpty() ? product.categories[0].categoryName : 'N/A'}"></td>
+                            <td th:text="${product.brand != null ? product.brand.name : 'N/A'}"></td>
+                            <td>
+                                <a class="product-link"
+                                   th:href="@{/staff/products/edit/{id}(id=${product.productId})}"
+                                   th:text="${product.productName}"></a>
+                            </td>
+                            <td th:text="${#numbers.formatDecimal(product.price, 0, 'COMMA', 2, 'POINT')}"></td>
+                            <td th:text="${product.inventoryQuantity}"></td>
+                            <td class="product-description-cell" th:text="${product.description}"></td>
+                            <td>
+                                <span class="status-badge"
+                                      th:classappend="${product.sellableOnStorefront ? ' status-completed' : ' status-cancelled'}"
+                                      th:text="${product.lifecycleStatus.displayName + ' / ' + (product.status ? 'Visible' : 'Hidden')}"></span>
+                            </td>
+                            <td>
+                                <div class="admin-row-actions">
+                                    <a th:href="@{/staff/products/edit/{id}(id=${product.productId})}"
+                                       class="btn btn-xs btn-app-primary">Edit</a>
+                                    <form th:action="@{'/staff/products/' + ${product.productId} + '/hide'}" method="post"
+                                          onsubmit="return confirm('Are you sure you want to stop selling and hide this product?');"
+                                          class="admin-inline-form">
+                                        <button type="submit" class="btn btn-warning btn-xs"
+                                                th:disabled="${product.lifecycleStatus.name() == 'DISCONTINUED'}">
+                                            Stop Selling
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
 
-        <label>🔸 Brand:</label>
-        <select id="brandFilter">
-            <option value="">All</option>
-            <option th:each="b : ${brands}"
-                    th:value="${b.name}"
-                    th:text="${b.name}"></option>
-        </select>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            var table = $('#productTable').DataTable({
+                pageLength: 10,
+                searching: true,
+                ordering: true,
+                lengthMenu: [5, 10, 25, 50],
+                language: {
+                    lengthMenu: 'Show _MENU_ products',
+                    info: 'Showing _START_ to _END_ of _TOTAL_ products',
+                    zeroRecords: 'No matching products found'
+                }
+            });
 
-        <label>🔸 Catalog State:</label>
-        <select id="statusFilter">
-            <option value="">All</option>
-            <option value="Selling">Selling</option>
-            <option value="Draft">Draft</option>
-            <option value="Discontinued">Discontinued</option>
-            <option value="Visible">Visible</option>
-            <option value="Hidden">Hidden</option>
-        </select>
-    </div>
+            $('#categoryFilter').on('change', function () {
+                table.column(2).search(this.value).draw();
+            });
 
-    <!-- ✅ Product Table -->
-    <table id="productTable" class="display">
-        <thead>
-        <tr>
-            <th>ID</th>
-            <th>Image</th>
-            <th>Category</th>
-            <th>Brand</th>
-            <th>Product Name</th>
-            <th>Price ($)</th>
-            <th>Inventory</th>
-            <th>Description</th>
-            <th>Catalog State</th>
-            <th>Actions</th>
-        </tr>
-        </thead>
+            $('#brandFilter').on('change', function () {
+                table.column(3).search(this.value).draw();
+            });
 
-        <tbody>
-        <tr th:if="${products == null or #lists.isEmpty(products)}">
-            <td colspan="10" style="text-align:center;color:#777">No results found</td>
-        </tr>
-
-        <tr th:each="product : ${products}">
-            <td th:text="${product.productId}"></td>
-
-            <td>
-                <img th:if="${product.images != null and !product.images.isEmpty()}"
-                     th:src="@{${product.images[0].imageUrl}}"
-                     alt="Product Image" class="product-image"/>
-                <img th:if="${product.images == null or product.images.isEmpty()}"
-                     th:src="@{/image/default-product.png}"
-                     alt="No Image" class="product-image"/>
-            </td>
-
-            <td th:text="${product.categories != null and !product.categories.isEmpty() ? product.categories[0].categoryName : 'N/A'}"></td>
-            <td th:text="${product.brand != null ? product.brand.name : 'N/A'}"></td>
-
-            <td>
-                <a class="product-link"
-                   th:href="@{/staff/products/edit/{id}(id=${product.productId})}"
-                   th:text="${product.productName}"></a>
-            </td>
-
-            <td th:text="${#numbers.formatDecimal(product.price, 0, 'COMMA', 2, 'POINT')}"></td>
-            <td th:text="${product.inventoryQuantity}"></td>
-            <td th:text="${product.description}"></td>
-
-            <td>
-                <span th:text="${product.lifecycleStatus.displayName + ' / ' + (product.status ? 'Visible' : 'Hidden')}"
-                      th:classappend="${product.sellableOnStorefront ? 'status-active' : 'status-hidden'}"></span>
-            </td>
-
-            <td>
-                <!-- Edit Button -->
-                <a th:href="@{/staff/products/edit/{id}(id=${product.productId})}"
-                   class="btn-action btn-edit">Edit</a>
-
-                <!-- Hide/Unhide Button -->
-                <form th:action="@{'/staff/products/' + ${product.productId} + '/hide'}" method="post"
-                      onsubmit="return confirm('Are you sure you want to stop selling and hide this product?');"
-                      class="d-inline">
-                    <button type="submit" class="btn btn-warning btn-sm"
-                            th:disabled="${product.lifecycleStatus.name() == 'DISCONTINUED'}">
-                        Stop Selling
-                    </button>
-                </form>
-
-            </td>
-        </tr>
-        </tbody>
-    </table>
-</div>
-
-<!-- ✅ jQuery + DataTables -->
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-
-<script>
-    $(document).ready(function() {
-        // Initialize DataTable
-        var table = $('#productTable').DataTable({
-            pageLength: 10,
-            searching: true,
-            ordering: true,
-            lengthMenu: [5, 10, 25, 50],
-            language: {
-                search: "🔍 Search:",
-                lengthMenu: "Show _MENU_ products",
-                info: "Showing _START_–_END_ of _TOTAL_ products",
-                zeroRecords: "No matching products found",
-                paginate: { first: "First", last: "Last", next: "→", previous: "←" }
-            }
+            $('#statusFilter').on('change', function () {
+                table.column(8).search(this.value).draw();
+            });
         });
-
-        // Filter by Category
-        $('#categoryFilter').on('change', function () {
-            table.column(2).search(this.value).draw();
-        });
-
-        // Filter by Brand
-        $('#brandFilter').on('change', function () {
-            table.column(3).search(this.value).draw();
-        });
-
-        // Filter by Status
-        $('#statusFilter').on('change', function () {
-            table.column(8).search(this.value).draw();
-        });
-    });
-</script>
-
+    </script>
+</th:block>
 </body>
 </html>

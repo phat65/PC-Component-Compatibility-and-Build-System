@@ -11,42 +11,42 @@
                 name: 'High-End Gaming',
                 description: 'Top performance for 4K gaming',
                 minBudget: 2000,
-                icon: '🎮'
+                icon: '4K'
             },
             {
                 id: 'GAMING_MID',
                 name: 'Mid-Range Gaming',
                 description: 'Great 1440p gaming experience',
                 minBudget: 1200,
-                icon: '🎯'
+                icon: '1440p'
             },
             {
                 id: 'BUDGET_GAMING',
                 name: 'Budget Gaming',
                 description: 'Solid 1080p gaming',
                 minBudget: 700,
-                icon: '💰'
+                icon: '1080p'
             },
             {
                 id: 'WORKSTATION',
                 name: 'Workstation',
                 description: 'For content creation & 3D work',
                 minBudget: 1500,
-                icon: '💼'
+                icon: 'Work'
             },
             {
                 id: 'STREAMING',
                 name: 'Streaming PC',
                 description: 'For gaming & streaming',
                 minBudget: 1400,
-                icon: '📹'
+                icon: 'Stream'
             },
             {
                 id: 'OFFICE',
                 name: 'Office PC',
                 description: 'For productivity work',
                 minBudget: 500,
-                icon: '📊'
+                icon: 'Office'
             }
         ],
         suggestedBuild: null
@@ -184,7 +184,7 @@
         } else {
             elements.btnGenerateSuggest.disabled = false;
             elements.budgetHint.style.color = '#27ae60';
-            elements.budgetHint.textContent = `✓ Budget: $${budget}`;
+            elements.budgetHint.textContent = `Budget: $${budget}`;
         }
     }
 
@@ -343,7 +343,7 @@
     // Show error
     function showError(message) {
         elements.errorMessage.style.display = 'block';
-        elements.errorMessage.textContent = '⚠️ ' + message;
+        elements.errorMessage.textContent = 'Warning: ' + message;
         elements.resultStep.style.display = 'none';
 
         // Auto-hide after 5 seconds

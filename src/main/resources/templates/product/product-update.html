@@ -1,126 +1,98 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org"
-      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
-<head>
-    <meta charset="UTF-8">
-    <title>Update Product</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        .image-preview-container {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 15px;
-        }
-        .image-preview-item {
-            position: relative;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            padding: 5px;
-        }
-        .image-preview-item img {
-            width: 150px;
-            height: 150px;
-            object-fit: cover;
-            border-radius: 4px;
-        }
-        .delete-image-btn {
-            position: absolute;
-            top: -10px;
-            right: -10px;
-            z-index: 10;
-        }
-        .error-message {
-            color: #dc3545;
-            font-size: 0.875em;
-            margin-top: 0.25rem;
-        }
-    </style>
-</head>
+      xmlns:sec="https://www.thymeleaf.org/extras/spring-security"
+      th:replace="~{layout/app :: page('Update Product', null, ~{::content})}">
 <body>
-<div th:replace="layout/header-staff :: header-staff"></div>
+<th:block th:fragment="content">
+    <section class="commerce-page admin-page">
+        <div class="container">
+            <div class="section-header">
+                <h1 class="commerce-title app-mb-0">
+                    Update Product: <span th:text="${product.productName}"></span>
+                </h1>
+                <a th:href="@{/staff/products/list}" class="btn btn-app-outline">Back</a>
+            </div>
 
-<div class="container mt-5 mb-5">
-    <div class="row">
-        <div class="col-md-10 offset-md-1">
-
-            <h2>Update Product: <span th:text="${product.productName}"></span></h2>
-            <hr>
-
-            <form th:action="@{/staff/products/edit}"
+            <form class="commerce-card admin-form-card product-edit-form"
+                  th:action="@{/staff/products/edit}"
                   th:object="${product}"
                   method="post"
                   enctype="multipart/form-data">
 
-                <input type="hidden" th:field="*{productId}" />
+                <input type="hidden" th:field="*{productId}">
 
-                <!-- ✅ Hiển thị thông báo lỗi tổng -->
                 <div th:if="${error}" class="alert alert-warning" th:text="${error}"></div>
 
                 <div class="row">
                     <div class="col-md-7">
-                        <h3>1. Basic Information</h3>
+                        <h3>Basic Information</h3>
 
-                        <div class="mb-3">
-                            <label for="productName" class="form-label">Product Name *</label>
+                        <div class="form-group">
+                            <label for="productName">Product Name</label>
                             <input type="text" class="form-control" id="productName" th:field="*{productName}" required>
-                            <div class="error-message" th:if="${#fields.hasErrors('productName')}" th:errors="*{productName}"></div>
+                            <div class="text-danger" th:if="${#fields.hasErrors('productName')}" th:errors="*{productName}"></div>
                         </div>
 
                         <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label for="price" class="form-label">Price ($) *</label>
-                                <input type="number" class="form-control" id="price" th:field="*{price}" min="1" required>
-                                <div class="error-message" th:if="${#fields.hasErrors('price')}" th:errors="*{price}"></div>
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label for="price">Price ($)</label>
+                                    <input type="number" class="form-control" id="price" th:field="*{price}" min="1" required>
+                                    <div class="text-danger" th:if="${#fields.hasErrors('price')}" th:errors="*{price}"></div>
+                                </div>
                             </div>
-
-                            <div class="col-md-6 mb-3">
-                                <label for="lifecycleStatus" class="form-label">Lifecycle</label>
-                                <select class="form-select" id="lifecycleStatus" th:field="*{lifecycleStatus}">
-                                    <option th:each="lifecycle : ${T(com.example.PCOnlineShop.model.product.ProductLifecycleStatus).values()}"
-                                            th:value="${lifecycle}"
-                                            th:text="${lifecycle.displayName}">
-                                    </option>
-                                </select>
-                            </div>
-
-                            <div class="col-md-6 mb-3">
-                                <label for="status" class="form-label">Visibility</label>
-                                <select class="form-select" id="status" th:field="*{status}">
-                                    <option th:value="true">Visible</option>
-                                    <option th:value="false">Hidden</option>
-                                </select>
-                                <div class="form-text">Draft và Discontinued sẽ tự động bị ẩn khỏi storefront.</div>
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label for="inventory">Inventory Quantity</label>
+                                    <input type="number" class="form-control" id="inventory" th:field="*{inventoryQuantity}" min="0" required>
+                                    <div class="text-danger" th:if="${#fields.hasErrors('inventoryQuantity')}" th:errors="*{inventoryQuantity}"></div>
+                                </div>
                             </div>
                         </div>
 
-                        <div class="mb-3">
-                            <label for="inventory" class="form-label">Inventory Quantity</label>
-                            <input type="number" class="form-control" id="inventory" th:field="*{inventoryQuantity}" min="0" required>
-                            <div class="error-message" th:if="${#fields.hasErrors('inventoryQuantity')}" th:errors="*{inventoryQuantity}"></div>
+                        <div class="row">
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label for="lifecycleStatus">Lifecycle</label>
+                                    <select class="form-control" id="lifecycleStatus" th:field="*{lifecycleStatus}">
+                                        <option th:each="lifecycle : ${T(com.example.PCOnlineShop.model.product.ProductLifecycleStatus).values()}"
+                                                th:value="${lifecycle}"
+                                                th:text="${lifecycle.displayName}"></option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label for="status">Visibility</label>
+                                    <select class="form-control" id="status" th:field="*{status}">
+                                        <option th:value="true">Visible</option>
+                                        <option th:value="false">Hidden</option>
+                                    </select>
+                                    <p class="help-block">Draft and Discontinued are automatically hidden from the storefront.</p>
+                                </div>
+                            </div>
                         </div>
 
-                        <div class="mb-3">
-                            <label for="description" class="form-label">Detailed Description</label>
+                        <div class="form-group">
+                            <label for="description">Detailed Description</label>
                             <textarea class="form-control" id="description" rows="8" th:field="*{description}"></textarea>
                         </div>
 
-                        <hr class="mt-4 mb-4">
-
-                        <h3>2. Image Management</h3>
-                        <div class="mb-3">
-                            <label for="imageFiles" class="form-label">Add New Images (multi-select)</label>
+                        <h3>Image Management</h3>
+                        <div class="form-group">
+                            <label for="imageFiles">Add New Images</label>
                             <input class="form-control" type="file" id="imageFiles" name="imageFiles" multiple>
                         </div>
 
-                        <div class="mb-3">
-                            <label class="form-label">Current Images</label>
-                            <div class="image-preview-container" id="image-preview-container">
+                        <div class="form-group">
+                            <label>Current Images</label>
+                            <div class="product-image-preview" id="image-preview-container">
                                 <div th:each="img : *{images}"
-                                     class="image-preview-item"
+                                     class="product-image-thumb product-existing-image"
                                      th:id="'image-item-' + ${img.imageId}">
                                     <img th:src="@{${img.imageUrl}}" alt="Product Image">
                                     <button type="button"
-                                            class="btn btn-danger btn-sm rounded-circle delete-image-btn"
+                                            class="btn btn-danger btn-xs delete-image-btn"
                                             th:data-image-id="${img.imageId}">
                                         X
                                     </button>
@@ -132,151 +104,132 @@
                         </div>
                     </div>
 
-                    <!-- RIGHT COLUMN -->
                     <div class="col-md-5">
-                        <h3>3. Classification & Specs</h3>
+                        <h3>Classification & Specs</h3>
 
-                        <!-- ✅ BRAND SELECT (Staff có thể thay đổi brand active) -->
-                        <div class="mb-3">
-                            <label for="brand" class="form-label">Brand *</label>
-                            <select id="brand" class="form-select" th:field="*{brand.brandId}" required>
+                        <div class="form-group">
+                            <label for="brand">Brand</label>
+                            <select id="brand" class="form-control" th:field="*{brand.brandId}" required>
                                 <option value="">-- Choose Brand --</option>
                                 <option th:each="b : ${brands}"
                                         th:value="${b.brandId}"
                                         th:text="${b.name}"
-                                        th:disabled="${!b.status}"
-                                        th:selected="${product.brand != null && product.brand.brandId == b.brandId}">
+                                        th:disabled="${!b.status}">
                                 </option>
                             </select>
-                            <div class="error-message" th:if="${brandError}" th:text="${brandError}"></div>
+                            <div class="text-danger" th:if="${brandError}" th:text="${brandError}"></div>
                         </div>
 
-                        <!-- ✅ CATEGORY (không đổi được) -->
-                        <div class="mb-3">
-                            <label for="category" class="form-label">Category</label>
+                        <div class="form-group">
+                            <label for="category">Category</label>
                             <input type="text" class="form-control" id="category"
                                    th:value="${!product.categories.isEmpty() ? product.categories[0].categoryName : 'N/A'}" readonly>
-
                         </div>
 
-                        <!-- ✅ TECHNICAL SPECS -->
-                        <div class="card bg-light">
-                            <div class="card-body">
-                                <h5 class="card-title">Technical Specifications</h5>
-                                <div id="spec-form-container">
-                                    <div class="d-flex justify-content-center">
-                                        <div class="spinner-border" role="status">
-                                            <span class="visually-hidden">Loading...</span>
-                                        </div>
-                                    </div>
-                                </div>
+                        <div class="form-group">
+                            <label>Technical Specifications</label>
+                            <div id="spec-form-container" class="spec-form-panel">
+                                <p class="help-block app-mb-0">Loading specifications...</p>
                             </div>
                         </div>
-
                     </div>
                 </div>
 
-                <hr class="mt-5">
-                <div class="text-end">
-                    <a th:href="@{/staff/products/list}" class="btn btn-secondary me-2">Cancel</a>
-                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                <div class="admin-form-actions">
+                    <a th:href="@{/staff/products/list}" class="btn btn-app-outline">Cancel</a>
+                    <button type="submit" class="btn btn-app-primary">Save Changes</button>
                 </div>
             </form>
         </div>
-    </div>
-</div>
+    </section>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script th:inline="javascript">
+        /*<![CDATA[*/
 
-<script th:inline="javascript">
-    /*<![CDATA[*/
+        const productId = /*[[${product.productId}]]*/ 0;
+        const initialCategoryId = /*[[${!product.categories.isEmpty() ? product.categories[0].categoryId : 0}]]*/ 0;
 
-    const productId = /*[[${product.productId}]]*/ 0;
-    const initialCategoryId = /*[[${!product.categories.isEmpty() ? product.categories[0].categoryId : 0}]]*/ 0;
-
-    function getCsrfToken() {
-        const match = document.cookie.match(/(?:^|; )XSRF-TOKEN=([^;]+)/);
-        return match ? decodeURIComponent(match[1]) : '';
-    }
-
-    function withCsrfHeaders(headers) {
-        const csrfToken = getCsrfToken();
-        if (!csrfToken) {
-            return headers;
+        function getCsrfToken() {
+            const match = document.cookie.match(/(?:^|; )XSRF-TOKEN=([^;]+)/);
+            return match ? decodeURIComponent(match[1]) : '';
         }
 
-        return {
-            ...headers,
-            'X-XSRF-TOKEN': csrfToken
-        };
-    }
-
-    document.addEventListener('DOMContentLoaded', function() {
-        loadSpecFormForEdit(initialCategoryId, productId);
-        syncVisibilityWithLifecycle();
-
-        // Delete image handler
-        const imageContainer = document.getElementById('image-preview-container');
-        imageContainer.addEventListener('click', function(event) {
-            if (event.target.classList.contains('delete-image-btn')) {
-                event.preventDefault();
-                const button = event.target;
-                const imageId = button.getAttribute('data-image-id');
-
-                if (confirm('Are you sure you want to delete this image immediately?')) {
-                    deleteImage(imageId, button);
-                }
+        function withCsrfHeaders(headers) {
+            const csrfToken = getCsrfToken();
+            if (!csrfToken) {
+                return headers;
             }
-        });
 
-        document.getElementById('lifecycleStatus').addEventListener('change', syncVisibilityWithLifecycle);
-    });
-
-    function syncVisibilityWithLifecycle() {
-        const lifecycleSelect = document.getElementById('lifecycleStatus');
-        const visibilitySelect = document.getElementById('status');
-        if (lifecycleSelect.value !== 'SELLING') {
-            visibilitySelect.value = 'false';
+            return {
+                ...headers,
+                'X-XSRF-TOKEN': csrfToken
+            };
         }
-    }
 
-    async function loadSpecFormForEdit(categoryId, prodId) {
-        const container = document.getElementById('spec-form-container');
-        container.innerHTML = '<div class="text-center spinner-border" role="status"></div>';
-        try {
-            const url = `/staff/products/spec-form-edit?categoryId=${categoryId}&productId=${prodId}`;
-            const response = await fetch(url);
-            if (!response.ok) throw new Error('Network response was not ok');
-            const htmlFragment = await response.text();
-            container.innerHTML = htmlFragment;
-        } catch (error) {
-            console.error('Error loading specs (edit):', error);
-            container.innerHTML = '<div class="alert alert-danger">Could not load specifications.</div>';
-        }
-    }
+        document.addEventListener('DOMContentLoaded', function() {
+            loadSpecFormForEdit(initialCategoryId, productId);
+            syncVisibilityWithLifecycle();
 
-    async function deleteImage(imageId, button) {
-        try {
-            const url = `/staff/products/image/${imageId}`;
-            const response = await fetch(url, {
-                method: 'DELETE',
-                headers: withCsrfHeaders({ 'Accept': 'application/json' })
+            const imageContainer = document.getElementById('image-preview-container');
+            imageContainer.addEventListener('click', function(event) {
+                if (event.target.classList.contains('delete-image-btn')) {
+                    event.preventDefault();
+                    const button = event.target;
+                    const imageId = button.getAttribute('data-image-id');
+
+                    if (confirm('Are you sure you want to delete this image immediately?')) {
+                        deleteImage(imageId, button);
+                    }
+                }
             });
 
-            if (response.ok) {
-                button.closest('.image-preview-item').remove();
-                alert('Image deleted successfully.');
-            } else {
-                throw new Error('Could not delete image.');
-            }
-        } catch (error) {
-            console.error('Error deleting image:', error);
-            alert('An error occurred while deleting the image.');
-        }
-    }
+            document.getElementById('lifecycleStatus').addEventListener('change', syncVisibilityWithLifecycle);
+        });
 
-    /*]]>*/
-</script>
+        function syncVisibilityWithLifecycle() {
+            const lifecycleSelect = document.getElementById('lifecycleStatus');
+            const visibilitySelect = document.getElementById('status');
+            if (lifecycleSelect.value !== 'SELLING') {
+                visibilitySelect.value = 'false';
+            }
+        }
+
+        async function loadSpecFormForEdit(categoryId, prodId) {
+            const container = document.getElementById('spec-form-container');
+            container.innerHTML = '<p class="help-block app-mb-0">Loading specifications...</p>';
+            try {
+                const url = `/staff/products/spec-form-edit?categoryId=${categoryId}&productId=${prodId}`;
+                const response = await fetch(url);
+                if (!response.ok) throw new Error('Network response was not ok');
+                container.innerHTML = await response.text();
+            } catch (error) {
+                console.error('Error loading specs (edit):', error);
+                container.innerHTML = '<div class="alert alert-danger app-mb-0">Could not load specifications.</div>';
+            }
+        }
+
+        async function deleteImage(imageId, button) {
+            try {
+                const url = `/staff/products/image/${imageId}`;
+                const response = await fetch(url, {
+                    method: 'DELETE',
+                    headers: withCsrfHeaders({ 'Accept': 'application/json' })
+                });
+
+                if (response.ok) {
+                    button.closest('.product-existing-image').remove();
+                    alert('Image deleted successfully.');
+                } else {
+                    throw new Error('Could not delete image.');
+                }
+            } catch (error) {
+                console.error('Error deleting image:', error);
+                alert('An error occurred while deleting the image.');
+            }
+        }
+
+        /*]]>*/
+    </script>
+</th:block>
 </body>
 </html>
-

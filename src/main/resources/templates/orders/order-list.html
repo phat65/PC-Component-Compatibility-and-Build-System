@@ -1,207 +1,123 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org"
-      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
-<head>
-    <meta charset="UTF-8">
-    <title th:text="${pageTitle ?: 'Orders'}">Orders</title>
-
-    <link rel="stylesheet" th:href="@{/css/OrderStyle.css}">
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css" th:if="${isStaffOrAdmin}">
-</head>
+      xmlns:sec="https://www.thymeleaf.org/extras/spring-security"
+      th:replace="~{layout/app :: page('Orders', null, ~{::content})}">
 <body>
+<th:block th:fragment="content">
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css" th:if="${isStaffOrAdmin}">
 
-<div sec:authorize="!isAuthenticated()" th:replace="~{layout/header-default :: header-default}"></div>
-<div sec:authorize="hasRole('ADMIN')" th:replace="~{layout/header-admin :: header-admin}"></div>
-<div sec:authorize="hasRole('STAFF')" th:replace="~{layout/header-staff :: header-staff}"></div>
-<div sec:authorize="hasRole('CUSTOMER')" th:replace="~{layout/header-customer :: header-customer}"></div>
+<section class="commerce-page">
+    <div class="container">
+        <h1 class="commerce-title" th:text="${pageTitle ?: 'Orders'}">Orders</h1>
 
-<div class="container">
-    <h2 th:text="${pageTitle ?: 'Orders'}">Orders</h2>
+        <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+        <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+        <div th:if="${info}" class="alert alert-info" th:text="${info}"></div>
 
-    <div th:if="${error}" class="alert alert-danger"><p th:text="${error}"></p></div>
-    <div th:if="${success}" class="alert alert-success"><p th:text="${success}"></p></div>
-    <div th:if="${info}" class="alert alert-info"><p th:text="${info}"></p></div>
+        <div class="commerce-card">
+            <div class="table-responsive">
+                <table id="orderTable" class="table table-hover order-table" th:if="${isStaffOrAdmin}">
+                    <thead>
+                    <tr>
+                        <th>Order ID</th>
+                        <th>Customer Name</th>
+                        <th>Created Date</th>
+                        <th>Final Amount</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="order : ${adminOrderList}">
+                        <td th:text="${order.orderId}"></td>
+                        <td th:text="${order.account?.fullName}"></td>
+                        <td th:data-order="${#dates.format(order.createdDate, 'yyyyMMdd')}"
+                            th:text="${#dates.format(order.createdDate, 'dd/MM/yyyy')}"></td>
+                        <td th:data-order="${order.finalAmount}"
+                            th:text="'$' + ${#numbers.formatInteger(order.finalAmount, 1, 'COMMA')}"></td>
+                        <td>
+                            <span class="status-badge"
+                                  th:classappend="${
+                                    (order.status == 'Pending Payment' or order.status == 'Pending') ? ' status-pending' :
+                                    order.status == 'Processing' ? ' status-processing' :
+                                    order.status == 'Ready to Ship' ? ' status-ready' :
+                                    order.status == 'Delivering' ? ' status-delivering' :
+                                    order.status == 'Completed' ? ' status-completed' :
+                                    order.status == 'Cancelled' ? ' status-cancelled' : ''
+                                  }"
+                                  th:text="${order.status ?: 'N/A'}">Status</span>
+                            <span th:if="${order.status == 'Cancelled' and order.paymentStatus == 'REFUND_PENDING'}"
+                                  class="status-refund-pending">(Refund Pending)</span>
+                        </td>
+                        <td>
+                            <a th:href="@{/orders/detail/{id}(id=${order.orderId})}" class="btn btn-app-outline btn-sm">View</a>
+                        </td>
+                    </tr>
+                    <tr th:if="${isStaffOrAdmin and (adminOrderList == null or #lists.isEmpty(adminOrderList))}">
+                        <td colspan="6" class="text-center text-muted">No orders found.</td>
+                    </tr>
+                    </tbody>
+                </table>
 
-    <table id="orderTable" th:if="${isStaffOrAdmin}">
-        <thead>
-        <tr>
-            <th>Order ID</th>
-            <th>Customer Name</th>
-            <th>Created Date</th>
-            <th>Final Amount</th>
-            <th>Status (State Machine)</th>
-            <th>Action</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr th:each="order, stat : ${adminOrderList}">
-            <td th:text="${order.orderId}"></td>
-            <td th:text="${order.account?.fullName}"></td>
-            <td th:data-order="${#dates.format(order.createdDate, 'yyyyMMdd')}"
-                th:text="${#dates.format(order.createdDate, 'dd/MM/yyyy')}">
-            </td>
-            <td th:data-order="${order.finalAmount}"
-                th:text="${#numbers.formatInteger(order.finalAmount, 1, 'COMMA')} + ' ₫'">
-            </td>
+                <table class="table table-hover order-table" th:unless="${isStaffOrAdmin}">
+                    <thead>
+                    <tr>
+                        <th>Order ID</th>
+                        <th>Created Date</th>
+                        <th>Final Amount</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="order : ${customerOrders}">
+                        <td th:text="${order.orderId}"></td>
+                        <td th:text="${#dates.format(order.createdDate, 'dd/MM/yyyy')}"></td>
+                        <td th:text="'$' + ${#numbers.formatInteger(order.finalAmount, 1, 'COMMA')}"></td>
+                        <td>
+                            <span class="status-badge"
+                                  th:classappend="${
+                                    (order.status == 'Pending Payment' or order.status == 'Pending') ? ' status-pending' :
+                                    order.status == 'Processing' ? ' status-processing' :
+                                    order.status == 'Ready to Ship' ? ' status-ready' :
+                                    order.status == 'Delivering' ? ' status-delivering' :
+                                    order.status == 'Completed' ? ' status-completed' :
+                                    order.status == 'Cancelled' ? ' status-cancelled' : ''
+                                  }"
+                                  th:text="${order.status ?: 'N/A'}">Status</span>
+                        </td>
+                        <td>
+                            <a th:href="@{/orders/detail/{id}(id=${order.orderId})}" class="btn btn-app-outline btn-sm">View</a>
+                        </td>
+                    </tr>
+                    <tr th:if="${!isStaffOrAdmin and (customerOrders == null or #lists.isEmpty(customerOrders))}">
+                        <td colspan="5" class="text-center text-muted">You have no orders.</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</section>
 
-            <td>
-                <div th:if="${order.status == 'Pending Payment' or order.status == 'Pending'}">
-                    <span class="status-badge status-pending" th:text="${order.status}"></span>
-                </div>
-
-                <div th:if="${order.status == 'Ready to Ship'}">
-                    <span class="status-badge status-ready">Ready to Ship</span>
-                </div>
-
-                <div th:if="${order.status == 'Delivering'}">
-                    <span class="status-badge status-delivering">Delivering</span>
-                </div>
-
-                <div th:if="${order.status == 'Completed'}">
-                    <span class="status-badge status-completed">Completed</span>
-                </div>
-
-                <div th:if="${order.status == 'Cancelled'}">
-                    <span class="status-badge status-cancelled">Cancelled</span>
-                    <span th:if="${order.paymentStatus == 'REFUND_PENDING'}" class="status-refund-pending">
-                        (Refund Pending)
-                    </span>
-                </div>
-
-                <div th:if="${order.status != 'Pending Payment' and order.status != 'Pending' and order.status != 'Processing' and order.status != 'Ready to Ship' and order.status != 'Delivering' and order.status != 'Completed' and order.status != 'Cancelled'}">
-                    <span class="status-badge" th:text="${order.status}"></span>
-                </div>
-            </td>
-
-            <td class="action-buttons">
-                <a th:href="@{'/orders/detail/' + ${order.orderId}}" class="view-btn">View</a>
-            </td>
-        </tr>
-        <tr th:if="${isStaffOrAdmin and (adminOrderList == null or #lists.isEmpty(adminOrderList))}">
-            <td colspan="6" style="text-align: center;">No orders found.</td>
-        </tr>
-        </tbody>
-    </table>
-
-    <!-- -------------------------
-         BẢNG CHO CUSTOMER (ĐÃ THÊM CỘT ACTION)
-         ------------------------- -->
-    <table class="customer-order-table" th:unless="${isStaffOrAdmin}">
-        <thead>
-        <tr>
-            <th>Order ID</th>
-            <th>Created Date</th>
-            <th>Final Amount</th>
-            <th>Status</th>
-            <th>Action</th> <!-- <- thêm cột Action -->
-        </tr>
-        </thead>
-        <tbody>
-        <tr th:each="order : ${customerOrders}">
-            <td th:text="${order.orderId}"></td>
-            <td th:text="${#dates.format(order.createdDate, 'dd/MM/yyyy')}"></td>
-            <td th:text="${#numbers.formatInteger(order.finalAmount, 1, 'COMMA')} + ' ₫'"></td>
-            <td>
-                <span class="status-badge"
-                      th:classappend="${
-                        (order.status == 'Pending Payment' or order.status == 'Pending') ? 'status-pending' :
-                        order.status == 'Ready to Ship' ? 'status-ready' :
-                        order.status == 'Delivering' ? 'status-delivering' :
-                        order.status == 'Completed' ? 'status-completed' :
-                        order.status == 'Cancelled' ? 'status-cancelled' : ''
-                      }"
-                      th:text="${order.status ?: 'N/A'}"> </span>
-            </td>
-
-            <!-- Nút View cho customer - dùng cùng class view-btn -->
-            <td class="action-buttons">
-                <a th:href="@{'/orders/detail/' + ${order.orderId}}" class="view-btn">View</a>
-            </td>
-        </tr>
-        <tr th:if="${!isStaffOrAdmin and (customerOrders == null or #lists.isEmpty(customerOrders))}">
-            <td colspan="5" style="text-align: center;">You have no orders.</td>
-        </tr>
-        </tbody>
-    </table>
-</div>
-
-<div id="payment-info-modal" class="modal">
-</div>
-
-
-<script src="https://code.jquery.com/jquery-3.7.0.js"></script>
+<script src="https://code.jquery.com/jquery-3.7.0.js" th:if="${isStaffOrAdmin}"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js" th:if="${isStaffOrAdmin}"></script>
 
-<script th:inline="none">
+<script th:inline="none" th:if="${isStaffOrAdmin}">
     $(document).ready(function() {
-
-        // --- 1. KHỞI TẠO DATATABLES ---
         if (typeof $ !== 'undefined' && typeof $.fn.DataTable !== 'undefined' && $('#orderTable').length > 0) {
-            var table = $('#orderTable').DataTable({
-                "paging": true,
-                "info": true,
-                "lengthMenu": [ [10, 25, 50, -1], [10, 25, 50, "All"] ],
-                "order": [[ 2, "desc" ]], // Sắp xếp theo cột Created Date
-                "columnDefs": [
-                    { "orderable": false, "targets": [4, 5] } // Tắt sort cột Status và Action
+            $('#orderTable').DataTable({
+                paging: true,
+                info: true,
+                lengthMenu: [[10, 25, 50, -1], [10, 25, 50, 'All']],
+                order: [[2, 'desc']],
+                columnDefs: [
+                    { orderable: false, targets: [4, 5] }
                 ]
             });
         }
-
-        // --- 3. LOGIC VIEW PAYMENT INFO (Giữ nguyên) ---
-        const paymentModal = $('#payment-info-modal');
-        const paymentInfoBody = $('#payment-info-body');
-        const paymentInfoError = $('#payment-info-error');
-        $('body').on('click', '.view-btn-payment', function() {
-            const orderId = $(this).data('order-id');
-
-            paymentInfoBody.show();
-            paymentInfoError.hide();
-            paymentInfoBody.find('span').text('');
-            $('#payment-status-text').attr('class', 'status-badge');
-
-            paymentInfoBody.html('<p>Loading...</p>');
-            paymentModal.css('display', 'flex');
-
-            fetch('/payment/info/' + orderId)
-                .then(response => {
-                    if (!response.ok) {
-                        return response.json().then(err => { throw new Error(err.error); });
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    paymentInfoBody.html($('#payment-info-modal .modal-content #payment-info-body').html().replace('<p>Loading...</p>', ''));
-
-                    const amount = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(data.amount);
-                    const createdAt = new Date(data.createdAt).toLocaleString('vi-VN');
-
-                    $('#payment-gateway-id').text(data.gatewayPaymentId || 'N/A');
-                    $('#payment-amount').text(amount);
-                    $('#payment-status-text').text(data.status);
-                    $('#payment-created-at').text(createdAt);
-
-                    if (data.status === 'SUCCESS') {
-                        $('#payment-status-text').addClass('status-completed');
-                    } else if (data.status === 'PENDING') {
-                        $('#payment-status-text').addClass('status-pending');
-                    } else {
-                        $('#payment-status-text').addClass('status-cancelled');
-                    }
-                })
-                .catch(err => {
-                    paymentInfoBody.hide();
-                    paymentInfoError.text(err.message || 'Không thể tải dữ liệu.').show();
-                });
-        });
-
-        // Đóng Modal
-        $('#btn-close-payment-modal').on('click', function() {
-            paymentModal.css('display', 'none');
-        });
-
     });
 </script>
-
+</th:block>
 </body>
 </html>

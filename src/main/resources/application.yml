@@ -1,5 +1,9 @@
 server:
   servlet:
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
     session:
       cookie:
         http-only: true
@@ -10,6 +14,10 @@ spring:
     name: pconlineshop
   profiles:
     default: dev
+  thymeleaf:
+    encoding: UTF-8
+  messages:
+    encoding: UTF-8
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:

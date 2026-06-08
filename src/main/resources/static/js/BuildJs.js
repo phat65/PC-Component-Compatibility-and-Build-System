@@ -127,7 +127,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 detailImg.alt = name || 'Product Image';
             } else {
                 // Nếu không có ảnh, hiển thị "No Image"
-                detailImageDiv.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:200px;color:#999;">No Image Available</div>';
+                detailImageDiv.innerHTML = '<div class="build-no-image">No Image Available</div>';
             }
         }
 

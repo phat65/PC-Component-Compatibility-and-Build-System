@@ -1,151 +1,113 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org"
-      xmlns:sec="https://www.thymeleaf.org/extras/spring-security" lang="en"><head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PCOnlineShop – Products</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        body { font-family: 'Inter', system-ui, sans-serif; }
-    </style>
-</head>
-<body class="bg-gray-50 text-gray-800">
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="https://www.thymeleaf.org/extras/spring-security"
+      th:replace="~{layout/app :: page('PCOnlineShop - Products', null, ~{::content})}">
+<body>
+<th:block th:fragment="content">
+<div class="storefront-page">
+    <section class="page-section">
+        <div class="container">
+            <h1 class="section-title">All Products</h1>
 
-<!-- Header -->
-<div sec:authorize="!isAuthenticated()"
-     th:replace="layout/header-default :: header-default"></div>
-<div sec:authorize="hasRole('ADMIN')"
-     th:replace="layout/header-admin :: header-admin"></div>
+            <form th:action="@{/products}" method="get" class="filter-panel app-mb-4">
+                <div class="row">
+                    <div class="col-md-3 col-lg-2">
+                        <label class="form-label">Category</label>
+                        <select name="category" class="form-control">
+                            <option value="">All</option>
+                            <option th:each="c : ${categories}"
+                                    th:value="${c.categoryId}"
+                                    th:text="${c.categoryName}"
+                                    th:selected="${selectedCategory == c.categoryId}">
+                            </option>
+                        </select>
+                    </div>
 
-<div sec:authorize="hasRole('STAFF')"
-     th:replace="layout/header-staff :: header-staff"></div>
+                    <div class="col-md-3 col-lg-2">
+                        <label class="form-label">Brand</label>
+                        <select name="brand" class="form-control">
+                            <option value="">All</option>
+                            <option th:each="b : ${brands}"
+                                    th:value="${b.brandId}"
+                                    th:text="${b.name}"
+                                    th:selected="${selectedBrand == b.brandId}">
+                            </option>
+                        </select>
+                    </div>
 
-<div sec:authorize="hasRole('CUSTOMER')"
-     th:replace="layout/header-customer :: header-customer"></div>
-<section class="container mx-auto px-6 py-12">
-    <h1 class="text-3xl font-bold mb-6">All Products</h1>
+                    <div class="col-md-4 col-lg-3">
+                        <label class="form-label">Price Range ($)</label>
+                        <div class="input-group">
+                            <input type="number" name="minPrice" th:value="${minPrice}" placeholder="Min"
+                                   class="form-control">
+                            <span class="input-group-addon">to</span>
+                            <input type="number" name="maxPrice" th:value="${maxPrice}" placeholder="Max"
+                                   class="form-control">
+                        </div>
+                    </div>
 
-    <!-- 🔍 Filter & Search -->
-    <form th:action="@{/products}" method="get"
-          class="flex flex-wrap items-end gap-4 mb-10 bg-white p-5 rounded-xl shadow border">
+                    <div class="col-md-3 col-lg-2">
+                        <label class="form-label">Sort by Price</label>
+                        <select name="sortDir" class="form-control">
+                            <option value="asc" th:selected="${sortDir == 'asc'}">Low to High</option>
+                            <option value="desc" th:selected="${sortDir == 'desc'}">High to Low</option>
+                        </select>
+                        <input type="hidden" name="sortField" value="price"/>
+                    </div>
 
-        <!-- Category -->
-        <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Category</label>
-            <select name="category"
-                    class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-blue-500 focus:outline-none">
-                <option value="">All</option>
-                <option th:each="c : ${categories}"
-                        th:value="${c.categoryId}"
-                        th:text="${c.categoryName}"
-                        th:selected="${selectedCategory == c.categoryId}">
-                </option>
-            </select>
-        </div>
+                    <div class="col-md-6 col-lg-2">
+                        <label class="form-label">Search</label>
+                        <input type="text" name="keyword" th:value="${keyword}"
+                               placeholder="Search products..." class="form-control">
+                    </div>
 
-        <!-- Brand -->
-        <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Brand</label>
-            <select name="brand"
-                    class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-blue-500 focus:outline-none">
-                <option value="">All</option>
-                <option th:each="b : ${brands}"
-                        th:value="${b.brandId}"
-                        th:text="${b.name}"
-                        th:selected="${selectedBrand == b.brandId}">
-                </option>
-            </select>
-        </div>
+                    <div class="col-md-2 col-lg-1">
+                        <button type="submit" class="btn btn-app-primary btn-block">Apply</button>
+                    </div>
+                </div>
+            </form>
 
-        <!-- Price Range -->
-        <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Price Range ($)</label>
-            <div class="flex items-center gap-2">
-                <input type="number" name="minPrice" th:value="${minPrice}" placeholder="Min"
-                       class="w-24 border border-gray-300 rounded-lg px-2 py-1 text-sm focus:ring-blue-500 focus:outline-none">
-                <span class="text-gray-500">–</span>
-                <input type="number" name="maxPrice" th:value="${maxPrice}" placeholder="Max"
-                       class="w-24 border border-gray-300 rounded-lg px-2 py-1 text-sm focus:ring-blue-500 focus:outline-none">
+            <div th:if="${products == null or #lists.isEmpty(products)}" class="empty-state-panel">
+                <h3>No products found</h3>
+                <p>Try changing your filters or search keyword.</p>
+                <a th:href="@{/products}" class="btn btn-app-outline">Clear Filters</a>
             </div>
-        </div>
-
-        <!-- Sort -->
-        <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Sort by Price</label>
-            <select name="sortDir"
-                    class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-blue-500 focus:outline-none">
-                <option value="asc" th:selected="${sortDir == 'asc'}">Low → High</option>
-                <option value="desc" th:selected="${sortDir == 'desc'}">High → Low</option>
-            </select>
-            <input type="hidden" name="sortField" value="price"/>
-        </div>
-
-        <!-- Keyword -->
-        <div class="flex-1">
-            <label class="block text-sm font-medium text-gray-700 mb-1">Search</label>
-            <input type="text" name="keyword" th:value="${keyword}"
-                   placeholder="Search products..."
-                   class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-blue-500 focus:outline-none">
-        </div>
-
-        <!-- Submit -->
-        <div>
-            <button type="submit"
-                    class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition">
-                Apply Filters
-            </button>
-        </div>
-    </form>
-
-    <!-- 🧱 Grid of products -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div th:each="p : ${products}"
-             class="bg-white border rounded-xl shadow-sm hover:shadow-md transition flex flex-col">
-
-            <!-- Product Image -->
-            <img th:if="${p != null and p.images != null and !p.images.isEmpty()}"
-                 th:src="@{${p.images[0].imageUrl}}"
-                 alt="Product image"
-                 class="rounded-t-xl w-full h-48 object-cover">
-            <img th:if="${p == null or p.images == null or p.images.isEmpty()}"
-                 src="/images/no-image.svg"
-                 alt="No image"
-                 class="rounded-t-xl w-full h-48 object-cover">
-
-            <!-- Product Info -->
-            <div class="p-4 flex-1 flex flex-col">
-                <h3 class="font-medium mb-1 truncate" th:text="${p.productName}">Product Name</h3>
-                <p class="text-gray-600 mb-3" th:text="'$' + ${p.price}">0.00</p>
-
-                <a th:href="@{'/products/' + ${p.productId}}"
-                   class="mt-auto bg-blue-600 hover:bg-blue-700 text-white text-center py-2 rounded-md text-sm">
-                    View Details
-                </a>
+            <div class="product-grid" th:unless="${products == null or #lists.isEmpty(products)}">
+                <article class="product-card" th:each="p : ${products}"
+                         th:with="imageUrl=${(p != null and p.images != null and !p.images.isEmpty() and p.images[0].imageUrl != null and !#strings.isEmpty(p.images[0].imageUrl)) ? p.images[0].imageUrl : '/images/no-image.svg'}">
+                    <img th:src="@{${imageUrl}}"
+                         th:attr="onerror=|this.onerror=null;this.src='@{/images/no-image.svg}';|"
+                         alt="Product image"
+                         class="product-card-image">
+                    <div class="product-card-body">
+                        <h3 class="product-card-title" th:text="${p.productName}">Product Name</h3>
+                        <p class="product-price" th:text="'$' + ${p.price}">0.00</p>
+                        <a th:href="@{/products/{id}(id=${p.productId})}"
+                           class="btn btn-app-primary">View Details</a>
+                    </div>
+                </article>
             </div>
+
+            <nav class="app-mt-5 text-center" aria-label="Product pages" th:if="${pageNumbers != null}">
+                <ul class="pagination">
+                    <li class="page-item" th:each="i : ${pageNumbers}"
+                        th:classappend="${i == currentPage} ? ' active' : ''">
+                        <a class="page-link"
+                           th:text="${i + 1}"
+                           th:href="@{'/products?page=' + ${i}
+                                + (${selectedCategory} != null ? '&category=' + ${selectedCategory} : '')
+                                + (${selectedBrand} != null ? '&brand=' + ${selectedBrand} : '')
+                                + (${minPrice} != null ? '&minPrice=' + ${minPrice} : '')
+                                + (${maxPrice} != null ? '&maxPrice=' + ${maxPrice} : '')
+                                + (${keyword} != null ? '&keyword=' + ${keyword} : '')
+                                + '&sortDir=' + ${sortDir}}">
+                        </a>
+                    </li>
+                </ul>
+            </nav>
         </div>
-    </div>
-
-    <!-- Pagination -->
-    <div class="mt-10 flex justify-center" th:if="${pageNumbers != null}">
-        <ul class="flex space-x-2">
-            <li th:each="i : ${pageNumbers}">
-                <a th:text="${i + 1}"
-                   th:href="@{'/products?page=' + ${i}
-                        + (${selectedCategory} != null ? '&category=' + ${selectedCategory} : '')
-                        + (${selectedBrand} != null ? '&brand=' + ${selectedBrand} : '')
-                        + (${minPrice} != null ? '&minPrice=' + ${minPrice} : '')
-                        + (${maxPrice} != null ? '&maxPrice=' + ${maxPrice} : '')
-                        + (${keyword} != null ? '&keyword=' + ${keyword} : '')
-                        + '&sortDir=' + ${sortDir}}"
-                   class="px-3 py-1 border rounded text-sm hover:bg-blue-50 transition"
-                   th:classappend="${i == currentPage} ? ' bg-blue-600 text-white border-blue-600' : ''"></a>
-            </li>
-        </ul>
-    </div>
-</section>
-
-<!-- Footer -->
-<div th:replace="~{layout/footer :: footer}"></div>
-
+    </section>
+</div>
+</th:block>
 </body>
 </html>

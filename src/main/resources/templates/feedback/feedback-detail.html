@@ -1,13 +1,13 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
-<head>
-    <title>Feedback Detail</title>
-    <link rel="stylesheet" th:href="@{/css/bootstrap.min.css}">
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="https://www.thymeleaf.org/extras/spring-security"
+      th:replace="~{layout/app :: page('Feedback Detail', null, ~{::content})}">
+<body>
+<th:block th:fragment="content">
+<link rel="stylesheet" th:href="@{/css/bootstrap.min.css}">
     <link rel="stylesheet" th:href="@{/css/Feedback.css}">
-</head>
 
-<body class="bg-light">
-
+<div class="page-body bg-light">
 <!-- MAIN WRAPPER -->
 <div class="feedback-detail-container" th:object="${fb}">
 
@@ -71,6 +71,7 @@
         return confirm('Xác nhận gửi/cập nhật phản hồi?');
     }
 </script>
-
+</div>
+</th:block>
 </body>
 </html>

@@ -1,106 +1,94 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.w3.org/1999/xhtml" lang="vi">
-<head>
-    <meta charset="UTF-8">
-    <title>Customer List</title>
-
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="https://www.thymeleaf.org/extras/spring-security"
+      th:replace="~{layout/app :: page('Customer List', null, ~{::content})}">
+<body>
+<th:block th:fragment="content">
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/jquery.dataTables.min.css">
     <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.dataTables.min.css">
 
-    <link rel="stylesheet" th:href="@{/css/StaffStyle.css}">
-</head>
-<body>
+    <section class="commerce-page admin-page">
+        <div class="container">
+            <div class="section-header">
+                <h1 class="commerce-title app-mb-0">Customer List</h1>
+                <a th:href="@{/customer/add}" class="btn btn-app-primary" sec:authorize="hasRole('ADMIN')">Add Customer</a>
+            </div>
 
-<!-- Header -->
-<div sec:authorize="hasRole('ADMIN')" th:replace="layout/header-admin :: header-admin"></div>
-<div sec:authorize="hasRole('STAFF')" th:replace="layout/header-staff :: header-staff"></div>
-<div style="height: 70px;"></div>
-<div class="container">
-    <h2>Customer List</h2>
+            <div class="commerce-card admin-table-card">
+                <div class="admin-filter-bar">
+                    <label for="statusFilter">Status</label>
+                    <select id="statusFilter" class="form-control">
+                        <option value="active" th:selected="${statusFilter == 'active'}">Active</option>
+                        <option value="inactive" th:selected="${statusFilter == 'inactive'}">Inactive</option>
+                        <option value="all" th:selected="${statusFilter == 'all'}">All</option>
+                    </select>
+                </div>
 
-    <div class="toolbar" sec:authorize="hasRole('ADMIN')">
-        <a th:href="@{/customer/add}" class="btn-add">+ Add Customer</a>
-    </div>
+                <div class="table-responsive">
+                    <table id="customerTable" class="table table-hover order-table admin-table" style="width:100%">
+                        <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>Address</th>
+                            <th>Status</th>
+                            <th class="admin-actions-col">Actions</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="c : ${customerList}">
+                            <td th:text="${c.accountId}"></td>
+                            <td th:text="${c.fullName}"></td>
+                            <td th:text="${c.email}"></td>
+                            <td th:text="${c.phoneNumber}"></td>
+                            <td th:text="${c.defaultAddress}"></td>
+                            <td>
+                                <span class="status-badge"
+                                      th:classappend="${c.enabled} ? ' status-completed' : ' status-cancelled'"
+                                      th:text="${c.enabled} ? 'Active' : 'Inactive'">Active</span>
+                            </td>
+                            <td>
+                                <div class="admin-row-actions">
+                                    <a th:href="@{'/customer/view/' + ${c.accountId}}" class="btn btn-xs btn-app-outline">View</a>
+                                    <a th:href="@{'/customer/edit/' + ${c.accountId}}" class="btn btn-xs btn-app-primary">Edit</a>
+                                    <a th:href="@{'/customer/delete/' + ${c.accountId}}"
+                                       class="btn btn-xs"
+                                       th:classappend="${c.enabled} ? ' btn-danger' : ' btn-success'"
+                                       th:text="${c.enabled} ? 'Deactivate' : 'Activate'"></a>
+                                </div>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
 
-    <div class="filter-bar">
-        <label for="statusFilter">Status:</label>
-        <select id="statusFilter">
-            <option value="active"   th:selected="${statusFilter == 'active'}">Active</option>
-            <option value="inactive" th:selected="${statusFilter == 'inactive'}">Inactive</option>
-            <option value="all"      th:selected="${statusFilter == 'all'}">All</option>
-        </select>
-    </div>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
 
-    <table id="customerTable" class="display" style="width:100%">
-        <thead>
-        <tr>
-            <th>ID</th>
-            <th>Tên</th>
-            <th>Email</th>
-            <th>Phone</th>
-            <th>Address</th>
-            <th>Status</th>
-            <th style="min-width:200px;">Actions</th>
-        </tr>
-        </thead>
+    <script th:inline="none">
+        $(function () {
+            $('#statusFilter').on('change', function () {
+                window.location.href = '/customer/list?statusFilter=' + $(this).val();
+            });
 
-        <tbody>
-        <tr th:each="c : ${customerList}">
-            <td th:text="${c.accountId}"></td>
-            <td th:text="${c.fullName}"></td>
-            <td th:text="${c.email}"></td>
-            <td th:text="${c.phoneNumber}"></td>
-            <td th:text="${c.defaultAddress}"></td>
-            <td>
-                <span th:classappend="${c.enabled} ? 'badge badge-active' : 'badge badge-inactive'"
-                      th:text="${c.enabled} ? 'Active' : 'Inactive'">Active</span>
-            </td>
-            <td>
-                <a th:href="@{'/customer/view/' + ${c.accountId}}" class="btn btn-sm btn-view">View</a>
-                <a th:href="@{'/customer/edit/' + ${c.accountId}}" class="btn btn-sm btn-edit">Edit</a>
-                <a th:href="@{'/customer/delete/' + ${c.accountId}}"
-                   class="btn btn-sm"
-                   th:classappend="${c.enabled} ? 'btn-deactivate' : 'btn-activate'"
-                   th:text="${c.enabled} ? 'Deactivate' : 'Activate'">
-                </a>
-            </td>
-        </tr>
-        </tbody>
-    </table>
-</div>
-
-<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
-<script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
-
-<script th:inline="none">
-    $(function () {
-        $('#statusFilter').on('change', function () {
-            const status = $(this).val();
-            window.location.href = '/customer/list?statusFilter=' + status;
+            $('#customerTable').DataTable({
+                responsive: false,
+                pageLength: 5,
+                lengthMenu: [5, 10, 25, 50, 100],
+                order: [[0, 'asc']],
+                columnDefs: [
+                    { targets: -1, orderable: false, searchable: false },
+                    { targets: 4, className: 'all' }
+                ]
+            });
         });
-
-        $('#customerTable').DataTable({
-            responsive: false,
-            pageLength: 5,
-            lengthMenu: [5, 10, 25, 50, 100],
-            order: [[0, 'asc']],
-            columnDefs: [
-                { targets: -1, orderable: false, searchable: false, responsivePriority: 1 },
-                { targets: 4, className: 'all' },
-                { targets: -2, responsivePriority: 2 }
-            ],
-            language: {
-                search: "Tìm:",
-                lengthMenu: "Hiển thị _MENU_ dòng",
-                info: "Hiển thị _START_–_END_ / _TOTAL_",
-                paginate: { previous: "Trước", next: "Sau" },
-                zeroRecords: "Không có dữ liệu phù hợp",
-                infoEmpty: "Không có bản ghi"
-            }
-        });
-    });
-</script>
-
+    </script>
+</th:block>
 </body>
 </html>

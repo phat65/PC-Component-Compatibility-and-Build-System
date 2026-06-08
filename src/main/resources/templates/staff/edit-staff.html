@@ -1,90 +1,95 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org"
-      xmlns:sec="https://www.thymeleaf.org/extras/spring-security" lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Edit Staff</title>
-    <link rel="stylesheet" href="/css/StaffStyle.css">
-</head>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="https://www.thymeleaf.org/extras/spring-security"
+      th:replace="~{layout/app :: page('Edit Staff', null, ~{::content})}">
 <body>
-<!-- ====== Header theo vai trò ====== -->
-<div sec:authorize="!isAuthenticated()" th:replace="layout/header-default :: header-default"></div>
-<div sec:authorize="hasRole('ADMIN')" th:replace="layout/header-admin :: header-admin"></div>
-<div sec:authorize="hasRole('STAFF')" th:replace="layout/header-staff :: header-staff"></div>
-<div sec:authorize="hasRole('CUSTOMER')" th:replace="layout/header-customer :: header-customer"></div>
-<div style="height: 70px;"></div>
-<div class="header"><h2>Edit Staff</h2></div>
+<th:block th:fragment="content">
+    <section class="commerce-page admin-page">
+        <div class="container">
+            <div class="section-header">
+                <h1 class="commerce-title app-mb-0">Edit Staff</h1>
+                <a th:href="@{/staff/list}" class="btn btn-app-outline">Back</a>
+            </div>
 
-<div class="content">
-    <!-- Thông báo lỗi -->
-    <div th:if="${errorMessage}" class="error">
-        <p th:text="${errorMessage}"></p>
-    </div>
+            <div class="commerce-card admin-form-card">
+                <div th:if="${errorMessage}" class="alert alert-danger" th:text="${errorMessage}"></div>
 
-    <!-- Form Edit Staff -->
-    <form th:action="@{/staff/edit}" th:object="${account}" method="post">
-        <input type="hidden" th:field="*{accountId}">
-        <table>
-            <tr><td>First Name:</td><td><input type="text" th:field="*{firstname}" required></td></tr>
-            <tr><td>Last Name:</td><td><input type="text" th:field="*{lastname}" required></td></tr>
-            <tr><td>Email:</td><td><input type="email" th:field="*{email}" required></td></tr>
-            <tr><td>Phone:</td><td><input type="text" th:field="*{phoneNumber}" pattern="[0-9]{9,15}" required></td></tr>
-<!--            <tr>
-                <td>Gender:</td>
-                <td>
-                    <select th:field="*{gender}" class="form-control">
-                        <option value="true" th:selected="${account.gender == true}">Male</option>
-                        <option value="false" th:selected="${account.gender == false}">Female</option>
-                    </select>
-                </td>
-            </tr>-->
+                <form th:action="@{/staff/edit}" th:object="${account}" method="post">
+                    <input type="hidden" th:field="*{accountId}">
 
-            <tr>
-                <td>Address:</td>
-                <td>
-                    <div class="address-group">
-                        <select id="province" class="form-control">
-                            <option value="">-- Chọn Tỉnh/Thành phố --</option>
-                        </select>
-                        <div class="address-sub">
-                            <select id="district" class="form-control">
-                                <option value="">-- Chọn Quận/Huyện --</option>
-                            </select>
-                            <select id="ward" class="form-control">
-                                <option value="">-- Chọn Phường/Xã --</option>
-                            </select>
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label for="firstname">First Name</label>
+                                <input id="firstname" type="text" th:field="*{firstname}" class="form-control" required>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label for="lastname">Last Name</label>
+                                <input id="lastname" type="text" th:field="*{lastname}" class="form-control" required>
+                            </div>
                         </div>
                     </div>
-                    <input type="hidden" id="address" name="addressStr" th:value="${account.defaultAddress}">
-                </td>
-            </tr>
 
-            <tr>
-                <td>Password:</td>
-                <td>
-                    <input type="text" id="password" th:field="*{password}" minlength="6"
-                           placeholder="Enter new password or keep old" required onkeyup="checkStrength()">
-                    <div id="strengthMessage"></div>
-                </td>
-            </tr>
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label for="email">Email</label>
+                                <input id="email" type="email" th:field="*{email}" class="form-control" required>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label for="phoneNumber">Phone</label>
+                                <input id="phoneNumber" type="text" th:field="*{phoneNumber}" class="form-control" pattern="[0-9]{9,15}" required>
+                            </div>
+                        </div>
+                    </div>
 
-            <tr>
-                <td>Status:</td>
-                <td>
-                    <label><input type="radio" th:field="*{enabled}" value="true"> Active</label>
-                    <label><input type="radio" th:field="*{enabled}" value="false"> Inactive</label>
-                </td>
-            </tr>
-        </table>
+                    <div class="form-group">
+                        <label>Address</label>
+                        <div class="address-group">
+                            <select id="province" class="form-control">
+                                <option value="">-- Select Province/City --</option>
+                            </select>
+                            <div class="address-sub">
+                                <select id="district" class="form-control">
+                                    <option value="">-- Select District --</option>
+                                </select>
+                                <select id="ward" class="form-control">
+                                    <option value="">-- Select Ward --</option>
+                                </select>
+                            </div>
+                        </div>
+                        <input type="hidden" id="address" name="addressStr" th:value="${account.defaultAddress}">
+                    </div>
 
-        <!-- Nhóm nút Back / Update -->
-        <div class="button-group">
-            <a href="/staff/list" class="btn-back">← Back</a>
-            <button type="submit">Update</button>
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <input id="password" type="text" th:field="*{password}" class="form-control" minlength="6"
+                               placeholder="Enter new password or keep old" required onkeyup="checkStrength()">
+                        <div id="strengthMessage" class="help-block admin-help"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Status</label>
+                        <div class="admin-radio-row">
+                            <label><input type="radio" th:field="*{enabled}" value="true"> Active</label>
+                            <label><input type="radio" th:field="*{enabled}" value="false"> Inactive</label>
+                        </div>
+                    </div>
+
+                    <div class="admin-form-actions">
+                        <a th:href="@{/staff/list}" class="btn btn-app-outline">Cancel</a>
+                        <button type="submit" class="btn btn-app-primary">Update</button>
+                    </div>
+                </form>
+            </div>
         </div>
-    </form>
-</div>
+    </section>
 
-<script src="/js/Staff.js"></script>
+    <script th:src="@{/js/Staff.js}"></script>
+</th:block>
 </body>
 </html>

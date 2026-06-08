@@ -1,454 +1,134 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.w3.org/1999/xhtml">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title th:text="${pageTitle}">Checkout</title>
-
-    <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            background-color: #f4f7f9;
-            margin: 0;
-            padding: 0;
-            color: #333;
-        }
-
-        * {
-            box-sizing: border-box;
-        }
-
-        .checkout-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-            padding-top: 90px; /* Space for fixed header */
-        }
-
-        .back-to-cart-link {
-            display: inline-block;
-            margin-bottom: 16px;
-            color: #007bff;
-            text-decoration: none;
-            font-weight: 500;
-        }
-        .back-to-cart-link:hover {
-            text-decoration: underline;
-        }
-
-        .checkout-grid {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 24px;
-        }
-
-        .main-content {
-            flex: 1;
-            min-width: 60%;
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-
-        .sidebar {
-            flex-basis: 320px;
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-
-        .checkout-card {
-            background-color: #ffffff;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-            padding: 24px;
-        }
-        .checkout-card h4 {
-            margin-top: 0;
-            margin-bottom: 20px;
-            font-size: 1.1rem;
-            font-weight: 600;
-        }
-
-        .product-list .product-item {
-            display: flex;
-            gap: 16px;
-            margin-bottom: 16px;
-            padding-bottom: 16px;
-            border-bottom: 1px solid #eee;
-        }
-        .product-list .product-item:last-child {
-            margin-bottom: 0;
-            padding-bottom: 0;
-            border-bottom: none;
-        }
-        .product-item img.product-image-small {
-            width: 60px;
-            height: 60px;
-            object-fit: cover;
-            border-radius: 4px;
-            border: 1px solid #eee;
-        }
-        .product-item .product-info {
-            flex: 1;
-        }
-        .product-item .product-info p {
-            margin: 0;
-            font-size: 0.95rem;
-            line-height: 1.4;
-        }
-        .product-item .product-price-details {
-            text-align: right;
-        }
-        .product-item .price-new {
-            font-weight: 600;
-            color: #d70018;
-        }
-        .product-item .price-old {
-            font-size: 0.9em;
-            color: #777;
-            text-decoration: line-through;
-        }
-
-        .form-group {
-            margin-bottom: 16px;
-        }
-        .form-group label {
-            display: block;
-            margin-bottom: 6px;
-            font-weight: 500;
-            font-size: 0.9rem;
-        }
-        .form-group input[type="text"],
-        .form-group input[type="email"],
-        .form-group textarea {
-            width: 100%;
-            padding: 10px 12px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            font-size: 0.95rem;
-        }
-        .form-group input:disabled {
-            background-color: #f0f0f0;
-            cursor: not-allowed;
-        }
-        .form-group .error {
-            color: #d70018;
-            font-size: 0.85rem;
-            margin-top: 4px;
-        }
-
-        .custom-radio-group {
-            display: flex;
-            gap: 16px;
-            margin-bottom: 20px;
-        }
-        .custom-radio {
-            flex: 1;
-            padding: 16px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-        .custom-radio input[type="radio"] {
-            margin-right: 10px;
-            accent-color: #007bff;
-        }
-        .custom-radio.selected {
-            border-color: #007bff;
-            box-shadow: 0 0 0 2px rgba(0,123,255,0.2);
-            background-color: #f7faff;
-        }
-
-        #shipping-details-block {
-            padding: 16px;
-            background-color: #f9f9f9;
-            border-radius: 6px;
-            margin-bottom: 16px;
-        }
-        #shipping-details-block p {
-            margin: 0 0 8px 0;
-        }
-        #shipping-details-block .shipping-address-text {
-            font-size: 0.95rem;
-            color: #555;
-        }
-
-        .btn-change-address {
-            background: none;
-            border: none;
-            color: #007bff;
-            font-weight: 600;
-            cursor: pointer;
-            padding: 4px 0;
-        }
-        .btn-change-address:hover {
-            text-decoration: underline;
-        }
-
-        .total-summary .summary-row {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 12px;
-            font-size: 0.95rem;
-        }
-        .total-summary .summary-row span:first-child {
-            color: #555;
-        }
-        .total-summary .summary-row span:last-child {
-            font-weight: 500;
-        }
-        .total-summary .summary-row.grand-total {
-            font-size: 1.1rem;
-            font-weight: 600;
-            margin-top: 16px;
-            padding-top: 16px;
-            border-top: 1px dashed #ccc;
-        }
-        .total-summary .grand-total span:last-child {
-            color: #d70018;
-            font-size: 1.25rem;
-        }
-        .total-summary .vat-note {
-            text-align: right;
-            font-size: 0.9rem;
-            color: #777;
-        }
-
-        .payment-method {
-            padding: 12px 16px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            margin-bottom: 12px;
-            cursor: pointer;
-        }
-        .payment-method input[type="radio"] {
-            margin-right: 10px;
-            accent-color: #d70018;
-        }
-
-        .btn {
-            display: block;
-            width: 100%;
-            padding: 14px;
-            border: none;
-            border-radius: 8px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            text-align: center;
-            text-decoration: none;
-            margin-bottom: 12px;
-        }
-
-        .btn-primary {
-            background-color: #d70018;
-            color: white;
-        }
-        .btn-primary:hover {
-            background-color: #b00014;
-        }
-
-        .btn-secondary {
-            background-color: #007bff;
-            color: white;
-        }
-        .btn-secondary:hover {
-            background-color: #0056b3;
-        }
-
-        .btn-outline {
-            background-color: white;
-            color: #007bff;
-            border: 1px solid #007bff;
-        }
-        .btn-outline:hover {
-            background-color: #f7faff;
-        }
-
-        .modal {
-            display: none;
-            position: fixed; z-index: 1000;
-            left: 0; top: 0; width: 100%; height: 100%;
-            overflow: auto; background-color: rgba(0,0,0,0.5);
-            justify-content: center; align-items: center;
-        }
-        .modal-content {
-            background-color: #fefefe;
-            margin: auto; padding: 24px;
-            border-radius: 8px;
-            width: 90%; max-width: 600px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-        }
-        .modal-content h4 {
-            margin-top: 0;
-            border-bottom: 1px solid #eee;
-            padding-bottom: 16px;
-            margin-bottom: 20px;
-        }
-        .modal .address-item {
-            padding: 12px;
-            border-radius: 6px;
-        }
-        .modal .address-item:hover {
-            background-color: #f9f9f9;
-        }
-        .modal .address-item input[type="radio"] {
-            margin-right: 10px;
-        }
-        .modal .modal-actions {
-            display: flex;
-            justify-content: flex-end;
-            gap: 12px;
-            margin-top: 24px;
-            padding-top: 20px;
-            border-top: 1px solid #eee;
-        }
-        .modal .btn-modal {
-            padding: 10px 20px;
-            border-radius: 6px;
-            border: 1px solid #ddd;
-            cursor: pointer;
-            font-weight: 500;
-        }
-        .btn-modal-cancel { background-color: #f1f1f1; }
-        .btn-modal-confirm { background-color: #d70018; color: white; border-color: #d70018; }
-        .btn-modal-add { background-color: #007bff; color: white; border-color: #007bff; }
-
-        #new-address-modal .form-group { margin-bottom: 16px; }
-
-        #shipping-details-block.hidden {
-            display: none;
-        }
-
-        .hidden {
-            display: none;
-        }
-    </style>
-</head>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="https://www.thymeleaf.org/extras/spring-security"
+      th:replace="~{layout/app :: page('Checkout', null, ~{::content})}">
 <body>
-
-<div sec:authorize="!isAuthenticated()" th:replace="~{layout/header-default :: header-default}"></div>
-<div sec:authorize="hasRole('ADMIN')" th:replace="~{layout/header-admin :: header-admin}"></div>
-<div sec:authorize="hasRole('STAFF')" th:replace="~{layout/header-staff :: header-staff}"></div>
-<div sec:authorize="hasRole('CUSTOMER')" th:replace="~{layout/header-customer :: header-customer}"></div>
-
-<div class="checkout-container">
-
-    <a th:href="@{/cart}" class="back-to-cart-link">&lt; Back to Cart</a>
-
-    <form id="checkout-form" th:action="@{/orders/checkout}" th:object="${checkoutDTO}" method="POST">
-
-        <div class="checkout-grid">
-
-            <div class="main-content">
-
-                <div class="checkout-card product-list">
-                    <h4>Products in Order (<span th:text="${cartItems.size()}"></span>)</h4>
-
-                    <div th:each="item : ${cartItems}" class="product-item">
-                        <img th:src="${item.imageUrl != null ? item.imageUrl : '/images/placeholder.png'}"
-                             alt="Product" class="product-image-small" />
-
-                        <div class="product-info">
-                            <p th:text="${item.productName}">Product Name</p>
-                            <p th:text="'Quantity: ' + ${item.quantity}">x1</p>
-                        </div>
-
-                        <div class="product-price-details">
-                            <p class="price-new" th:text="'$' + ${#numbers.formatDecimal(item.subtotal, 0, 'COMMA', 2, 'POINT')}"></p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="checkout-card">
-                    <h4>Customer Information</h4>
-                    <div class="form-group">
-                        <input type="text" th:value="${account.getFullName()}" disabled />
-                    </div>
-                    <div class="form-group">
-                        <input type="text" th:value="${account.getPhoneNumber()}"
-                               th:classappend="${#fields.hasErrors('shippingPhone') ? 'input-error' : ''}"
-                               disabled />
-                        <div class="error" th:if="${#fields.hasErrors('shippingPhone')}" th:errors="*{shippingPhone}"></div>
-                    </div>
-                    <div class="form-group">
-                        <input type="email" th:value="${account.getEmail()}" disabled />
-                    </div>
-                </div>
-
-                <div class="checkout-card">
-                    <h4>Shipping Address</h4>
-
-                    <div class="custom-radio-group">
-                        <label for="ship-home" class="custom-radio" th:classappend="*{shippingMethod == 'Giao hàng tận nơi'} ? 'selected' : ''">
-                            <input type="radio" id="ship-home" name="shippingMethodRadio" value="Home Delivery" th:checked="*{shippingMethod == 'Giao hàng tận nơi'}">
-                            Home Delivery
-                        </label>
-
-                        <label for="ship-store" class="custom-radio" th:classappend="*{shippingMethod == 'Nhận tại cửa hàng'} ? 'selected' : ''">
-                            <input type="radio" id="ship-store" name="shippingMethodRadio" value="Pick up at Store" th:checked="*{shippingMethod == 'Nhận tại cửa hàng'}">
-                            Pick up at Store
-                        </label>
-                    </div>
-                    <input type="hidden" th:field="*{shippingMethod}" id="shippingMethodInput" />
-
-                    <div id="shipping-details-block" th:classappend="*{shippingMethod != 'Giao hàng tận nơi'} ? 'hidden' : ''">
-
-                        <div id="address-display-block" th:classappend="${defaultAddress == null} ? 'hidden' : ''">
-                            <p>
-                                <strong id="display-name" th:text="*{shippingFullName}"></strong> -
-                                <span id="display-phone" th:text="*{shippingPhone}"></span>
-                            </p>
-                            <p id="display-address" class="shipping-address-text" th:text="*{shippingAddress}"></p>
-                        </div>
-
-                        <div id="no-address-block" th:classappend="${defaultAddress != null} ? 'hidden' : ''">
-                            <p class="error">You have no address information. Please add an address.</p>
-                        </div>
-
-                        <button type="button" id="btn-change-address" class="btn-change-address">
-                            Change
-                        </button>
-                    </div>
-                    <div class="error" th:if="${#fields.hasErrors('shippingFullName')}" th:errors="*{shippingFullName}"></div>
-                    <div class="error" th:if="${#fields.hasErrors('shippingAddress')}" th:errors="*{shippingAddress}"></div>
-
-                    <input type="hidden" th:field="*{shippingFullName}" id="shippingFullNameInput" />
-                    <input type="hidden" th:field="*{shippingPhone}" id="shippingPhoneInput" />
-                    <input type="hidden" th:field="*{shippingAddress}" id="shippingAddressInput" />
-                </div>
-            </div>
-
-            <div class="sidebar">
-
-                <div class="checkout-card total-summary">
-                    <div class="summary-row">
-                        <span>Subtotal</span>
-                        <span th:text="'$' + ${#numbers.formatDecimal(grandTotal, 0, 'COMMA', 2, 'POINT')}"></span>
-                    </div>
-                    <div class="summary-row grand-total">
-                        <span>Grand Total</span>
-                        <span th:text="'$' + ${#numbers.formatDecimal(grandTotal, 0, 'COMMA', 2, 'POINT')}"></span>
-                    </div>
-                    <p class="vat-note">(VAT Included)</p>
-                </div>
-
-
-                <div class="checkout-card">
-                    <button type="submit" class="btn btn-primary">Place Order</button>
-                    <a th:href="@{/home}" class="btn btn-secondary">Continue Shopping</a>
-                </div>
-
-            </div>
+<th:block th:fragment="content">
+<section class="commerce-page">
+    <div class="container checkout-container">
+        <div class="section-header">
+            <h1 class="commerce-title app-mb-0">Checkout</h1>
+            <a th:href="@{/cart}" class="btn btn-app-outline">&larr; Back to Cart</a>
         </div>
-    </form>
-</div>
 
-<div id="address-list-modal" class="modal">
-    <div class="modal-content">
+        <form id="checkout-form" th:action="@{/orders/checkout}" th:object="${checkoutDTO}" method="POST">
+            <div class="row">
+                <div class="col-md-8">
+                    <section class="commerce-card">
+                        <h4>Products in Order (<span th:text="${cartItems.size()}">0</span>)</h4>
+
+                        <div th:each="item : ${cartItems}" class="checkout-product">
+                            <img th:src="${item.imageUrl != null ? item.imageUrl : '/images/no-image.svg'}"
+                                 onerror="this.onerror=null;this.src='/images/no-image.svg';"
+                                 alt="Product"
+                                 class="checkout-product-image">
+
+                            <div class="checkout-product-info">
+                                <p class="checkout-product-name" th:text="${item.productName}">Product Name</p>
+                                <p class="checkout-product-meta" th:text="'Quantity: ' + ${item.quantity}">Quantity: 1</p>
+                            </div>
+
+                            <div class="checkout-product-price"
+                                 th:text="'$' + ${#numbers.formatDecimal(item.subtotal, 0, 'COMMA', 2, 'POINT')}">$0.00</div>
+                        </div>
+                    </section>
+
+                    <section class="commerce-card">
+                        <h4>Customer Information</h4>
+                        <div class="row">
+                            <div class="col-sm-4">
+                                <label class="form-label">Full Name</label>
+                                <input class="form-control" type="text" th:value="${account.getFullName()}" disabled>
+                            </div>
+                            <div class="col-sm-4">
+                                <label class="form-label">Phone</label>
+                                <input class="form-control" type="text" th:value="${account.getPhoneNumber()}"
+                                       th:classappend="${#fields.hasErrors('shippingPhone') ? ' input-error' : ''}"
+                                       disabled>
+                                <div class="text-danger" th:if="${#fields.hasErrors('shippingPhone')}" th:errors="*{shippingPhone}"></div>
+                            </div>
+                            <div class="col-sm-4">
+                                <label class="form-label">Email</label>
+                                <input class="form-control" type="email" th:value="${account.getEmail()}" disabled>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="commerce-card">
+                        <h4>Shipping Address</h4>
+
+                        <div class="checkout-radio-group">
+                            <label for="ship-home" class="custom-radio"
+                                   th:classappend="*{shippingMethod == 'Giao hàng tận nơi'} ? ' selected' : ''">
+                                <input type="radio" id="ship-home" name="shippingMethodRadio" value="Home Delivery"
+                                       th:checked="*{shippingMethod == 'Giao hàng tận nơi'}">
+                                Home Delivery
+                            </label>
+
+                            <label for="ship-store" class="custom-radio"
+                                   th:classappend="*{shippingMethod == 'Nhận tại cửa hàng'} ? ' selected' : ''">
+                                <input type="radio" id="ship-store" name="shippingMethodRadio" value="Pick up at Store"
+                                       th:checked="*{shippingMethod == 'Nhận tại cửa hàng'}">
+                                Pick up at Store
+                            </label>
+                        </div>
+                        <input type="hidden" th:field="*{shippingMethod}" id="shippingMethodInput">
+
+                        <div id="shipping-details-block" class="shipping-box"
+                             th:classappend="*{shippingMethod != 'Giao hàng tận nơi'} ? ' hidden' : ''">
+                            <div id="address-display-block" th:classappend="${defaultAddress == null} ? ' hidden' : ''">
+                                <p class="app-mb-1">
+                                    <strong id="display-name" th:text="*{shippingFullName}"></strong>
+                                    <span>-</span>
+                                    <span id="display-phone" th:text="*{shippingPhone}"></span>
+                                </p>
+                                <p id="display-address" class="app-mb-2 text-muted" th:text="*{shippingAddress}"></p>
+                            </div>
+
+                            <div id="no-address-block" th:classappend="${defaultAddress != null} ? ' hidden' : ''">
+                                <p class="text-danger">You have no address information. Please add an address.</p>
+                            </div>
+
+                            <button type="button" id="btn-change-address" class="link-button">Change</button>
+                        </div>
+
+                        <div class="text-danger" th:if="${#fields.hasErrors('shippingFullName')}" th:errors="*{shippingFullName}"></div>
+                        <div class="text-danger" th:if="${#fields.hasErrors('shippingAddress')}" th:errors="*{shippingAddress}"></div>
+
+                        <input type="hidden" th:field="*{shippingFullName}" id="shippingFullNameInput">
+                        <input type="hidden" th:field="*{shippingPhone}" id="shippingPhoneInput">
+                        <input type="hidden" th:field="*{shippingAddress}" id="shippingAddressInput">
+                    </section>
+                </div>
+
+                <div class="col-md-4">
+                    <aside class="commerce-card">
+                        <h4>Order Summary</h4>
+                        <div class="summary-line">
+                            <span>Subtotal</span>
+                            <span class="summary-value"
+                                  th:text="'$' + ${#numbers.formatDecimal(grandTotal, 0, 'COMMA', 2, 'POINT')}">$0.00</span>
+                        </div>
+                        <div class="summary-line grand-total">
+                            <span>Grand Total</span>
+                            <span class="summary-value"
+                                  th:text="'$' + ${#numbers.formatDecimal(grandTotal, 0, 'COMMA', 2, 'POINT')}">$0.00</span>
+                        </div>
+                        <p class="text-muted text-right">(VAT Included)</p>
+                    </aside>
+
+                    <aside class="commerce-card">
+                        <button type="submit" class="btn btn-app-primary btn-block">Place Order</button>
+                        <a th:href="@{/home}" class="btn btn-app-outline btn-block">Continue Shopping</a>
+                    </aside>
+                </div>
+            </div>
+        </form>
+    </div>
+</section>
+
+<div id="address-list-modal" class="app-modal modal">
+    <div class="app-modal-content">
         <h4>My Addresses</h4>
 
         <div id="address-radio-list">
@@ -461,22 +141,20 @@
                                th:checked="${addr.isDefault()}"
                                th:data-name="${addr.fullName}"
                                th:data-phone="${addr.phone}"
-                               th:data-address="${addr.address}" />
+                               th:data-address="${addr.address}">
 
                         <label th:for="'addr-' + ${addr.addressId}">
-                            <strong class="addr-name" th:text="${addr.fullName}"></strong> -
+                            <strong class="addr-name" th:text="${addr.fullName}"></strong>
+                            <span>-</span>
                             <span class="addr-phone" th:text="${addr.phone}"></span>
-
-                            <span th:if="${addr.isDefault()}" style="color: #d70018; font-weight: 600;">(Default)</span>
-
+                            <span th:if="${addr.isDefault()}" class="text-danger"><strong>(Default)</strong></span>
                             <br>
-                            <span class="addr-text" th:text="${addr.address}"></span>
+                            <span class="addr-text text-muted" th:text="${addr.address}"></span>
                         </label>
                     </div>
 
-                    <div class="address-item-actions" style="margin-left: 28px; margin-top: 8px; display: flex; gap: 15px;">
-
-                        <button type="button" class="btn-change-address btn-edit-address"
+                    <div class="address-item-actions">
+                        <button type="button" class="link-button btn-edit-address"
                                 th:data-id="${addr.addressId}"
                                 th:data-name="${addr.fullName}"
                                 th:data-phone="${addr.phone}"
@@ -484,7 +162,7 @@
                             Edit
                         </button>
 
-                        <button type="button" class="btn-change-address btn-set-default"
+                        <button type="button" class="link-button btn-set-default"
                                 th:if="${!addr.isDefault()}"
                                 th:data-id="${addr.addressId}">
                             Set as Default
@@ -492,7 +170,7 @@
                     </div>
                 </div>
             </th:block>
-            <p id="no-address-msg" class="error" th:if="${allAddresses == null || allAddresses.isEmpty()}">
+            <p id="no-address-msg" class="text-danger" th:if="${allAddresses == null || allAddresses.isEmpty()}">
                 You have no addresses. Please add a new shipping address.
             </p>
         </div>
@@ -505,23 +183,23 @@
     </div>
 </div>
 
-<div id="new-address-modal" class="modal">
-    <div class="modal-content">
+<div id="new-address-modal" class="app-modal modal">
+    <div class="app-modal-content">
         <h4>New Address</h4>
-        <div id="new-address-error" class="error"></div>
+        <div id="new-address-error" class="text-danger app-mb-2"></div>
 
         <form id="new-address-form">
             <div class="form-group">
-                <label for="new-name">Full Name:</label>
-                <input type="text" id="new-name" name="fullName" required>
+                <label for="new-name">Full Name</label>
+                <input type="text" id="new-name" name="fullName" class="form-control" required>
             </div>
             <div class="form-group">
-                <label for="new-phone">Phone Number:</label>
-                <input type="text" id="new-phone" name="phone" required>
+                <label for="new-phone">Phone Number</label>
+                <input type="text" id="new-phone" name="phone" class="form-control" required>
             </div>
             <div class="form-group">
-                <label for="new-address">Address:</label>
-                <input type="text" id="new-address" name="address" required>
+                <label for="new-address">Address</label>
+                <input type="text" id="new-address" name="address" class="form-control" required>
             </div>
         </form>
 
@@ -532,25 +210,25 @@
     </div>
 </div>
 
-<div id="edit-address-modal" class="modal">
-    <div class="modal-content">
+<div id="edit-address-modal" class="app-modal modal">
+    <div class="app-modal-content">
         <h4>Edit Address</h4>
-        <div id="edit-address-error" class="error"></div>
+        <div id="edit-address-error" class="text-danger app-mb-2"></div>
 
         <form id="edit-address-form">
             <input type="hidden" id="edit-address-id" name="addressId">
 
             <div class="form-group">
-                <label for="edit-name">Full Name:</label>
-                <input type="text" id="edit-name" name="fullName" required>
+                <label for="edit-name">Full Name</label>
+                <input type="text" id="edit-name" name="fullName" class="form-control" required>
             </div>
             <div class="form-group">
-                <label for="edit-phone">Phone Number:</label>
-                <input type="text" id="edit-phone" name="phone" required>
+                <label for="edit-phone">Phone Number</label>
+                <input type="text" id="edit-phone" name="phone" class="form-control" required>
             </div>
             <div class="form-group">
-                <label for="edit-address">Address:</label>
-                <input type="text" id="edit-address" name="address" required>
+                <label for="edit-address">Address</label>
+                <input type="text" id="edit-address" name="address" class="form-control" required>
             </div>
         </form>
 
@@ -562,6 +240,6 @@
 </div>
 
 <script th:src="@{/js/checkout.js}"></script>
-
+</th:block>
 </body>
 </html>

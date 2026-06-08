@@ -1,125 +1,150 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.w3.org/1999/xhtml">
-<head>
-    <meta charset="UTF-8">
-    <title th:text="${pageTitle}">Order Detail</title>
-    <link rel="stylesheet" th:href="@{/css/OrderStyle.css}">
-</head>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="https://www.thymeleaf.org/extras/spring-security"
+      th:replace="~{layout/app :: page('Order Detail', null, ~{::content})}">
 <body>
-
-<div sec:authorize="!isAuthenticated()" th:replace="~{layout/header-default :: header-default}"></div>
-<div sec:authorize="hasRole('ADMIN')" th:replace="~{layout/header-admin :: header-admin}"></div>
-<div sec:authorize="hasRole('STAFF')" th:replace="~{layout/header-staff :: header-staff}"></div>
-<div sec:authorize="hasRole('CUSTOMER')" th:replace="~{layout/header-customer :: header-customer}"></div>
-
-
-<div class="container">
-    <div class="detail-header">
-        <h2 th:text="${pageTitle}">Order Detail</h2>
-        <a th:href="@{/orders/list}" class="back-btn">← Back to Order List</a>
-    </div>
-
-    <div class="order-detail-grid">
-
-        <div class="order-detail-main">
-            <div class="card">
-                <h3>Products</h3>
-                <table class="product-table">
-                    <thead>
-                    <tr>
-                        <th>Product Name</th>
-                        <th>Price</th>
-                        <th>Quantity</th>
-                        <th>Subtotal</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <tr th:each="d : ${details}">
-                        <td class="product-cell">
-                            <a th:if="${d.product != null}"
-                               th:href="@{'/product/detail/' + ${d.product.productId}}"
-                               th:text="${d.product.productName}"
-                               style="text-decoration: none; color: #007bff; font-weight: 600;">
-                            </a>
-                        </td>
-                        <td th:text="${#numbers.formatInteger(d.price, 1, 'COMMA')} + ' $'"></td>
-                        <td th:text="${d.quantity}"></td>
-                        <td th:text="${#numbers.formatInteger(d.quantity * d.price, 1, 'COMMA')} + ' $'"></td>
-                    </tr>
-                    <tr th:if="${details == null or #lists.isEmpty(details)}">
-                        <td colspan="4" style="text-align: center;">No product details found.</td>
-                    </tr>
-                    </tbody>
-                </table>
-            </div>
+<th:block th:fragment="content">
+<section class="commerce-page">
+    <div class="container">
+        <div class="section-header">
+            <h1 class="commerce-title app-mb-0" th:text="${pageTitle}">Order Detail</h1>
+            <a th:href="@{/orders/list}" class="btn btn-app-outline">&larr; Back to Order List</a>
         </div>
 
-        <div class="order-detail-sidebar">
-
-            <div class="card">
-                <h3>Order Summary</h3>
-                <p><b>Order ID:</b> <span th:text="${order.orderId}"></span></p>
-                <p><b>Order Date:</b> <span th:text="${#dates.format(order.createdDate, 'dd/MM/yyyy')}"></span></p>
-                <p><b>Status:</b>
-                    <span class="status-badge"
-                          th:classappend="${
-                            order.status == 'Pending Payment' ? 'status-pending' :
-                            order.status == 'Processing' ? 'status-processing' :
-                            order.status == 'Ready to Ship' ? 'status-ready' :
-                            order.status == 'Delivering' ? 'status-delivering' :
-                            order.status == 'Completed' ? 'status-completed' :
-                            order.status == 'Cancelled' ? 'status-cancelled' : ''
-                          }"
-                          th:text="${order.status}">
-                    </span>
-                </p>
-                <p class="grand-total">
-                    <b>Total Amount:</b>
-                    <span th:text="${#numbers.formatInteger(order.finalAmount, 1, 'COMMA')} + ' $'"></span>
-                </p>
+        <div class="row">
+            <div class="col-md-8">
+                <section class="commerce-card">
+                    <h3>Products</h3>
+                    <div class="table-responsive">
+                        <table class="table table-hover order-table">
+                            <thead>
+                            <tr>
+                                <th>Product Name</th>
+                                <th>Price</th>
+                                <th>Quantity</th>
+                                <th>Subtotal</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="d : ${details}">
+                                <td>
+                                    <a th:if="${d.product != null}"
+                                       th:href="@{/products/{id}(id=${d.product.productId})}"
+                                       th:text="${d.product.productName}">Product Name</a>
+                                </td>
+                                <td th:text="'$' + ${#numbers.formatInteger(d.price, 1, 'COMMA')}"></td>
+                                <td th:text="${d.quantity}"></td>
+                                <td th:text="'$' + ${#numbers.formatInteger(d.quantity * d.price, 1, 'COMMA')}"></td>
+                            </tr>
+                            <tr th:if="${details == null or #lists.isEmpty(details)}">
+                                <td colspan="4" class="text-center text-muted">No product details found.</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
             </div>
 
-            <div class="card">
-                <h3>Shipping & Customer</h3>
-                <p th:if="${isStaffOrAdmin}"><b>Customer:</b> <span th:text="${order.account?.fullName}"></span></p>
-                <p><b>Recipient:</b> <span th:text="${order.shippingFullName}"></span></p>
-                <p><b>Phone:</b> <span th:text="${order.shippingPhone}"></span></p>
-                <p><b>Address:</b> <span th:text="${order.shippingAddress}"></span></p>
-                <p><b>Method:</b> <span th:text="${order.shippingMethod}"></span></p>
-                <p th:if="${order.note != null and !order.note.isEmpty()}"><b>Note:</b> <span th:text="${order.note}"></span></p>
-            </div>
+            <div class="col-md-4">
+                <aside class="commerce-card">
+                    <h3>Order Summary</h3>
+                    <div class="detail-row">
+                        <strong>Order ID</strong>
+                        <span th:text="${order.orderId}"></span>
+                    </div>
+                    <div class="detail-row">
+                        <strong>Order Date</strong>
+                        <span th:text="${#dates.format(order.createdDate, 'dd/MM/yyyy')}"></span>
+                    </div>
+                    <div class="detail-row">
+                        <strong>Status</strong>
+                        <span class="status-badge"
+                              th:classappend="${
+                                order.status == 'Pending Payment' ? ' status-pending' :
+                                order.status == 'Processing' ? ' status-processing' :
+                                order.status == 'Ready to Ship' ? ' status-ready' :
+                                order.status == 'Delivering' ? ' status-delivering' :
+                                order.status == 'Completed' ? ' status-completed' :
+                                order.status == 'Cancelled' ? ' status-cancelled' : ''
+                              }"
+                              th:text="${order.status}">Status</span>
+                    </div>
+                    <div class="summary-line grand-total">
+                        <span>Total Amount</span>
+                        <span class="summary-value"
+                              th:text="'$' + ${#numbers.formatInteger(order.finalAmount, 1, 'COMMA')}"></span>
+                    </div>
+                </aside>
 
-            <div class="card" th:if="${paymentInfo != null}">
-                <h3>Payment Information</h3>
-                <p><b>Transaction ID:</b> <span th:text="${paymentInfo.gatewayPaymentId ?: 'N/A'}"></span></p>
-                <p><b>Amount Paid:</b> <span th:text="${#numbers.formatInteger(paymentInfo.amount, 1, 'COMMA')} + ' $'"></span></p>
-                <p><b>Payment Status:</b>
-                    <span class="status-badge"
-                          th:classappend="${
-                            paymentInfo.status == 'SUCCESS' ? 'status-completed' :
-                            paymentInfo.status == 'PENDING' ? 'status-pending' :
-                            'status-cancelled'
-                          }"
-                          th:text="${paymentInfo.status}">
-                    </span>
-                </p>
-                <p><b>Payment Time:</b> <span th:text="${#dates.format(paymentInfo.createdAt, 'dd/MM/yyyy HH:mm:ss')}"></span></p>
-            </div>
+                <aside class="commerce-card">
+                    <h3>Shipping & Customer</h3>
+                    <div class="detail-row" th:if="${isStaffOrAdmin}">
+                        <strong>Customer</strong>
+                        <span th:text="${order.account?.fullName}"></span>
+                    </div>
+                    <div class="detail-row">
+                        <strong>Recipient</strong>
+                        <span th:text="${order.shippingFullName}"></span>
+                    </div>
+                    <div class="detail-row">
+                        <strong>Phone</strong>
+                        <span th:text="${order.shippingPhone}"></span>
+                    </div>
+                    <div class="detail-row">
+                        <strong>Address</strong>
+                        <span th:text="${order.shippingAddress}"></span>
+                    </div>
+                    <div class="detail-row">
+                        <strong>Method</strong>
+                        <span th:text="${order.shippingMethod == 'Giao hàng tận nơi' ? 'Home Delivery' : (order.shippingMethod == 'Nhận tại cửa hàng' ? 'Pick up at Store' : order.shippingMethod)}"></span>
+                    </div>
+                    <div class="detail-row" th:if="${order.note != null and !order.note.isEmpty()}">
+                        <strong>Note</strong>
+                        <span th:text="${order.note}"></span>
+                    </div>
+                </aside>
 
-            <div class="card" th:unless="${isStaffOrAdmin}">
-                <h3>Actions</h3>
+                <aside class="commerce-card" th:if="${paymentInfo != null}">
+                    <h3>Payment Information</h3>
+                    <div class="detail-row">
+                        <strong>Transaction ID</strong>
+                        <span th:text="${paymentInfo.gatewayPaymentId ?: 'N/A'}"></span>
+                    </div>
+                    <div class="detail-row">
+                        <strong>Amount Paid</strong>
+                        <span th:text="'$' + ${#numbers.formatInteger(paymentInfo.amount, 1, 'COMMA')}"></span>
+                    </div>
+                    <div class="detail-row">
+                        <strong>Payment Status</strong>
+                        <span class="status-badge"
+                              th:classappend="${
+                                paymentInfo.status == 'SUCCESS' ? ' status-completed' :
+                                paymentInfo.status == 'PENDING' ? ' status-pending' :
+                                ' status-cancelled'
+                              }"
+                              th:text="${paymentInfo.status}">Status</span>
+                    </div>
+                    <div class="detail-row">
+                        <strong>Payment Time</strong>
+                        <span th:text="${#dates.format(paymentInfo.createdAt, 'dd/MM/yyyy HH:mm:ss')}"></span>
+                    </div>
+                </aside>
 
-                <div th:if="${order.status == 'Pending Payment'}" style="margin-bottom: 10px;">
-                    <a th:href="@{'/payment/continue/' + ${order.orderId}}"
-                       class="btn-action"
-                       style="background-color: #007bff; color: white; display: block; text-align: center; padding: 10px; text-decoration: none; border-radius: 4px;">
+                <aside class="commerce-card" th:unless="${isStaffOrAdmin}">
+                    <h3>Actions</h3>
+                    <a th:if="${order.status == 'Pending Payment'}"
+                       th:href="@{/payment/continue/{id}(id=${order.orderId})}"
+                       class="btn btn-app-primary btn-block">
                         Continue Payment
                     </a>
-                </div>
-                <p th:if="${order.status != 'Pending Payment'}">
-                    No actions available for this order status.
-                </p>
+                    <p th:if="${order.status != 'Pending Payment'}" class="text-muted app-mb-0">
+                        No actions available for this order status.
+                    </p>
+                </aside>
             </div>
-
-        </div> </div> </div> </body>
+        </div>
+    </div>
+</section>
+</th:block>
+</body>
 </html>

@@ -1,38 +1,54 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org"
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
       xmlns:sec="https://www.thymeleaf.org/extras/spring-security"
-      lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>View Customer</title>
-    <link rel="stylesheet" href="/css/StaffStyle.css">
-</head>
+      th:replace="~{layout/app :: page('View Customer', null, ~{::content})}">
 <body>
+<th:block th:fragment="content">
+    <section class="commerce-page admin-page">
+        <div class="container">
+            <div class="section-header">
+                <h1 class="commerce-title app-mb-0">View Customer</h1>
+                <a th:href="@{/customer/list}" class="btn btn-app-outline">Back</a>
+            </div>
 
-<!-- Header đồng bộ -->
-<div sec:authorize="!isAuthenticated()" th:replace="layout/header-default :: header-default"></div>
-<div sec:authorize="hasRole('ADMIN')" th:replace="layout/header-admin :: header-admin"></div>
-<div sec:authorize="hasRole('STAFF')" th:replace="layout/header-staff :: header-staff"></div>
-<div sec:authorize="hasRole('CUSTOMER')" th:replace="layout/header-customer :: header-customer"></div>
-<div style="height: 70px;"></div>
-<div class="header"><h2>View Customer</h2></div>
-
-<div class="content">
-    <form>
-        <table>
-            <tr><td>ID:</td><td><input type="text" th:value="${account.accountId}" readonly></td></tr>
-            <tr><td>First Name:</td><td><input type="text" th:value="${account.firstname}" readonly></td></tr>
-            <tr><td>Last Name:</td><td><input type="text" th:value="${account.lastname}" readonly></td></tr>
-            <tr><td>Email:</td><td><input type="email" th:value="${account.email}" readonly></td></tr>
-            <tr><td>Phone:</td><td><input type="text" th:value="${account.phoneNumber}" readonly></td></tr>
-            <tr><td>Address:</td><td><input type="text" th:value="${account.defaultAddress}" readonly></td></tr>
-            <tr><td>Status:</td><td><input type="text" th:value="${account.enabled ? 'Active' : 'Inactive'}" readonly></td></tr>
-        </table>
-
-        <div class="button-group" style="justify-content: center;">
-            <a href="/customer/list" class="btn-back">← Back</a>
+            <div class="commerce-card admin-detail-card">
+                <div class="admin-detail-grid">
+                    <div class="admin-detail-row">
+                        <span>ID</span>
+                        <strong th:text="${account.accountId}"></strong>
+                    </div>
+                    <div class="admin-detail-row">
+                        <span>First Name</span>
+                        <strong th:text="${account.firstname}"></strong>
+                    </div>
+                    <div class="admin-detail-row">
+                        <span>Last Name</span>
+                        <strong th:text="${account.lastname}"></strong>
+                    </div>
+                    <div class="admin-detail-row">
+                        <span>Email</span>
+                        <strong th:text="${account.email}"></strong>
+                    </div>
+                    <div class="admin-detail-row">
+                        <span>Phone</span>
+                        <strong th:text="${account.phoneNumber}"></strong>
+                    </div>
+                    <div class="admin-detail-row admin-detail-row-full">
+                        <span>Address</span>
+                        <strong th:text="${account.defaultAddress}"></strong>
+                    </div>
+                    <div class="admin-detail-row">
+                        <span>Status</span>
+                        <strong>
+                            <span class="status-badge"
+                                  th:classappend="${account.enabled} ? ' status-completed' : ' status-cancelled'"
+                                  th:text="${account.enabled ? 'Active' : 'Inactive'}"></span>
+                        </strong>
+                    </div>
+                </div>
+            </div>
         </div>
-    </form>
-</div>
+    </section>
+</th:block>
 </body>
 </html>

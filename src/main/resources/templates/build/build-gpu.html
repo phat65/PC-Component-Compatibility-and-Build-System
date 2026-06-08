@@ -1,26 +1,11 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org"
-      xmlns:sec="https://www.thymeleaf.org/extras/spring-security" lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <title>Select GPU</title>
-    <link rel="stylesheet" th:href="@{/css/BuildStyle.css}">
-</head>
-
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="https://www.thymeleaf.org/extras/spring-security"
+      th:replace="~{layout/app :: page('Select GPU', null, ~{::content})}">
 <body>
-
-<div sec:authorize="!isAuthenticated()"
-     th:replace="layout/header-default :: header-default"></div>
-<div sec:authorize="hasRole('ADMIN')"
-     th:replace="layout/header-admin :: header-admin"></div>
-<div sec:authorize="hasRole('STAFF')"
-     th:replace="layout/header-staff :: header-staff"></div>
-<div sec:authorize="hasRole('CUSTOMER')"
-     th:replace="layout/header-customer :: header-customer"></div>
-
-<div class="layout">
-<div class="container">
+<th:block th:fragment="content">
+<section class="build-page">
+<div class="build-shell">
     <!-- Sidebar -->
     <div th:replace="~{layout/build-sidebar :: buildSidebar('gpu')}"></div>
 
@@ -35,7 +20,7 @@
         </div>
 
         <!-- Filter & Sort Form Popup -->
-        <div id="filterPopup" class="popup" style="display:none;">
+        <div id="filterPopup" class="popup">
             <div class="popup-content">
                 <form th:action="@{/build/gpu/filter}" method="post" id="filterForm">
                     <h4>Filter By:</h4>
@@ -48,7 +33,7 @@
                         </div>
                     </div>
 
-                    <h4 style="margin-top: 20px;">Sort By:</h4>
+                    <h4 class="build-popup-subtitle">Sort By:</h4>
                     <select name="sortBy" id="sortSelect">
                         <option value="">-- No Sort --</option>
                         <option value="priceAsc" th:selected="${selectedSort == 'priceAsc'}">Price: Low to High</option>
@@ -81,10 +66,7 @@
                         <img th:if="${gpu.product.images != null && !gpu.product.images.isEmpty()}"
                              th:src="@{${gpu.product.images[0].imageUrl}}"
                              th:alt="${gpu.product.productName}"/>
-                        <div th:unless="${gpu.product.images != null && !gpu.product.images.isEmpty()}"
-                             style="display:flex;align-items:center;justify-content:center;height:100%;color:#999;font-size:12px;">
-                            No Image
-                        </div>
+                        <div th:unless="${gpu.product.images != null && !gpu.product.images.isEmpty()}" class="build-no-image">No Image</div>
                     </div>
                     <h4 th:text="${gpu.product.productName}"></h4>
                     <p th:text="'PCIe: ' + ${gpu.pcieVersion}"></p>
@@ -92,9 +74,7 @@
                     <strong th:text="'$' + ${gpu.product.price}"></strong>
                 </div>
             </div>
-
-            <!-- Footer -->
-            <div class="footer-bar">
+<div class="footer-bar">
                 <span>Total Price: <strong id="priceTotal" th:text="'$' + ${buildItems.formattedTotalPrice}"></strong></span>
                 <button type="submit" class="next-btn">Choose</button>
             </div>
@@ -117,9 +97,9 @@
     </div>
 </div>
 </div>
-</div>
-
+</section>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script th:src="@{/js/BuildJs.js}"></script>
+</th:block>
 </body>
 </html>

@@ -1,13 +1,11 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <title>Shipping Management</title>
-    <link rel="stylesheet" th:href="@{/css/OrderStyle.css}">
-</head>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="https://www.thymeleaf.org/extras/spring-security"
+      th:replace="~{layout/app :: page('Shipping Management', null, ~{::content})}">
 <body>
+<th:block th:fragment="content">
+<link rel="stylesheet" th:href="@{/css/OrderStyle.css}">
 
-<div th:replace="~{layout/header-staff :: header-staff}"></div>
 <div class="container">
     <h2>Shipping Management (Ready & Delivering Orders)</h2>
 
@@ -70,6 +68,6 @@
     </div>
 
 </div>
-
+</th:block>
 </body>
 </html>
