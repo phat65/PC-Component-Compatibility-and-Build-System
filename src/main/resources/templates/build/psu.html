@@ -56,10 +56,13 @@
             <input type="hidden" name="psuId" id="selectedPsuId"
                    th:value="${buildItems.powerSupply?.product?.productId ?: ''}"/>
             <div class="product-grid">
+                <div th:if="${#lists.isEmpty(psus)}" class="build-grid-empty">
+                    No compatible power supplies found.
+                </div>
                 <div th:each="psu : ${psus}"
                      class="product-card"
                      th:classappend="${buildItems.powerSupply?.product?.productId == psu.product.productId} ? 'selected' : ''"
-                     th:attr="data-id=${psu.product.productId}"
+                     th:attr="data-id=${psu.product.productId},data-price=${psu.product.price}"
                      th:data-name="${psu.product.productName}"
                      th:data-wattage="${psu.wattage}"
                      th:data-formfactor="${psu.formFactor}"

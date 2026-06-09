@@ -56,10 +56,13 @@
             <input type="hidden" name="cpuId" id="selectedCpuId"
                    th:value="${buildItems.cpu?.product?.productId ?: ''}"/>
             <div class="product-grid">
+                <div th:if="${#lists.isEmpty(cpus)}" class="build-grid-empty">
+                    No compatible CPUs found.
+                </div>
                 <div th:each="cpu : ${cpus}"
                      class="product-card"
                      th:classappend="${buildItems.cpu?.product?.productId == cpu.productId} ? 'selected' : ''"
-                     th:attr="data-id=${cpu.productId}"
+                     th:attr="data-id=${cpu.productId},data-price=${cpu.product.price}"
                      th:data-name="${cpu.product.productName}"
                      th:data-socket="${cpu.socket}"
                      th:data-tdp="${cpu.tdp}"

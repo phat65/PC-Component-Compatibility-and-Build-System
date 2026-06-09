@@ -56,10 +56,13 @@
             <input type="hidden" name="storageId" id="selectedStorageId"
                    th:value="${buildItems.storage?.product?.productId ?: ''}"/>
             <div class="product-grid">
+                <div th:if="${#lists.isEmpty(storages)}" class="build-grid-empty">
+                    No compatible storage products found.
+                </div>
                 <div th:each="storage : ${storages}"
                      class="product-card"
                      th:classappend="${buildItems.storage?.product?.productId == storage.product.productId} ? 'selected' : ''"
-                     th:attr="data-id=${storage.product.productId}"
+                     th:attr="data-id=${storage.product.productId},data-price=${storage.product.price}"
                      th:data-name="${storage.product.productName}"
                      th:data-type="${storage.type}"
                      th:data-capacity="${storage.capacity}">

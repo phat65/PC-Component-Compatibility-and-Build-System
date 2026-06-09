@@ -56,10 +56,13 @@
             <input type="hidden" name="caseId" id="selectedCaseId"
                    th:value="${buildItems.pcCase?.product?.productId ?: ''}"/>
             <div class="product-grid">
+                <div th:if="${#lists.isEmpty(cases)}" class="build-grid-empty">
+                    No compatible cases found.
+                </div>
                 <div th:each="case : ${cases}"
                      class="product-card"
                      th:classappend="${buildItems.pcCase?.product?.productId == case.productId} ? 'selected' : ''"
-                     th:attr="data-id=${case.productId}"
+                     th:attr="data-id=${case.productId},data-price=${case.product.price}"
                      th:data-name="${case.product.productName}"
                      th:data-formfactor="${case.formFactor}"
                      th:data-gpumaxlength="${case.gpuMaxLength}"

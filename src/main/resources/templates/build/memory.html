@@ -56,10 +56,13 @@
             <input type="hidden" name="memoryId" id="selectedMemoryId"
                    th:value="${buildItems.memory?.product?.productId ?: ''}"/>
             <div class="product-grid">
+                <div th:if="${#lists.isEmpty(memories)}" class="build-grid-empty">
+                    No compatible memory products found.
+                </div>
                 <div th:each="memory : ${memories}"
                      class="product-card"
                      th:classappend="${buildItems.memory?.product?.productId == memory.product.productId} ? 'selected' : ''"
-                     th:attr="data-id=${memory.product.productId}"
+                     th:attr="data-id=${memory.product.productId},data-price=${memory.product.price}"
                      th:data-name="${memory.product.productName}"
                      th:data-type="${memory.type}"
                      th:data-capacity="${memory.capacity}"

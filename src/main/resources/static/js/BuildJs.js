@@ -1,327 +1,306 @@
 document.addEventListener("DOMContentLoaded", function () {
-    // use event delegation: handle clicks on any .product-card across the page
     const priceTotal = document.getElementById("priceTotal");
+    const productGrid = document.querySelector(".product-grid");
 
-    // known hidden input ids (fallback)
     const knownHiddenIds = [
-        'selectedMainboardId','selectedCpuId','selectedGpuId','selectedCaseId',
-        'selectedCoolingId','selectedMemoryId','selectedStorageId','selectedPsuId','selectedOtherId'
+        "selectedMainboardId",
+        "selectedCpuId",
+        "selectedGpuId",
+        "selectedCaseId",
+        "selectedCoolingId",
+        "selectedMemoryId",
+        "selectedStorageId",
+        "selectedPsuId",
+        "selectedOtherId"
     ];
 
-    // helper to find a hidden input for a clicked card: prefer input inside the same form
+    const fields = {
+        name: document.getElementById("detailName"),
+        image: document.querySelector(".detail-image"),
+        socket: document.getElementById("detailSocket"),
+        ram: document.getElementById("detailRAM"),
+        form: document.getElementById("detailForm"),
+        chipset: document.getElementById("detailChipset"),
+        tdp: document.getElementById("detailTdp") || document.getElementById("detailTDP"),
+        igpu: document.getElementById("detailIGPU"),
+        pcie: document.getElementById("detailPCIe"),
+        vram: document.getElementById("detailVRAM"),
+        formFactor: document.getElementById("detailFormFactor"),
+        gpuLength: document.getElementById("detailGpuLength"),
+        cpuHeight: document.getElementById("detailCpuHeight"),
+        psuFormFactor: document.getElementById("detailPsuFormFactor"),
+        type: document.getElementById("detailType"),
+        fanSize: document.getElementById("detailFanSize"),
+        capacity: document.getElementById("detailCapacity"),
+        modules: document.getElementById("detailModules"),
+        speed: document.getElementById("detailSpeed"),
+        wattage: document.getElementById("detailWattage"),
+        efficiency: document.getElementById("detailEfficiency"),
+        modular: document.getElementById("detailModular"),
+        description: document.getElementById("detailDescription"),
+        price: document.getElementById("detailPrice")
+    };
+
     function findHiddenInputForCard(card) {
-        // try to find form ancestor
-        const form = card.closest('form');
+        const form = card.closest("form");
         if (form) {
-            // prefer inputs whose name ends with 'Id' or have id starting with 'selected'
-            let input = form.querySelector("input[type=hidden][id^='selected']");
-            if (!input) input = form.querySelector("input[type=hidden]");
-            if (input) return input;
-        }
-        // fallback: global known ids
-        for (const id of knownHiddenIds) {
-            const el = document.getElementById(id);
-            if (el) return el;
-        }
-        // last resort: first hidden input on document
-        return document.querySelector("input[type=hidden]");
-    }
+            const preferred = form.querySelector("input[type=hidden][id^='selected']");
+            if (preferred) {
+                return preferred;
+            }
 
-    // helper to parse a price from element: prefer data-price attribute (numeric), else parse innerText
-    function parsePriceFromCard(card) {
-        const dp = card.getAttribute('data-price');
-        if (dp) {
-            const n = parseFloat(dp);
-            if (!isNaN(n)) return n;
-        }
-        const strong = card.querySelector('strong') || card.querySelector('span') || card.querySelector('p');
-        if (strong) {
-            const txt = strong.innerText || '';
-            const cleaned = txt.replace(/[^\d.\-]/g, '');
-            const num = parseFloat(cleaned);
-            return isNaN(num) ? 0 : num;
-        }
-        return 0;
-    }
-
-    // get initial total displayed (if any)
-    function readDisplayedTotal() {
-        if (!priceTotal) return 0;
-        const txt = priceTotal.innerText || '';
-        const cleaned = txt.replace(/[^\d.\-]/g, '');
-        const num = parseFloat(cleaned);
-        return isNaN(num) ? 0 : num;
-    }
-
-    let originalTotalPrice = readDisplayedTotal();
-
-    // detail fields (optional on some pages)
-    const detailName = document.getElementById("detailName");
-    // Mainboard & CPU fields
-    const detailSocket = document.getElementById("detailSocket");
-    const detailRAM = document.getElementById("detailRAM");
-    const detailForm = document.getElementById("detailForm");
-    const detailChipset = document.getElementById("detailChipset");
-    const detailTdp = document.getElementById("detailTdp");
-    const detailIGPU = document.getElementById("detailIGPU");
-    // GPU fields
-    const detailPCIe = document.getElementById("detailPCIe");
-    const detailVRAM = document.getElementById("detailVRAM");
-    // Case fields
-    const detailFormFactor = document.getElementById("detailFormFactor");
-    const detailGpuLength = document.getElementById("detailGpuLength");
-    const detailCpuHeight = document.getElementById("detailCpuHeight");
-    const detailPsuFormFactor = document.getElementById("detailPsuFormFactor");
-    // Cooling fields
-    const detailType = document.getElementById("detailType");
-    const detailFanSize = document.getElementById("detailFanSize");
-    const detailTDP = document.getElementById("detailTDP");
-    // Memory & Storage fields
-    const detailCapacity = document.getElementById("detailCapacity");
-    const detailModules = document.getElementById("detailModules");
-    const detailSpeed = document.getElementById("detailSpeed");
-    // PSU fields
-    const detailWattage = document.getElementById("detailWattage");
-    const detailEfficiency = document.getElementById("detailEfficiency");
-    const detailModular = document.getElementById("detailModular");
-
-    // delegate clicks from document level for product-card
-    document.addEventListener('click', function (e) {
-        const card = e.target.closest('.product-card');
-        if (!card) return;
-
-        // visual selection
-        document.querySelectorAll('.product-card.selected').forEach(c => c.classList.remove('selected'));
-        card.classList.add('selected');
-
-        // id and attributes
-        const id = card.getAttribute('data-id');
-        const name = card.getAttribute('data-name');
-
-        // set hidden input in same form (preferred)
-        const hiddenInput = findHiddenInputForCard(card);
-        if (hiddenInput && id != null) hiddenInput.value = id;
-
-        // parse price (data-price preferred)
-        const currentProductPrice = parsePriceFromCard(card) || 0;
-
-        // update detail panel - name is common for all
-        if (detailName) detailName.innerText = name || '';
-
-        // Update detail image
-        const detailImageDiv = document.querySelector('.detail-image');
-        if (detailImageDiv) {
-            // Tìm ảnh trong card được click
-            const cardImage = card.querySelector('.product-image img');
-            if (cardImage && cardImage.src) {
-                // Tạo hoặc cập nhật img element trong detail panel
-                let detailImg = detailImageDiv.querySelector('img');
-                if (!detailImg) {
-                    detailImg = document.createElement('img');
-                    detailImg.style.width = '100%';
-                    detailImg.style.height = 'auto';
-                    detailImg.style.objectFit = 'contain';
-                    detailImageDiv.appendChild(detailImg);
-                }
-                detailImg.src = cardImage.src;
-                detailImg.alt = name || 'Product Image';
-            } else {
-                // Nếu không có ảnh, hiển thị "No Image"
-                detailImageDiv.innerHTML = '<div class="build-no-image">No Image Available</div>';
+            const fallback = form.querySelector("input[type=hidden]");
+            if (fallback) {
+                return fallback;
             }
         }
 
-        // Mainboard & CPU specific
-        if (detailSocket) {
-            const socket = card.getAttribute('data-socket');
-            detailSocket.innerText = socket ? ('Socket: ' + socket) : 'Socket: ...';
-        }
-        if (detailRAM) {
-            detailRAM.innerText = 'RAM: ' + (card.getAttribute('data-ramtype') || '...');
-        }
-        if (detailForm) {
-            detailForm.innerText = 'Form Factor: ' + (card.getAttribute('data-formfactor') || '...');
-        }
-        if (detailChipset) {
-            detailChipset.innerText = 'Chipset: ' + (card.getAttribute('data-chipset') || '...');
-        }
-        if (detailTdp) {
-            detailTdp.innerText = 'TDP: ' + (card.getAttribute('data-tdp') || '...');
-        }
-        if (detailIGPU) {
-            detailIGPU.innerText = 'IGPU: ' + ((card.getAttribute('data-igpu') === 'true') ? 'Yes' : 'No');
+        for (const id of knownHiddenIds) {
+            const input = document.getElementById(id);
+            if (input) {
+                return input;
+            }
         }
 
-        // GPU specific
-        if (detailPCIe) {
-            detailPCIe.innerText = 'PCIe: ' + (card.getAttribute('data-pcie') || '...');
-        }
-        if (detailVRAM) {
-            detailVRAM.innerText = 'VRAM: ' + (card.getAttribute('data-vram') || '...') + ' GB';
+        return document.querySelector("input[type=hidden]");
+    }
+
+    function parseMoney(text) {
+        const cleaned = String(text || "").replace(/[^\d.-]/g, "");
+        const value = parseFloat(cleaned);
+        return Number.isNaN(value) ? 0 : value;
+    }
+
+    function parsePriceFromCard(card) {
+        const dataPrice = card.getAttribute("data-price");
+        if (dataPrice) {
+            return parseMoney(dataPrice);
         }
 
-        // Case specific
-        if (detailFormFactor) {
-            detailFormFactor.innerText = 'Form Factor: ' + (card.getAttribute('data-formfactor') || '...');
-        }
-        if (detailGpuLength) {
-            detailGpuLength.innerText = 'GPU Max Length: ' + (card.getAttribute('data-gpumaxlength') || '...') + 'mm';
-        }
-        if (detailCpuHeight) {
-            detailCpuHeight.innerText = 'CPU Cooler Max Height: ' + (card.getAttribute('data-cpumaxheight') || '...') + 'mm';
-        }
-        if (detailPsuFormFactor) {
-            detailPsuFormFactor.innerText = 'PSU Form Factor: ' + (card.getAttribute('data-psuformfactor') || '...');
+        const priceElement = card.querySelector("strong");
+        return priceElement ? parseMoney(priceElement.innerText) : 0;
+    }
+
+    function formatMoney(value) {
+        return "$" + (Number.isInteger(value) ? value.toFixed(0) : value.toFixed(2));
+    }
+
+    function readDisplayedTotal() {
+        return priceTotal ? parseMoney(priceTotal.innerText) : 0;
+    }
+
+    const originalTotalPrice = readDisplayedTotal();
+    const initiallySelectedCard = document.querySelector(".product-card.selected");
+    const initialPageSelectionPrice = initiallySelectedCard ? parsePriceFromCard(initiallySelectedCard) : 0;
+
+    function value(card, name) {
+        return card.getAttribute("data-" + name) || "";
+    }
+
+    function setText(element, label, content, suffix) {
+        if (!element) {
+            return;
         }
 
-        // Cooling specific
-        if (detailType) {
-            detailType.innerText = 'Type: ' + (card.getAttribute('data-type') || '...');
-        }
-        if (detailFanSize) {
-            detailFanSize.innerText = 'Fan Size: ' + (card.getAttribute('data-fansize') || '...');
-        }
-        if (detailTDP) {
-            detailTDP.innerText = 'TDP: ' + (card.getAttribute('data-tdp') || '...');
+        const displayValue = content || "...";
+        element.innerText = label + ": " + displayValue + (content && suffix ? suffix : "");
+    }
+
+    function updateDetailImage(card, name) {
+        if (!fields.image) {
+            return;
         }
 
-        // Memory specific
-        if (detailModules) {
-            detailModules.innerText = 'Modules: ' + (card.getAttribute('data-modules') || '...');
-        }
-        if (detailSpeed) {
-            detailSpeed.innerText = 'Speed: ' + (card.getAttribute('data-speed') || '...') + 'MHz';
-        }
-
-        // PSU specific
-        if (detailWattage) {
-            detailWattage.innerText = 'Wattage: ' + (card.getAttribute('data-wattage') || '...') + 'W';
-        }
-        if (detailEfficiency) {
-            detailEfficiency.innerText = 'Efficiency: ' + (card.getAttribute('data-efficiency') || '...');
-        }
-        if (detailModular) {
-            const isModular = card.getAttribute('data-modular') === 'true';
-            detailModular.innerText = 'Modular: ' + (isModular ? 'Yes' : 'No');
+        const cardImage = card.querySelector(".product-image img");
+        if (cardImage && cardImage.src) {
+            fields.image.innerHTML = "";
+            const detailImg = document.createElement("img");
+            detailImg.src = cardImage.src;
+            detailImg.alt = name || "Product image";
+            fields.image.appendChild(detailImg);
+            return;
         }
 
-        // Memory & Storage specific
-        if (detailCapacity) {
-            detailCapacity.innerText = 'Capacity: ' + (card.getAttribute('data-capacity') || '...') + 'GB';
+        fields.image.innerHTML = '<div class="build-no-image">No Image Available</div>';
+    }
+
+    function updateDetailPanel(card) {
+        const name = value(card, "name");
+        const price = parsePriceFromCard(card);
+
+        if (fields.name) {
+            fields.name.innerText = name || "Selected component";
         }
 
-        // PSU specific
-        if (detailWattage) {
-            detailWattage.innerText = 'Wattage: ' + (card.getAttribute('data-wattage') || '...') + 'W';
+        updateDetailImage(card, name);
+
+        if (value(card, "pcie")) {
+            setText(fields.pcie || fields.socket, "PCIe", value(card, "pcie"));
+        } else {
+            setText(fields.socket, "Socket", value(card, "socket"));
         }
 
-        // update temporary total display (originalTotalPrice + currentProductPrice)
+        if (value(card, "vram")) {
+            setText(fields.vram || fields.ram, "VRAM", value(card, "vram"), " GB");
+        } else {
+            setText(fields.ram, "RAM", value(card, "ramtype"));
+        }
+
+        setText(fields.form, "Form Factor", value(card, "formfactor"));
+        setText(fields.chipset, "Chipset", value(card, "chipset"));
+        setText(fields.tdp, "TDP", value(card, "tdp"), value(card, "tdp") ? "W" : "");
+        setText(fields.igpu, "IGPU", value(card, "igpu") === "true" ? "Yes" : (value(card, "igpu") ? "No" : ""));
+        setText(fields.formFactor, "Form Factor", value(card, "formfactor"));
+        setText(fields.gpuLength, "GPU Max Length", value(card, "gpumaxlength"), "mm");
+        setText(fields.cpuHeight, "CPU Cooler Max Height", value(card, "cpumaxheight"), "mm");
+        setText(fields.psuFormFactor, "PSU Form Factor", value(card, "psuformfactor"));
+        setText(fields.type, "Type", value(card, "type"));
+        setText(fields.fanSize, "Fan Size", value(card, "fansize"));
+        setText(fields.capacity, "Capacity", value(card, "capacity"), "GB");
+        setText(fields.modules, "Modules", value(card, "modules"));
+        setText(fields.speed, "Speed", value(card, "speed"), "MHz");
+        setText(fields.wattage, "Wattage", value(card, "wattage"), "W");
+        setText(fields.efficiency, "Efficiency", value(card, "efficiency"));
+        setText(fields.modular, "Modular", value(card, "modular") === "true" ? "Yes" : (value(card, "modular") ? "No" : ""));
+        if (fields.description) {
+            fields.description.innerText = value(card, "description") || "No description available";
+        }
+
+        if (fields.price) {
+            fields.price.innerText = "Price: " + formatMoney(price);
+        }
+    }
+
+    function selectCard(card) {
+        document.querySelectorAll(".product-card.selected").forEach(selected => {
+            selected.classList.remove("selected");
+        });
+        card.classList.add("selected");
+
+        const id = card.getAttribute("data-id");
+        const hiddenInput = findHiddenInputForCard(card);
+        if (hiddenInput && id != null) {
+            hiddenInput.value = id;
+        }
+
+        updateDetailPanel(card);
+
         if (priceTotal) {
-            const tempTotal = originalTotalPrice + currentProductPrice;
-            priceTotal.innerText = "$" + (Number.isInteger(tempTotal) ? tempTotal.toFixed(0) : tempTotal.toFixed(2));
+            const tempTotal = originalTotalPrice - initialPageSelectionPrice + parsePriceFromCard(card);
+            priceTotal.innerText = formatMoney(Math.max(tempTotal, 0));
         }
+    }
+
+    function ensureSearchEmptyState() {
+        if (!productGrid || document.getElementById("buildSearchEmpty")) {
+            return;
+        }
+
+        const emptyState = document.createElement("div");
+        emptyState.id = "buildSearchEmpty";
+        emptyState.className = "build-grid-empty";
+        emptyState.textContent = "No matching components found.";
+        emptyState.hidden = true;
+        productGrid.appendChild(emptyState);
+    }
+
+    function updateSearchEmptyState() {
+        const emptyState = document.getElementById("buildSearchEmpty");
+        if (!emptyState) {
+            return;
+        }
+
+        const cards = Array.from(document.querySelectorAll(".product-card"));
+        emptyState.hidden = cards.length === 0 || cards.some(card => card.style.display !== "none");
+    }
+
+    document.addEventListener("click", function (event) {
+        const card = event.target.closest(".product-card");
+        if (!card) {
+            return;
+        }
+
+        selectCard(card);
     });
 
-    // Form submission - allow submit even without new selection
-    // (Data may already exist in session DTO, so user can skip selection and just click Next)
-    document.querySelectorAll('form[data-require-selection="true"]').forEach(form => {
-        form.addEventListener('submit', function (e) {
-            // No validation needed - allow submit
-            // User can either:
-            // 1. Select a new component (hidden input will have value)
-            // 2. Skip selection and continue with existing DTO data
+    document.querySelectorAll("form[data-require-selection='true']").forEach(form => {
+        form.addEventListener("submit", function () {
             return true;
         });
     });
 
-    // Popup logic (unchanged)
-    const filterBtn = document.getElementById('openFilterPopup');
-    const filterPopup = document.getElementById('filterPopup');
-    const closeFilterBtn = document.getElementById('closeFilterPopup');
+    const filterBtn = document.getElementById("openFilterPopup");
+    const filterPopup = document.getElementById("filterPopup");
+    const closeFilterBtn = document.getElementById("closeFilterPopup");
 
     if (filterBtn && filterPopup && closeFilterBtn) {
-        filterBtn.onclick = () => {
-            filterPopup.style.display = 'block';
-        };
-        closeFilterBtn.onclick = () => {
-            filterPopup.style.display = 'none';
-        };
+        filterBtn.addEventListener("click", function () {
+            filterPopup.style.display = "flex";
+        });
+        closeFilterBtn.addEventListener("click", function () {
+            filterPopup.style.display = "none";
+        });
+        filterPopup.addEventListener("click", function (event) {
+            if (event.target === filterPopup) {
+                filterPopup.style.display = "none";
+            }
+        });
     }
 
-    // ===============================
-    // Overview Popup Handling
-    // ===============================
     const openOverviewBtn = document.getElementById("openOverviewBtn");
     const overviewPopup = document.getElementById("overviewPopup");
     const closeOverviewBtn = document.getElementById("closeOverviewBtn");
     const closeOverviewFooterBtn = document.getElementById("closeOverviewFooterBtn");
 
-    // Open overview popup
+    function closeOverview() {
+        if (overviewPopup) {
+            overviewPopup.style.display = "none";
+        }
+    }
+
     if (openOverviewBtn && overviewPopup) {
-        openOverviewBtn.addEventListener("click", function(e) {
-            e.preventDefault();
+        openOverviewBtn.addEventListener("click", function (event) {
+            event.preventDefault();
             overviewPopup.style.display = "flex";
-            console.log("✅ Overview popup opened");
         });
     }
 
-    // Close overview popup - X button
-    if (closeOverviewBtn && overviewPopup) {
-        closeOverviewBtn.addEventListener("click", function() {
-            overviewPopup.style.display = "none";
-            console.log("✅ Overview popup closed");
-        });
-    }
+    closeOverviewBtn?.addEventListener("click", closeOverview);
+    closeOverviewFooterBtn?.addEventListener("click", closeOverview);
 
-    // Close overview popup - Close button in footer
-    if (closeOverviewFooterBtn && overviewPopup) {
-        closeOverviewFooterBtn.addEventListener("click", function() {
-            overviewPopup.style.display = "none";
-            console.log("✅ Overview popup closed via footer button");
-        });
-    }
-
-    // Close overview popup when clicking outside
     if (overviewPopup) {
-        overviewPopup.addEventListener("click", function(e) {
-            if (e.target === overviewPopup) {
-                overviewPopup.style.display = "none";
-                console.log("✅ Overview popup closed by clicking outside");
+        overviewPopup.addEventListener("click", function (event) {
+            if (event.target === overviewPopup) {
+                closeOverview();
             }
         });
     }
 
-    // ===============================
-    // Save as Image Functionality
-    // ===============================
     const saveAsImageBtn = document.getElementById("saveAsImageBtn");
-
     if (saveAsImageBtn) {
-        saveAsImageBtn.addEventListener("click", function() {
-            // Lấy phần nội dung overview để chụp
+        saveAsImageBtn.addEventListener("click", function () {
             const overviewContent = document.querySelector(".overview-popup-content");
-
-            if (!overviewContent) {
-                alert("⚠️ Cannot find overview content to save.");
+            if (!overviewContent || typeof html2canvas !== "function") {
+                alert("Cannot save overview image right now.");
                 return;
             }
 
-            // Tạm ẩn các nút trong footer và close button để không chụp vào ảnh
             const footer = overviewContent.querySelector(".overview-footer");
             const closeBtn = overviewContent.querySelector(".close-overview");
 
-            if (footer) footer.style.display = "none";
-            if (closeBtn) closeBtn.style.display = "none";
+            if (footer) {
+                footer.hidden = true;
+            }
+            if (closeBtn) {
+                closeBtn.hidden = true;
+            }
 
-            // Add class để apply CSS đặc biệt cho việc chụp ảnh
             overviewContent.classList.add("capturing-image");
 
-            // Đợi một chút để browser render lại
             setTimeout(() => {
-                // Sử dụng html2canvas để chụp với quality cao
                 html2canvas(overviewContent, {
-                    backgroundColor: '#ffffff',
-                    scale: 3, // High DPI for crisp image (3x resolution)
+                    backgroundColor: "#ffffff",
+                    scale: 3,
                     logging: false,
                     useCORS: true,
                     allowTaint: true,
@@ -332,103 +311,110 @@ document.addEventListener("DOMContentLoaded", function () {
                     width: 1000,
                     imageTimeout: 0,
                     removeContainer: true
-                }).then(function(canvas) {
-                    // Khôi phục tất cả style
-                    if (footer) footer.style.display = "";
-                    if (closeBtn) closeBtn.style.display = "";
+                }).then(function (canvas) {
+                    if (footer) {
+                        footer.hidden = false;
+                    }
+                    if (closeBtn) {
+                        closeBtn.hidden = false;
+                    }
                     overviewContent.classList.remove("capturing-image");
 
-                    // Tạo link download với quality cao
-                    const link = document.createElement('a');
-                    const timestamp = new Date().toISOString().slice(0,10);
-                    link.download = 'PC-Build-Overview-' + timestamp + '.png';
-                    link.href = canvas.toDataURL('image/png', 1.0); // Quality = 1.0 (max)
+                    const link = document.createElement("a");
+                    const timestamp = new Date().toISOString().slice(0, 10);
+                    link.download = "PC-Build-Overview-" + timestamp + ".png";
+                    link.href = canvas.toDataURL("image/png", 1.0);
                     link.click();
-
-                    console.log("✅ Build image saved successfully! Resolution: " + canvas.width + "x" + canvas.height);
-                }).catch(function(error) {
-                    // Khôi phục style nếu có lỗi
-                    if (footer) footer.style.display = "";
-                    if (closeBtn) closeBtn.style.display = "";
+                }).catch(function () {
+                    if (footer) {
+                        footer.hidden = false;
+                    }
+                    if (closeBtn) {
+                        closeBtn.hidden = false;
+                    }
                     overviewContent.classList.remove("capturing-image");
-
-                    console.error("❌ Error saving image:", error);
-                    alert("⚠️ Error saving image. Please try again.");
+                    alert("Error saving image. Please try again.");
                 });
-            }, 100); // Đợi 100ms để CSS apply xong
+            }, 100);
         });
     }
 
-    // ===============================
-    // Search Box Real-time Filtering
-    // ===============================
     const searchBox = document.getElementById("searchBox");
     if (searchBox) {
         let searchTimeout;
 
-        // Real-time filter with debounce (wait 300ms after user stops typing)
-        searchBox.addEventListener("input", function() {
+        searchBox.addEventListener("input", function () {
             clearTimeout(searchTimeout);
-            searchTimeout = setTimeout(() => {
-                filterProducts();
-            }, 300);
+            searchTimeout = setTimeout(filterProducts, 300);
         });
 
-        // Handle Enter key
-        searchBox.addEventListener("keypress", function(e) {
-            if (e.key === "Enter") {
-                e.preventDefault();
+        searchBox.addEventListener("keypress", function (event) {
+            if (event.key === "Enter") {
+                event.preventDefault();
                 clearTimeout(searchTimeout);
                 filterProducts();
             }
         });
 
-        // Clear filter when search box is cleared
-        searchBox.addEventListener("change", function() {
+        searchBox.addEventListener("change", function () {
             if (!this.value.trim()) {
                 clearFilter();
             }
         });
     }
 
-    // If needed, recalc originalTotalPrice whenever server re-renders or other changes appear. We keep one-time read for now.
+    ensureSearchEmptyState();
+    if (initiallySelectedCard) {
+        updateDetailPanel(initiallySelectedCard);
+    }
+    updateSearchEmptyState();
 });
 
+function normalizeSearchText(text) {
+    return String(text || "")
+        .trim()
+        .toLowerCase()
+        .replace(/\s+/g, " ")
+        .replace(/[^\w\s-]/g, "");
+}
+
 function filterProducts() {
-    const sb = document.getElementById("searchBox");
-    if (!sb) return;
-
-    // Normalize query: trim, lowercase, remove extra spaces, remove special chars
-    let query = sb.value
-        .trim()                           // Remove leading/trailing spaces
-        .toLowerCase()                     // Case insensitive
-        .replace(/\s+/g, ' ')             // Replace multiple spaces with single space
-        .replace(/[^\w\s\-]/g, '');       // Remove special chars except dash and alphanumeric
-
-    // If query is empty after normalization, show all
-    if (!query) {
-        document.querySelectorAll(".product-card").forEach(card => {
-            card.style.display = "block";
-        });
+    const searchBox = document.getElementById("searchBox");
+    if (!searchBox) {
         return;
     }
 
-    document.querySelectorAll(".product-card").forEach(card => {
-        // Normalize product name the same way
-        const name = (card.getAttribute("data-name") || "")
-            .toLowerCase()
-            .replace(/\s+/g, ' ')
-            .replace(/[^\w\s\-]/g, '');
+    const query = normalizeSearchText(searchBox.value);
+    const cards = document.querySelectorAll(".product-card");
 
-        // Show if normalized name includes normalized query
-        const matches = name.includes(query);
-        card.style.display = matches ? "block" : "none";
+    cards.forEach(card => {
+        if (!query) {
+            card.style.display = "flex";
+            return;
+        }
+
+        const name = normalizeSearchText(card.getAttribute("data-name"));
+        card.style.display = name.includes(query) ? "flex" : "none";
     });
+
+    const emptyState = document.getElementById("buildSearchEmpty");
+    if (emptyState) {
+        emptyState.hidden = Array.from(cards).some(card => card.style.display !== "none");
+    }
 }
+
 function clearFilter() {
-    const sb = document.getElementById("searchBox");
-    if (sb) sb.value = "";
+    const searchBox = document.getElementById("searchBox");
+    if (searchBox) {
+        searchBox.value = "";
+    }
+
     document.querySelectorAll(".product-card").forEach(card => {
-        card.style.display = "block";
+        card.style.display = "flex";
     });
+
+    const emptyState = document.getElementById("buildSearchEmpty");
+    if (emptyState) {
+        emptyState.hidden = true;
+    }
 }

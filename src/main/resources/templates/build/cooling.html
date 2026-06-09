@@ -56,10 +56,13 @@
             <input type="hidden" name="coolingId" id="selectedCoolingId"
                    th:value="${buildItems.cooling?.product?.productId ?: ''}"/>
             <div class="product-grid">
+                <div th:if="${#lists.isEmpty(coolings)}" class="build-grid-empty">
+                    No compatible cooling products found.
+                </div>
                 <div th:each="cl : ${coolings}"
                      class="product-card"
                      th:classappend="${buildItems.cooling?.product?.productId == cl.product.productId} ? 'selected' : ''"
-                     th:attr="data-id=${cl.product.productId}"
+                     th:attr="data-id=${cl.product.productId},data-price=${cl.product.price}"
                      th:data-name="${cl.product.productName}"
                      th:data-type="${cl.type}"
                      th:data-fansize="${cl.fanSize}"

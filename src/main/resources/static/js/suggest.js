@@ -68,6 +68,15 @@
         };
     }
 
+    function escapeHtml(value) {
+        return String(value ?? '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
+
     // DOM Elements
     const elements = {
         // Buttons
@@ -115,8 +124,8 @@
 
         elements.welcomeMessage.style.display = 'none';
         elements.suggestForm.style.display = 'block';
+        elements.errorMessage.style.display = 'none';
 
-        // Render presets immediately (no loading)
         renderPresets();
     }
 
@@ -124,9 +133,10 @@
     function renderPresets() {
         const presetsHtml = state.presets.map(preset => `
             <div class="preset-item" data-preset="${preset.id}" data-min-budget="${preset.minBudget}">
-                <div class="preset-icon">${preset.icon}</div>
+                <div class="preset-icon">${escapeHtml(preset.icon)}</div>
                 <div class="preset-info">
-                    <div class="preset-name">${preset.name}</div>
+                    <div class="preset-name">${escapeHtml(preset.name)}</div>
+                    <div class="preset-budget">${escapeHtml(preset.description)}</div>
                     <div class="preset-budget">Min: $${preset.minBudget}</div>
                 </div>
             </div>
@@ -202,12 +212,14 @@
         }
 
         try {
-            // Show loading
             const btnText = elements.btnGenerateSuggest.querySelector('.btn-text');
             const btnLoading = elements.btnGenerateSuggest.querySelector('.btn-loading');
             btnText.style.display = 'none';
             btnLoading.style.display = 'inline';
             elements.btnGenerateSuggest.disabled = true;
+            elements.resultStep.style.display = 'block';
+            elements.resultContent.innerHTML = '<div class="suggest-state loading">Generating compatible build...</div>';
+            elements.errorMessage.style.display = 'none';
 
             const response = await fetch('/api/build/suggest', {
                 method: 'POST',
@@ -232,7 +244,6 @@
             console.error('Error generating suggestion:', error);
             showError(error.message || 'Failed to generate build suggestion. Please try again.');
         } finally {
-            // Hide loading
             const btnText = elements.btnGenerateSuggest.querySelector('.btn-text');
             const btnLoading = elements.btnGenerateSuggest.querySelector('.btn-loading');
             btnText.style.display = 'inline';
@@ -260,22 +271,31 @@
         };
 
         let buildHtml = '<div class="build-list">';
+        let componentCount = 0;
 
-        // Render each component
         Object.keys(componentNames).forEach(key => {
             const component = build[key];
             if (component && component.productId) {
                 totalPrice += component.price || 0;
+                componentCount += 1;
 
                 buildHtml += `
                     <div class="build-item">
-                        <div class="build-label">${componentNames[key]}</div>
-                        <div class="build-name">${component.productName || 'N/A'}</div>
+                        <div class="build-label">${escapeHtml(componentNames[key])}</div>
+                        <div class="build-name">${escapeHtml(component.productName || 'N/A')}</div>
                         <div class="build-price">$${(component.price || 0).toFixed(2)}</div>
                     </div>
                 `;
             }
         });
+
+        if (componentCount === 0) {
+            elements.resultContent.innerHTML = '<div class="suggest-state">No compatible build was returned for this budget.</div>';
+            elements.resultStep.style.display = 'block';
+            elements.errorMessage.style.display = 'none';
+            elements.btnApplySuggest.disabled = true;
+            return;
+        }
 
         buildHtml += `
             <div class="build-total">
@@ -286,6 +306,7 @@
         elements.resultContent.innerHTML = buildHtml;
         elements.resultStep.style.display = 'block';
         elements.errorMessage.style.display = 'none';
+        elements.btnApplySuggest.disabled = false;
     }
 
     // Apply suggested build
@@ -327,9 +348,11 @@
         elements.budgetStep.style.display = 'none';
         elements.resultStep.style.display = 'none';
         elements.errorMessage.style.display = 'none';
+        elements.resultContent.innerHTML = '';
         elements.budgetInput.value = '';
         elements.budgetHint.textContent = '';
         elements.btnGenerateSuggest.disabled = true;
+        elements.btnApplySuggest.disabled = false;
 
         // Deselect all preset items
         document.querySelectorAll('.preset-item').forEach(item => {
@@ -345,8 +368,8 @@
         elements.errorMessage.style.display = 'block';
         elements.errorMessage.textContent = 'Warning: ' + message;
         elements.resultStep.style.display = 'none';
+        elements.resultContent.innerHTML = '';
 
-        // Auto-hide after 5 seconds
         setTimeout(() => {
             elements.errorMessage.style.display = 'none';
         }, 5000);

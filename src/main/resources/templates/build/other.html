@@ -69,6 +69,9 @@
                 <input type="hidden" name="otherId" id="selectedOtherId"
                        th:value="${buildItems.other?.productId ?: ''}"/>
                 <div class="product-grid">
+                    <div th:if="${#lists.isEmpty(others)}" class="build-grid-empty">
+                        No optional components found.
+                    </div>
                     <div th:each="other : ${others}"
                          class="product-card"
                          th:classappend="${buildItems.other?.productId == other.productId} ? 'selected' : ''"
@@ -119,11 +122,16 @@
         cards.forEach(card => {
             const cardCategory = card.getAttribute('data-category');
             if (category === 'all' || cardCategory === category) {
-                card.style.display = 'block';
+                card.style.display = 'flex';
             } else {
                 card.style.display = 'none';
             }
         });
+
+        const emptyState = document.getElementById('buildSearchEmpty');
+        if (emptyState) {
+            emptyState.hidden = Array.from(cards).some(card => card.style.display !== 'none');
+        }
     }
 
     // Sort products
@@ -148,36 +156,6 @@
 
         cards.forEach(card => grid.appendChild(card));
     }
-
-    // Open/Close filter popup
-    document.getElementById('openFilterPopup')?.addEventListener('click', function() {
-        document.getElementById('filterPopup').style.display = 'flex';
-    });
-
-    document.getElementById('closeFilterPopup')?.addEventListener('click', function() {
-        document.getElementById('filterPopup').style.display = 'none';
-    });
-
-    // Update detail panel when clicking on a product
-    document.querySelectorAll('.product-card').forEach(card => {
-        card.addEventListener('click', function() {
-            const name = this.getAttribute('data-name');
-            const description = this.getAttribute('data-description');
-            const price = this.getAttribute('data-price');
-            const imgSrc = this.querySelector('.product-image img')?.src || '';
-
-            document.getElementById('detailName').textContent = name;
-            document.getElementById('detailDescription').textContent = description || 'No description available';
-            document.getElementById('detailPrice').textContent = 'Price: $' + price;
-
-            const detailImage = document.querySelector('.detail-image');
-            if (imgSrc) {
-                detailImage.innerHTML = '<img src="' + imgSrc + '" alt="' + name + '">';
-            } else {
-                detailImage.innerHTML = '<div class="build-no-image">No Image</div>';
-            }
-        });
-    });
 </script>
 </th:block>
 </body>

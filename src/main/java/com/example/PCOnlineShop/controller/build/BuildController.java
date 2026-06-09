@@ -31,7 +31,9 @@ public class BuildController {
     }
 
     private Account getCurrentAccount(UserDetails userDetails) {
-        if (userDetails == null) return null;
+        if (userDetails == null) {
+            return null;
+        }
         return accountService.getByPhoneNumber(userDetails.getUsername());
     }
 
@@ -40,8 +42,12 @@ public class BuildController {
         return new BuildItemDto();
     }
 
+    @GetMapping({"", "/"})
+    public String redirectToBuildStartPage() {
+        return "redirect:/build/start";
+    }
 
-    @GetMapping("/start" )
+    @GetMapping("/start")
     public String showBuildStartPage() {
         return BUILD_START_VIEW;
     }
@@ -70,16 +76,12 @@ public class BuildController {
         }
 
         try {
-
             cartService.addBuildToCart(account, buildItems);
-
-            // Xóa "buildItems" (DTO) khỏi session
             sessionStatus.setComplete();
-            redirectAttributes.addFlashAttribute("success", "Bộ PC đã được thêm vào giỏ hàng!");
+            redirectAttributes.addFlashAttribute("success", "PC build has been added to your cart.");
             return "redirect:/cart";
-
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", "Lỗi khi lưu PC Build: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("error", "Unable to save PC build: " + e.getMessage());
             return "redirect:/build/start";
         }
     }

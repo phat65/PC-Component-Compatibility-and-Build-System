@@ -53,10 +53,13 @@
             <input type="hidden" name="gpuId" id="selectedGpuId"
                    th:value="${buildItems.gpu?.product?.productId ?: ''}"/>
             <div class="product-grid">
+                <div th:if="${#lists.isEmpty(gpus)}" class="build-grid-empty">
+                    No compatible GPUs found.
+                </div>
                 <div th:each="gpu : ${gpus}"
                      class="product-card"
                      th:classappend="${buildItems.gpu?.product?.productId == gpu.productId} ? 'selected' : ''"
-                     th:attr="data-id=${gpu.productId}"
+                     th:attr="data-id=${gpu.productId},data-price=${gpu.product.price}"
                      th:data-name="${gpu.product.productName}"
                      th:data-pcie="${gpu.pcieVersion}"
                      th:data-tdp="${gpu.tdp}"
@@ -95,7 +98,6 @@
             </div>
         </div>
     </div>
-</div>
 </div>
 </section>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
