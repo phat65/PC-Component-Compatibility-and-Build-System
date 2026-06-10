@@ -8,7 +8,7 @@ import java.util.Date;
 public class PaymentInfoDTO {
     private String gatewayPaymentId; // Mã giao dịch PayOS
     private BigDecimal amount;
-    private String status; // SUCCESS, FAILED, PENDING
+    private String status;
     private Date createdAt; // Thời gian tạo
 
     public PaymentInfoDTO(Payment payment) {

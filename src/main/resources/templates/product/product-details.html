@@ -7,8 +7,16 @@
 <div class="storefront-page">
     <section class="page-section">
         <div class="container">
-            <div class="row">
-                <div class="col-lg-6">
+            <div class="breadcrumb-bar" aria-label="Breadcrumb">
+                <a th:href="@{/home}">Home</a>
+                <span>/</span>
+                <a th:href="@{/products}">Products</a>
+                <span>/</span>
+                <span th:text="${product.productName}">Product</span>
+            </div>
+
+            <div class="product-detail-shell">
+                <div class="product-detail-card">
                     <img id="mainImage"
                          th:if="${product.images != null and !product.images.isEmpty()}"
                          th:src="@{${product.images[0].imageUrl}}"
@@ -30,7 +38,8 @@
                     </div>
                 </div>
 
-                <div class="col-lg-6">
+                <div class="product-detail-card">
+                    <div class="product-brand" th:text="${product.brand != null ? product.brand.name : 'PCOnlineShop'}">Brand</div>
                     <h1 class="section-title app-mb-3" th:text="${product.productName}">Product Name</h1>
 
                     <div class="app-flex app-flex-wrap app-align-center app-gap-1 app-mb-3">
@@ -48,7 +57,7 @@
                         </span>
                     </div>
 
-                    <p class="product-price" th:text="'$' + ${product.price}">0.00</p>
+                    <p class="product-price" th:text="'$' + ${product.price}">$0.00</p>
                     <div class="app-mb-4 text-muted" th:utext="${product.description}">Product description here.</div>
 
                     <div class="row app-mb-4">
@@ -56,29 +65,30 @@
                             <div class="spec-tile">
                                 <p class="spec-label">Category</p>
                                 <p class="spec-value"
-                                   th:text="${!product.categories.isEmpty() ? product.categories[0].categoryName : 'N/A'}">Category</p>
+                                   th:text="${product.categories != null and !product.categories.isEmpty() ? product.categories[0].categoryName : 'N/A'}">Category</p>
                             </div>
                         </div>
                         <div class="col-sm-6">
                             <div class="spec-tile">
-                                <p class="spec-label">Brand</p>
-                                <p class="spec-value" th:text="${product.brand != null ? product.brand.name : 'N/A'}">Brand</p>
+                                <p class="spec-label">Stock Status</p>
+                                <p class="spec-value">
+                                    <span th:class="${product.inventoryQuantity != null and product.inventoryQuantity > 0 ? (product.inventoryQuantity <= 5 ? 'stock-badge low' : 'stock-badge') : 'stock-badge out'}"
+                                          th:text="${product.inventoryQuantity != null and product.inventoryQuantity > 0 ? (product.inventoryQuantity <= 5 ? 'Limited Stock' : 'In Stock') : 'Out of Stock'}">In Stock</span>
+                                </p>
                             </div>
                         </div>
                     </div>
 
-                    <div class="app-mb-4">
-                        <p class="spec-label">Status</p>
-                        <span th:if="${product.inventoryQuantity != null and product.inventoryQuantity > 0}"
-                              class="status-pill status-pill-success">In Stock</span>
-                        <span th:if="${product.inventoryQuantity == null or product.inventoryQuantity <= 0}"
-                              class="status-pill status-pill-danger">Out of Stock</span>
+                    <div class="store-panel app-mb-4">
+                        <h3 class="app-mt-0">Key Specifications</h3>
+                        <p class="text-muted app-mb-0" th:text="${product.specification != null and !#strings.isEmpty(product.specification) ? product.specification : 'Detailed specifications are available in the specifications tab.'}">
+                            Specification
+                        </p>
                     </div>
 
-                    <div class="app-flex app-flex-wrap app-align-center app-gap-3">
-                        <form th:action="@{'/cart/add/' + ${product.productId}}" method="post"
-                              class="app-flex app-flex-wrap app-align-center app-gap-2">
-                            <label for="quantity"><strong>Quantity:</strong></label>
+                    <form th:action="@{'/cart/add/' + ${product.productId}}" method="post" class="app-mb-3">
+                        <div class="app-flex app-flex-wrap app-align-center app-gap-3">
+                            <label for="quantity"><strong>Quantity</strong></label>
                             <input type="number" id="quantity" name="quantity" value="1" min="1"
                                    th:max="${product.inventoryQuantity ?: 1}"
                                    class="form-control text-center quantity-input-compact"
@@ -86,26 +96,86 @@
                                    th:disabled="${product.inventoryQuantity == null or product.inventoryQuantity <= 0}">
 
                             <button type="submit"
-                                    class="btn btn-success"
+                                    class="btn btn-app-primary"
                                     th:disabled="${product.inventoryQuantity == null or product.inventoryQuantity <= 0}">
                                 <i class="fa fa-shopping-cart"></i>
                                 Add to Cart
                             </button>
 
-                            <span th:if="${product.inventoryQuantity == null or product.inventoryQuantity <= 0}"
-                                  class="text-danger"><strong>Out of stock</strong></span>
-                        </form>
-
-                        <a th:href="@{/products}" class="btn btn-app-outline">&larr; Back to Products</a>
-                    </div>
+                            <a th:href="@{/cart}" class="btn btn-app-outline">Buy Now</a>
+                            <a th:href="@{/profile}" class="btn btn-app-outline"><i class="fa fa-heart-o"></i> Wishlist</a>
+                            <a th:href="@{/products}" class="btn btn-app-outline">Compare</a>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
     </section>
 
-    <section class="page-section-tight app-pb-5">
+    <section class="page-section-tight">
         <div class="container">
-            <h2 class="section-title">Customer Feedback</h2>
+            <div class="product-detail-card">
+                <nav class="detail-tabs" aria-label="Product information tabs">
+                    <a href="#overview" class="active">Overview</a>
+                    <a href="#specifications">Specifications</a>
+                    <a href="#compatibility">Compatibility</a>
+                    <a href="#reviews">Reviews</a>
+                    <a href="#shipping">Shipping &amp; Warranty</a>
+                </nav>
+
+                <section id="overview" class="app-mb-4">
+                    <h2 class="section-title h3">Overview</h2>
+                    <div class="text-muted" th:utext="${product.description}">Product overview.</div>
+                </section>
+
+                <section id="specifications" class="app-mb-4">
+                    <h2 class="section-title h3">Specifications</h2>
+                    <table class="spec-table">
+                        <tbody>
+                        <tr>
+                            <th>Brand</th>
+                            <td th:text="${product.brand != null ? product.brand.name : 'N/A'}">Brand</td>
+                        </tr>
+                        <tr>
+                            <th>Category</th>
+                            <td th:text="${product.categories != null and !product.categories.isEmpty() ? product.categories[0].categoryName : 'N/A'}">Category</td>
+                        </tr>
+                        <tr>
+                            <th>Specification</th>
+                            <td th:text="${product.specification != null and !#strings.isEmpty(product.specification) ? product.specification : 'N/A'}">Specification</td>
+                        </tr>
+                        <tr>
+                            <th>Inventory</th>
+                            <td th:text="${product.inventoryQuantity != null ? product.inventoryQuantity : 0}">0</td>
+                        </tr>
+                        <tr>
+                            <th>Performance Score</th>
+                            <td th:text="${product.performanceScore != null ? product.performanceScore : 'N/A'}">N/A</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </section>
+
+                <section id="compatibility" class="app-mb-4">
+                    <h2 class="section-title h3">Compatibility</h2>
+                    <div class="app-flex app-flex-wrap app-gap-2">
+                        <span class="compat-badge compatible">Compatible parts supported</span>
+                        <span class="compat-badge warning">Check socket and memory type</span>
+                        <span class="compat-badge pending">Use PC Builder for validation</span>
+                    </div>
+                </section>
+
+                <section id="shipping">
+                    <h2 class="section-title h3">Shipping &amp; Warranty</h2>
+                    <p class="text-muted app-mb-0">Fast checkout, PayOS payment, order tracking, and warranty details are handled after purchase from your account area.</p>
+                </section>
+            </div>
+        </div>
+    </section>
+
+    <section id="reviews" class="page-section-tight app-pb-5">
+        <div class="container">
+            <h2 class="section-title">Customer Reviews</h2>
 
             <div th:if="${feedback_success}"
                  class="alert alert-success"
@@ -147,7 +217,7 @@
 
                     <div th:if="${fb.reply != null and !#strings.isEmpty(fb.reply)}"
                          class="staff-reply">
-                        <p class="app-mb-1 text-primary"><strong>Staff reply:</strong></p>
+                        <p class="app-mb-1"><strong>Staff reply:</strong></p>
                         <p class="app-mb-0 text-muted" th:text="${fb.reply}">Thank you for your feedback!</p>
                     </div>
                 </article>
@@ -157,7 +227,7 @@
                 This product does not have any feedback yet.
             </div>
 
-            <hr class="app-my-5"/>
+            <hr class="app-my-5">
 
             <h3 class="h4 app-mb-3"><strong>Leave Your Feedback</strong></h3>
 
@@ -232,10 +302,6 @@
     function validateFeedbackForm() {
         const rating = document.getElementById('ratingValue').value;
         const comment = document.querySelector('textarea[name="comment"]').value.trim();
-        const errorMsg = document.getElementById('feedbackErrorMsg');
-
-        errorMsg.classList.add('hidden');
-        errorMsg.textContent = '';
 
         if (!rating) {
             showInlineError('Please choose a star rating before sending feedback.');

@@ -1,338 +1,126 @@
 <!DOCTYPE html>
-<html lang="en"
-      xmlns:th="http://www.thymeleaf.org"
-      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Customer Header</title>
-</head>
-
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <body>
-<header th:fragment="header-customer">
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: "Segoe UI", Arial, sans-serif;
-        }
-
-        header {
-            width: 100%;
-            background-color: #ffffff;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 10px 40px;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .logo img {
-            width: 45px;
-            height: 45px;
-            border-radius: 8px;
-        }
-
-        .logo h1 {
-            font-size: 20px;
-            font-weight: 600;
-            color: #333;
-        }
-
-        .menu select {
-            padding: 6px 10px;
-            border-radius: 6px;
-            border: 1px solid #ccc;
-            font-size: 14px;
-            background-color: #f9f9f9;
-            cursor: pointer;
-        }
-
-        .menu select:hover {
-            background-color: #f0f0f0;
-        }
-
-        .search-bar {
-            flex: 1;
-            display: flex;
-            justify-content: center;
-            max-width: 400px;
-            margin: 0 40px;
-        }
-
-        .search-bar input {
-            width: 100%;
-            padding: 8px 10px;
-            border: 1px solid #ccc;
-            border-right: none;
-            border-radius: 6px 0 0 6px;
-        }
-
-        .search-bar button {
-            padding: 8px 14px;
-            border: 1px solid #ccc;
-            background-color: #4CAF50;
-            color: white;
-            border-radius: 0 6px 6px 0;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-
-        .search-bar button:hover {
-            background-color: #45a049;
-        }
-
-        .header-right {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            position: relative; /* for dropdown positioning */
-        }
-
-        .header-right button,
-        .header-right a {
-            padding: 8px 14px;
-            border: none;
-            border-radius: 6px;
-            background-color: #f2f2f2;
-            color: #333;
-            cursor: pointer;
-            font-size: 14px;
-            transition: all 0.2s ease;
-            text-decoration: none;
-        }
-
-        .header-right a.cart {
-            font-size: 14px;
-            background-color: #eee;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .header-right button:hover,
-        .header-right a:hover {
-            background-color: #ddd;
-        }
-
-
-        /* Single dropdown toggle button */
-        .profile-toggle {
-            padding: 8px 14px;
-            border: none;
-            border-radius: 6px;
-            background-color: #f2f2f2;
-            color: #333;
-            cursor: pointer;
-            font-size: 14px;
-            transition: all 0.15s ease;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .profile-toggle:hover {
-            background-color: #ddd;
-        }
-
-        /* Dropdown menu */
-        .dropdown-menu {
-            position: absolute;
-            right: 0;
-            top: calc(100% + 8px);
-            background: #fff;
-            box-shadow: 0 6px 18px rgba(0,0,0,0.12);
-            border-radius: 8px;
-            min-width: 200px;
-            overflow: hidden;
-            display: none;
-            z-index: 200;
-        }
-
-        .dropdown-menu.show {
-            display: block;
-        }
-
-        .dropdown-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            width: 100%;
-            padding: 10px 14px;
-            background: transparent;
-            border: none;
-            text-align: left;
-            color: #333;
-            text-decoration: none;
-            font-size: 14px;
-            cursor: pointer;
-        }
-
-        .dropdown-item:hover {
-            background: #f5f5f5;
-        }
-
-        .dropdown-item.cart {
-            font-size: 16px;
-            justify-content: space-between;
-        }
-
-        @media (max-width: 768px) {
-            header {
-                flex-direction: column;
-                align-items: flex-start;
-                padding: 15px 20px;
-            }
-
-            .search-bar {
-                width: 100%;
-                margin: 10px 0;
-            }
-
-            .header-right {
-                width: 100%;
-                justify-content: flex-end;
-            }
-        }
-        .btn-blog {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 8px 14px;
-            border-radius: 10px;
-            background: linear-gradient(180deg, #ffffff 0%, #f7f9fc 100%);
-            border: 1px solid #e6eef8;
-            color: #1f2937;
-            text-decoration: none;
-            font-weight: 600;
-            box-shadow: 0 2px 8px rgba(22, 35, 56, 0.06);
-            transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s;
-            line-height: 1;
-        }
-
-        .btn-blog .icon {
-            font-size: 16px;
-            display: inline-block;
-            transform: translateY(-1px);
-        }
-
-        .btn-blog:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 24px rgba(22, 35, 56, 0.08);
-            background: linear-gradient(180deg, #ffffff 0%, #eef6ff 100%);
-        }
-
-        /* Make sure it fits small screens */
-        @media (max-width: 480px) {
-            .btn-blog { padding: 6px 10px; gap: 6px; font-size: 14px; }
-            .btn-blog .label { display: none; } /* show only icon on very small screens */
-        }
-    </style>
-
-    <!-- Logo -->
-    <div class="logo">
-        <a th:href="@{/home}" class="logo-link" style="display: flex; align-items: center; text-decoration: none; color: inherit;">
-            <img src="/assets/image/logo.jpg" alt="Logo">
-            <h1 style="margin-left: 8px;">PCOnlineShop</h1>
+<header th:fragment="header-customer" class="site-header">
+    <div class="site-header-inner">
+        <a th:href="@{/home}" class="site-logo" aria-label="PCOnlineShop home">
+            <span class="site-logo-mark" aria-hidden="true"><i class="fa fa-bolt"></i></span>
+            <span class="site-logo-text">PCOnlineShop</span>
         </a>
-    </div>
 
-    <!-- Menu -->
-    <form class="menu" th:action="@{products}" >
-        <select onchange="this.form.submit()" name="category">
-            <option>Menu</option>
-            <option th:each="c : ${categories}"
-                    th:value="${c.categoryId}"
-                    th:text="${c.categoryName}"
-            >
-            </option>
-        </select>
-    </form>
-    <a th:href="@{/blog}" class="btn-blog" role="button" aria-label="Blog">
-        <span class="icon">📰</span>
-        <span class="label">Blog</span>
-    </a>
-    <!-- Search -->
-    <form class="search-bar" th:action="@{/products}" method="get">
-        <input name="keyword" type="text" placeholder="Search products...">
-        <button>Search</button>
-    </form>
-
-    <!-- Collapsed right-side dropdown -->
-    <div class="header-right">
-        <button th:onclick="|window.location.href='@{/build/start}'|">🧩 Build PC</button>
-        <button th:onclick="|window.location.href='@{/cart}'|">🛒 My Cart</button>
-        <button id="profileToggle" class="profile-toggle" aria-expanded="false" type="button">
-            👤 My Account
+        <button class="site-nav-toggle" type="button" aria-label="Open navigation" data-nav-toggle>
+            <i class="fa fa-bars"></i>
         </button>
 
-        <div id="profileDropdown" class="dropdown-menu" role="menu" aria-hidden="true">
+        <nav class="site-nav" aria-label="Main navigation" data-site-nav>
+            <div class="site-nav-item has-mega">
+                <a th:href="@{/products}" class="site-nav-link">Products</a>
+                <div class="mega-menu" role="menu">
+                    <div class="mega-grid">
+                        <section>
+                            <h3>Core Components</h3>
+                            <a th:href="@{/products(keyword='CPU')}">CPU <span>Gaming and workstation processors</span></a>
+                            <a th:href="@{/products(keyword='GPU')}">GPU <span>Graphics cards for every frame</span></a>
+                            <a th:href="@{/products(keyword='Mainboard')}">Mainboard <span>AM4, AM5, LGA1700 platforms</span></a>
+                            <a th:href="@{/products(keyword='Memory')}">Memory / RAM <span>DDR4 and DDR5 kits</span></a>
+                            <a th:href="@{/products(keyword='Storage')}">Storage <span>NVMe SSD and high capacity HDD</span></a>
+                            <a th:href="@{/products(keyword='Power Supply')}">Power Supply <span>Stable efficient power</span></a>
+                            <a th:href="@{/products(keyword='Cooling')}">Cooling <span>Air, AIO, and fans</span></a>
+                            <a th:href="@{/products(keyword='Case')}">PC Case <span>ATX, Micro-ATX, Mini-ITX</span></a>
+                        </section>
+                        <section>
+                            <h3>Gaming Gear</h3>
+                            <a th:href="@{/products(keyword='Keyboard')}">Keyboard <span>Mechanical and RGB layouts</span></a>
+                            <a th:href="@{/products(keyword='Mouse')}">Mouse <span>Precision sensors and low latency</span></a>
+                            <a th:href="@{/products(keyword='Monitor')}">Monitor <span>High refresh gaming displays</span></a>
+                            <a th:href="@{/products(keyword='Headset')}">Headset <span>Clear comms and spatial audio</span></a>
+                            <a th:href="@{/products(keyword='Mousepad')}">Mousepad <span>Control and speed surfaces</span></a>
+                            <a th:href="@{/products(keyword='Accessories')}">Accessories <span>Cables, hubs, and upgrades</span></a>
+                        </section>
+                        <section>
+                            <h3>Shop by Compatibility</h3>
+                            <a th:href="@{/products(keyword='AM4')}">Socket AM4 <span>Ryzen compatible boards</span></a>
+                            <a th:href="@{/products(keyword='AM5')}">Socket AM5 <span>Latest AMD platform</span></a>
+                            <a th:href="@{/products(keyword='LGA1700')}">Intel LGA1700 <span>Core i5, i7, i9 systems</span></a>
+                            <a th:href="@{/products(keyword='DDR4')}">DDR4 Memory <span>Value and broad support</span></a>
+                            <a th:href="@{/products(keyword='DDR5')}">DDR5 Memory <span>Modern high bandwidth kits</span></a>
+                            <a th:href="@{/products(keyword='PCIe 4.0')}">PCIe 4.0 <span>Fast GPU and SSD lanes</span></a>
+                            <a th:href="@{/products(keyword='PCIe 5.0')}">PCIe 5.0 <span>Next generation bandwidth</span></a>
+                            <a th:href="@{/products(keyword='M.2 NVMe')}">M.2 NVMe SSD <span>Compact high speed storage</span></a>
+                        </section>
+                        <section class="mega-feature">
+                            <span class="mega-eyebrow">Featured Links</span>
+                            <h3>Build Faster</h3>
+                            <p>Use guided compatibility checks to choose CPU, mainboard, RAM, GPU, PSU, case, and cooling.</p>
+                            <a th:href="@{/build/start}" class="mega-cta">Start PC Builder</a>
+                            <a th:href="@{/orders/list}" class="mega-cta secondary">Order History</a>
+                            <a th:href="@{/products}" class="mega-cta secondary">New Arrivals</a>
+                        </section>
+                    </div>
+                </div>
+            </div>
+            <a th:href="@{/build/start}" class="site-nav-link">PC Builder</a>
+            <a th:href="@{/products(keyword='Gaming')}" class="site-nav-link">Gaming Gear</a>
+            <a th:href="@{/products(sortDir='asc')}" class="site-nav-link">Deals</a>
+            <a th:href="@{/products}" class="site-nav-link">Brands</a>
+            <a th:href="@{/blog}" class="site-nav-link">Support</a>
+        </nav>
 
-            <a th:href="@{/orders/list}" class="dropdown-item" role="menuitem">📦 My Orders</a>
-
-            <a th:href="@{/profile}" class="dropdown-item" role="menuitem">👤 My Profile</a>
-            <form th:action="@{/auth/logout}" method="post" style="margin: 0;">
-                <button type="submit" class="dropdown-item" role="menuitem">Logout</button>
+        <div class="site-actions">
+            <form class="site-search" th:action="@{/products}" method="get" role="search">
+                <label class="sr-only" for="header-search-customer">Search products</label>
+                <input id="header-search-customer" name="keyword" type="search" placeholder="Search components">
+                <button type="submit" aria-label="Search"><i class="fa fa-search"></i></button>
             </form>
+            <a th:href="@{/profile}" class="site-icon-link" aria-label="Account"><i class="fa fa-user"></i></a>
+            <a th:href="@{/profile}" class="site-icon-link" aria-label="Wishlist"><i class="fa fa-heart-o"></i></a>
+            <a th:href="@{/cart}" class="site-icon-link site-cart-link" aria-label="Cart">
+                <i class="fa fa-shopping-cart"></i>
+                <span class="cart-count">0</span>
+            </a>
+            <div class="account-menu">
+                <button id="profileToggle" class="account-toggle" type="button" aria-expanded="false">
+                    My Account <i class="fa fa-angle-down"></i>
+                </button>
+                <div id="profileDropdown" class="account-dropdown" role="menu" aria-hidden="true">
+                    <a th:href="@{/orders/list}" role="menuitem">Order History</a>
+                    <a th:href="@{/profile}" role="menuitem">Profile</a>
+                    <form th:action="@{/auth/logout}" method="post">
+                        <button type="submit" role="menuitem">Logout</button>
+                    </form>
+                </div>
+            </div>
         </div>
     </div>
 
     <script>
-        (function() {
-            const toggle = document.getElementById('profileToggle');
-            const dropdown = document.getElementById('profileDropdown');
+        (function () {
+            const header = document.currentScript.closest('.site-header');
+            const navToggle = header.querySelector('[data-nav-toggle]');
+            const nav = header.querySelector('[data-site-nav]');
+            const profileToggle = header.querySelector('#profileToggle');
+            const dropdown = header.querySelector('#profileDropdown');
 
-            function openDropdown() {
-                dropdown.classList.add('show');
-                toggle.setAttribute('aria-expanded', 'true');
-                dropdown.setAttribute('aria-hidden', 'false');
-            }
-
-            function closeDropdown() {
-                dropdown.classList.remove('show');
-                toggle.setAttribute('aria-expanded', 'false');
-                dropdown.setAttribute('aria-hidden', 'true');
-            }
-
-            function toggleDropdown(event) {
-                event.stopPropagation();
-                if (dropdown.classList.contains('show')) {
-                    closeDropdown();
-                } else {
-                    openDropdown();
-                }
-            }
-
-            toggle.addEventListener('click', toggleDropdown);
-
-            // Close when clicking outside
-            document.addEventListener('click', function(e) {
-                if (!dropdown.contains(e.target) && e.target !== toggle) {
-                    closeDropdown();
-                }
+            navToggle.addEventListener('click', function () {
+                nav.classList.toggle('is-open');
             });
 
-            // Close on Escape
-            document.addEventListener('keydown', function(e) {
-                if (e.key === 'Escape') {
-                    closeDropdown();
+            profileToggle.addEventListener('click', function (event) {
+                event.stopPropagation();
+                const open = dropdown.classList.toggle('show');
+                profileToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+                dropdown.setAttribute('aria-hidden', open ? 'false' : 'true');
+            });
+
+            document.addEventListener('click', function (event) {
+                if (!dropdown.contains(event.target) && event.target !== profileToggle) {
+                    dropdown.classList.remove('show');
+                    profileToggle.setAttribute('aria-expanded', 'false');
+                    dropdown.setAttribute('aria-hidden', 'true');
                 }
             });
         })();
     </script>
-
 </header>
 </body>
 </html>
-

@@ -1,0 +1,1237 @@
+﻿diff --git a/src/main/java/com/example/PCOnlineShop/controller/address/AddressController.java b/src/main/java/com/example/PCOnlineShop/controller/address/AddressController.java
+index dce0d5f..d405324 100644
+--- a/src/main/java/com/example/PCOnlineShop/controller/address/AddressController.java
++++ b/src/main/java/com/example/PCOnlineShop/controller/address/AddressController.java
+@@ -9,6 +9,7 @@ import com.example.PCOnlineShop.service.address.AddressService;
+ import jakarta.persistence.EntityNotFoundException;
+ import jakarta.validation.Valid;
+ import lombok.RequiredArgsConstructor;
++import lombok.extern.slf4j.Slf4j;
+ import org.springframework.http.ResponseEntity;
+ import org.springframework.security.core.annotation.AuthenticationPrincipal;
+ import org.springframework.security.core.userdetails.UserDetails;
+@@ -24,6 +25,7 @@ import java.util.Map;
+ @RestController
+ @RequestMapping("/address")
+ @RequiredArgsConstructor
++@Slf4j
+ public class AddressController {
+ 
+     private final AddressService addressService;
+@@ -59,7 +61,8 @@ public class AddressController {
+             return ResponseEntity.ok(new AddressResponse(newAddress));
+         } catch (IllegalArgumentException e) {
+             return badRequest(e.getMessage());
+-        } catch (Exception e) {
++        } catch (RuntimeException e) {
++            log.error("Unexpected error adding address for account {}", account.getAccountId(), e);
+             return systemError();
+         }
+     }
+@@ -95,7 +98,8 @@ public class AddressController {
+             return ResponseEntity.status(404).body(Map.of("error", e.getMessage()));
+         } catch (SecurityException e) {
+             return ResponseEntity.status(403).body(Map.of("error", e.getMessage()));
+-        } catch (Exception e) {
++        } catch (RuntimeException e) {
++            log.error("Unexpected error updating address {} for account {}", addressId, account.getAccountId(), e);
+             return systemError();
+         }
+     }
+@@ -117,7 +121,8 @@ public class AddressController {
+             return ResponseEntity.status(404).body(Map.of("error", e.getMessage()));
+         } catch (SecurityException e) {
+             return ResponseEntity.status(403).body(Map.of("error", e.getMessage()));
+-        } catch (Exception e) {
++        } catch (RuntimeException e) {
++            log.error("Unexpected error setting default address {} for account {}", addressId, account.getAccountId(), e);
+             return systemError();
+         }
+     }
+diff --git a/src/main/java/com/example/PCOnlineShop/controller/blog/ExternalBlogController.java b/src/main/java/com/example/PCOnlineShop/controller/blog/ExternalBlogController.java
+index 63335b1..917120f 100644
+--- a/src/main/java/com/example/PCOnlineShop/controller/blog/ExternalBlogController.java
++++ b/src/main/java/com/example/PCOnlineShop/controller/blog/ExternalBlogController.java
+@@ -3,6 +3,7 @@ package com.example.PCOnlineShop.controller.blog;
+ import com.example.PCOnlineShop.dto.blog.BlogLinkDto;
+ import com.example.PCOnlineShop.service.blog.HacomScraperService;
+ import lombok.RequiredArgsConstructor;
++import lombok.extern.slf4j.Slf4j;
+ import org.springframework.stereotype.Controller;
+ import org.springframework.ui.Model;
+ import org.springframework.web.bind.annotation.GetMapping;
+@@ -13,6 +14,7 @@ import java.util.List;
+ @Controller
+ @RequiredArgsConstructor
+ @RequestMapping("/blog")
++@Slf4j
+ public class ExternalBlogController {
+     private static final String HACOM_VIEW = "blog/hacom-list";
+     private static final String REDIRECT_HACOM = "redirect:/blog/hacom";
+@@ -26,7 +28,8 @@ public class ExternalBlogController {
+         try {
+             List<BlogLinkDto> links = scraperService.getLatest();
+             model.addAttribute("links", links);
+-        } catch (Exception e) {
++        } catch (RuntimeException e) {
++            log.error("Unexpected error loading Hacom blog posts", e);
+             model.addAttribute("links", List.of());
+             model.addAttribute("error", "Unable to load blog posts at this time.");
+         }
+diff --git a/src/main/java/com/example/PCOnlineShop/controller/build/BuildController.java b/src/main/java/com/example/PCOnlineShop/controller/build/BuildController.java
+index 2e03065..bc60640 100644
+--- a/src/main/java/com/example/PCOnlineShop/controller/build/BuildController.java
++++ b/src/main/java/com/example/PCOnlineShop/controller/build/BuildController.java
+@@ -4,6 +4,8 @@ import com.example.PCOnlineShop.dto.build.BuildItemDto;
+ import com.example.PCOnlineShop.model.account.Account;
+ import com.example.PCOnlineShop.service.account.AccountService;
+ import com.example.PCOnlineShop.service.cart.CartService;
++import jakarta.persistence.EntityNotFoundException;
++import lombok.extern.slf4j.Slf4j;
+ import org.springframework.security.access.prepost.PreAuthorize;
+ import org.springframework.security.core.annotation.AuthenticationPrincipal;
+ import org.springframework.security.core.userdetails.UserDetails;
+@@ -18,6 +20,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+ @Controller
+ @SessionAttributes({"buildItems"})
+ @RequestMapping("/build")
++@Slf4j
+ public class BuildController {
+     private static final String BUILD_START_VIEW = "build/build-pc";
+     private static final String PRESET_RESULT_VIEW = "build/preset-result";
+@@ -80,9 +83,13 @@ public class BuildController {
+             sessionStatus.setComplete();
+             redirectAttributes.addFlashAttribute("success", "PC build has been added to your cart.");
+             return "redirect:/cart";
+-        } catch (Exception e) {
++        } catch (IllegalArgumentException | EntityNotFoundException e) {
+             redirectAttributes.addFlashAttribute("error", "Unable to save PC build: " + e.getMessage());
+             return "redirect:/build/start";
++        } catch (RuntimeException e) {
++            log.error("Unexpected error saving PC build for account {}", account.getAccountId(), e);
++            redirectAttributes.addFlashAttribute("error", "Unable to save PC build. Please try again.");
++            return "redirect:/build/start";
+         }
+     }
+ }
+diff --git a/src/main/java/com/example/PCOnlineShop/controller/build/BuildSuggestionController.java b/src/main/java/com/example/PCOnlineShop/controller/build/BuildSuggestionController.java
+index 3021f94..aad2419 100644
+--- a/src/main/java/com/example/PCOnlineShop/controller/build/BuildSuggestionController.java
++++ b/src/main/java/com/example/PCOnlineShop/controller/build/BuildSuggestionController.java
+@@ -74,10 +74,10 @@ public class BuildSuggestionController {
+             return ResponseEntity.badRequest()
+                 .body("Invalid preset: " + request.getPreset());
+ 
+-        } catch (Exception e) {
++        } catch (RuntimeException e) {
+             log.error("Error generating build suggestion", e);
+             return ResponseEntity.internalServerError()
+-                .body("Error generating build suggestion: " + e.getMessage());
++                .body("Error generating build suggestion. Please try again.");
+         }
+     }
+ 
+@@ -106,10 +106,10 @@ public class BuildSuggestionController {
+             return ResponseEntity.badRequest()
+                 .body("Invalid build plan: " + e.getMessage());
+ 
+-        } catch (Exception e) {
++        } catch (RuntimeException e) {
+             log.error("Error applying build to session", e);
+             return ResponseEntity.internalServerError()
+-                .body("Error applying build: " + e.getMessage());
++                .body("Error applying build. Please try again.");
+         }
+     }
+ 
+diff --git a/src/main/java/com/example/PCOnlineShop/controller/cart/CartController.java b/src/main/java/com/example/PCOnlineShop/controller/cart/CartController.java
+index f3a942f..e4785ad 100644
+--- a/src/main/java/com/example/PCOnlineShop/controller/cart/CartController.java
++++ b/src/main/java/com/example/PCOnlineShop/controller/cart/CartController.java
+@@ -4,8 +4,10 @@ import com.example.PCOnlineShop.dto.cart.CartSummaryDTO;
+ import com.example.PCOnlineShop.model.account.Account;
+ import com.example.PCOnlineShop.service.account.AccountService;
+ import com.example.PCOnlineShop.service.cart.CartService;
++import jakarta.persistence.EntityNotFoundException;
+ import jakarta.servlet.http.HttpServletRequest;
+ import lombok.RequiredArgsConstructor;
++import lombok.extern.slf4j.Slf4j;
+ import org.springframework.http.HttpStatus;
+ import org.springframework.http.ResponseEntity;
+ import org.springframework.security.core.annotation.AuthenticationPrincipal;
+@@ -22,6 +24,7 @@ import java.util.function.Consumer;
+ @Controller
+ @RequestMapping("/cart")
+ @RequiredArgsConstructor
++@Slf4j
+ public class CartController {
+ 
+     private static final String LOGIN_REQUIRED_REDIRECT = "redirect:/auth/login?required";
+@@ -66,8 +69,11 @@ public class CartController {
+         try {
+             cartService.addToCart(account, productId, quantity);
+             addSuccess(redirectAttributes, "Product added to cart!");
+-        } catch (Exception e) {
++        } catch (IllegalArgumentException | EntityNotFoundException e) {
+             addError(redirectAttributes, e);
++        } catch (RuntimeException e) {
++            log.error("Unexpected error adding product {} to cart for account {}", productId, account.getAccountId(), e);
++            addError(redirectAttributes, "Unable to add product to cart. Please try again.");
+         }
+         return redirectToReferer(request);
+     }
+@@ -89,8 +95,11 @@ public class CartController {
+         try {
+             cartService.addListToCart(account, productIds, quantity);
+             addSuccess(redirectAttributes, "Products added!");
+-        } catch (Exception e) {
++        } catch (IllegalArgumentException | EntityNotFoundException e) {
+             addError(redirectAttributes, e);
++        } catch (RuntimeException e) {
++            log.error("Unexpected error adding product list to cart for account {}", account.getAccountId(), e);
++            addError(redirectAttributes, "Unable to add products to cart. Please try again.");
+         }
+         return "redirect:/cart";
+     }
+@@ -148,8 +157,11 @@ public class CartController {
+             action.accept(account);
+             double newTotal = cartService.calculateSelectedTotalForAccount(account);
+             return ResponseEntity.ok(Map.of("message", "Success", "newGrandTotal", newTotal));
+-        } catch (Exception e) {
++        } catch (IllegalArgumentException | EntityNotFoundException | SecurityException e) {
+             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
++        } catch (RuntimeException e) {
++            log.error("Unexpected cart action error for account {}", account.getAccountId(), e);
++            return ResponseEntity.internalServerError().body(Map.of("error", "Unable to update cart. Please try again."));
+         }
+     }
+ 
+@@ -189,4 +201,8 @@ public class CartController {
+     private void addError(RedirectAttributes redirectAttributes, Exception e) {
+         redirectAttributes.addFlashAttribute("error", e.getMessage());
+     }
++
++    private void addError(RedirectAttributes redirectAttributes, String message) {
++        redirectAttributes.addFlashAttribute("error", message);
++    }
+ }
+diff --git a/src/main/java/com/example/PCOnlineShop/controller/order/OrderController.java b/src/main/java/com/example/PCOnlineShop/controller/order/OrderController.java
+index 74e8c45..a54790a 100644
+--- a/src/main/java/com/example/PCOnlineShop/controller/order/OrderController.java
++++ b/src/main/java/com/example/PCOnlineShop/controller/order/OrderController.java
+@@ -4,13 +4,13 @@ import com.example.PCOnlineShop.dto.order.CheckoutDTO;
+ import com.example.PCOnlineShop.dto.order.CheckoutPageDTO;
+ import com.example.PCOnlineShop.model.account.Account;
+ import com.example.PCOnlineShop.model.order.Order;
+-import com.example.PCOnlineShop.model.payment.Payment;
+ import com.example.PCOnlineShop.service.account.AccountService;
+-import com.example.PCOnlineShop.service.cart.CartService;
+ import com.example.PCOnlineShop.service.order.OrderService;
+ import com.example.PCOnlineShop.service.payment.PaymentService;
++import jakarta.persistence.EntityNotFoundException;
+ import jakarta.validation.Valid;
+ import lombok.RequiredArgsConstructor;
++import lombok.extern.slf4j.Slf4j;
+ import org.springframework.security.core.Authentication;
+ import org.springframework.security.core.annotation.AuthenticationPrincipal;
+ import org.springframework.security.core.context.SecurityContextHolder;
+@@ -24,10 +24,10 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+ @Controller
+ @RequestMapping("/orders")
+ @RequiredArgsConstructor
++@Slf4j
+ public class OrderController {
+ 
+     private final OrderService orderService;
+-    private final CartService cartService;
+     private final PaymentService paymentService;
+     private final AccountService accountService;
+ 
+@@ -76,9 +76,13 @@ public class OrderController {
+             model.addAttribute("pageTitle", "Order Detail #" + order.getOrderId());
+             model.addAttribute("paymentInfo", paymentService.getPaymentInfoSafe(id));
+             return "orders/order-detail";
+-        } catch (Exception e) {
++        } catch (SecurityException | EntityNotFoundException e) {
+             redirectAttributes.addFlashAttribute("error", e.getMessage());
+             return "redirect:/orders/list";
++        } catch (RuntimeException e) {
++            log.error("Unexpected error loading order detail {}", id, e);
++            redirectAttributes.addFlashAttribute("error", "Unable to load order detail.");
++            return "redirect:/orders/list";
+         }
+     }
+ 
+@@ -128,23 +132,29 @@ public class OrderController {
+                 model.addAttribute("pageTitle", "Checkout");
+                 model.addAttribute("postActionUrl", "/orders/checkout");
+                 return "orders/checkout";
+-            } catch (Exception e) {
++            } catch (IllegalStateException e) {
++                redirectAttributes.addFlashAttribute("error", e.getMessage());
++                return "redirect:/cart";
++            } catch (RuntimeException e) {
++                log.error("Unexpected error rebuilding checkout form for account {}", currentAccount.getAccountId(), e);
++                redirectAttributes.addFlashAttribute("error", "Unable to load checkout data.");
+                 return "redirect:/cart";
+             }
+         }
+ 
+         try {
+-            Order newOrder = orderService.processCheckout(currentAccount, checkoutDTO);
+-            Payment newPayment = paymentService.createPaymentRecord(newOrder);
+-            String payosCheckoutUrl = paymentService.createPayOSLink(newPayment);
+-            cartService.clearSelectedItems(currentAccount);
++            String payosCheckoutUrl = paymentService.createCheckoutPaymentLink(currentAccount, checkoutDTO);
+             return "redirect:" + payosCheckoutUrl;
+ 
+         } catch (IllegalStateException e) {
+             redirectAttributes.addFlashAttribute("error", e.getMessage());
+             return "redirect:/cart";
+-        } catch (Exception e) {
+-            redirectAttributes.addFlashAttribute("error", "Unable to create payment: " + e.getMessage());
++        } catch (IllegalArgumentException | EntityNotFoundException e) {
++            redirectAttributes.addFlashAttribute("error", e.getMessage());
++            return "redirect:/orders/checkout";
++        } catch (RuntimeException e) {
++            log.error("Unexpected error processing checkout for account {}", currentAccount.getAccountId(), e);
++            redirectAttributes.addFlashAttribute("error", "Unable to create payment. Please try again.");
+             return "redirect:/orders/checkout";
+         }
+     }
+diff --git a/src/main/java/com/example/PCOnlineShop/controller/payment/PaymentController.java b/src/main/java/com/example/PCOnlineShop/controller/payment/PaymentController.java
+index 4af66cb..eec77c6 100644
+--- a/src/main/java/com/example/PCOnlineShop/controller/payment/PaymentController.java
++++ b/src/main/java/com/example/PCOnlineShop/controller/payment/PaymentController.java
+@@ -6,6 +6,7 @@ import com.example.PCOnlineShop.service.order.OrderService;
+ import com.example.PCOnlineShop.service.payment.PaymentService;
+ import jakarta.persistence.EntityNotFoundException;
+ import lombok.RequiredArgsConstructor;
++import lombok.extern.slf4j.Slf4j;
+ import org.springframework.http.ResponseEntity;
+ import org.springframework.security.core.Authentication;
+ import org.springframework.security.core.annotation.AuthenticationPrincipal;
+@@ -20,6 +21,7 @@ import java.util.Map;
+ @Controller
+ @RequestMapping("/payment")
+ @RequiredArgsConstructor
++@Slf4j
+ public class PaymentController {
+ 
+     private final PaymentService paymentService;
+@@ -37,7 +39,10 @@ public class PaymentController {
+             } else {
+                 redirectAttributes.addFlashAttribute("info", "Payment processing...");
+             }
+-        } catch (Exception e) {
++        } catch (EntityNotFoundException e) {
++            redirectAttributes.addFlashAttribute("error", e.getMessage());
++        } catch (RuntimeException e) {
++            log.error("Unexpected error checking payment success callback for orderCode {}", orderCode, e);
+             redirectAttributes.addFlashAttribute("error", "Error checking payment.");
+         }
+         return "redirect:/orders/list";
+@@ -47,12 +52,25 @@ public class PaymentController {
+     public String handleFailedCallback(@RequestParam(value = "orderCode", required = false) Long orderCode,
+                                        RedirectAttributes redirectAttributes) {
+         try {
+-            if (orderCode != null) {
+-                paymentService.processFailedPayment(orderCode);
++            if (orderCode == null) {
++                redirectAttributes.addFlashAttribute("error", "Payment Cancelled.");
++                return "redirect:/orders/list";
++            }
++
++            PaymentService.FailedPaymentResult result = paymentService.processFailedPayment(orderCode);
++            switch (result) {
++                case CANCELLED ->
++                        redirectAttributes.addFlashAttribute("error", "Payment Cancelled. Order inventory was released.");
++                case PAID ->
++                        redirectAttributes.addFlashAttribute("success", "Payment Successful. Order confirmed.");
++                case PENDING ->
++                        redirectAttributes.addFlashAttribute("info", "Payment was not confirmed as cancelled. You can continue payment from your order detail.");
+             }
+-            redirectAttributes.addFlashAttribute("error", "Payment Cancelled.");
+-        } catch (Exception e) {
+-            redirectAttributes.addFlashAttribute("error", "Unable to update cancelled payment.");
++        } catch (EntityNotFoundException e) {
++            redirectAttributes.addFlashAttribute("error", e.getMessage());
++        } catch (RuntimeException e) {
++            log.error("Unexpected error checking payment failed callback for orderCode {}", orderCode, e);
++            redirectAttributes.addFlashAttribute("error", "Unable to verify cancelled payment.");
+         }
+         return "redirect:/orders/list";
+     }
+@@ -68,8 +86,12 @@ public class PaymentController {
+         } catch (SecurityException | EntityNotFoundException e) {
+             redirectAttributes.addFlashAttribute("error", e.getMessage());
+             return "redirect:/orders/list";
+-        } catch (Exception e) {
+-            redirectAttributes.addFlashAttribute("error", "Unable to retrieve payment link: " + e.getMessage());
++        } catch (IllegalStateException e) {
++            redirectAttributes.addFlashAttribute("error", e.getMessage());
++            return "redirect:/orders/detail/" + orderId;
++        } catch (RuntimeException e) {
++            log.error("Unexpected error retrieving payment link for order {}", orderId, e);
++            redirectAttributes.addFlashAttribute("error", "Unable to retrieve payment link. Please try again.");
+             return "redirect:/orders/detail/" + orderId;
+         }
+     }
+@@ -80,8 +102,11 @@ public class PaymentController {
+         try {
+             paymentService.handleWebhook(body);
+             return ResponseEntity.ok("Webhook received");
+-        } catch (Exception e) {
++        } catch (EntityNotFoundException | IllegalArgumentException e) {
+             return ResponseEntity.badRequest().body(e.getMessage());
++        } catch (RuntimeException e) {
++            log.error("Unexpected PayOS webhook processing error", e);
++            return ResponseEntity.internalServerError().body("Webhook processing failed");
+         }
+     }
+ 
+@@ -100,8 +125,9 @@ public class PaymentController {
+             return ResponseEntity.status(403).body(Map.of("error", e.getMessage()));
+         } catch (EntityNotFoundException e) {
+             return ResponseEntity.status(404).body(Map.of("error", e.getMessage()));
+-        } catch (Exception e) {
+-            return ResponseEntity.status(500).body(Map.of("error", e.getMessage()));
++        } catch (RuntimeException e) {
++            log.error("Unexpected error retrieving payment info for order {}", orderId, e);
++            return ResponseEntity.status(500).body(Map.of("error", "Unable to retrieve payment info."));
+         }
+     }
+ 
+diff --git a/src/main/java/com/example/PCOnlineShop/controller/product/ProductController.java b/src/main/java/com/example/PCOnlineShop/controller/product/ProductController.java
+index 63b326a..a2989fe 100644
+--- a/src/main/java/com/example/PCOnlineShop/controller/product/ProductController.java
++++ b/src/main/java/com/example/PCOnlineShop/controller/product/ProductController.java
+@@ -11,6 +11,7 @@ import com.example.PCOnlineShop.service.product.ProductService;
+ 
+ import jakarta.validation.Valid;
+ import lombok.RequiredArgsConstructor;
++import lombok.extern.slf4j.Slf4j;
+ import org.springframework.stereotype.Controller;
+ import org.springframework.ui.Model;
+ import org.springframework.validation.BindingResult;
+@@ -18,11 +19,13 @@ import org.springframework.web.bind.annotation.*;
+ import org.springframework.web.multipart.MultipartFile;
+ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+ 
++import java.io.IOException;
+ import java.util.*;
+ 
+ @Controller
+ @RequestMapping("/staff/products")
+ @RequiredArgsConstructor
++@Slf4j
+ public class ProductController {
+ 
+     private final ProductService productService;
+@@ -126,8 +129,22 @@ public class ProductController {
+ 
+         try {
+             productCommandService.createProduct(product, categoryIds, brandId, params, imageFiles);
+-        } catch (Exception e) {
+-            model.addAttribute("error", "Failed to save product: " + e.getMessage());
++        } catch (IllegalArgumentException | IllegalStateException e) {
++            model.addAttribute("error", e.getMessage());
++            model.addAttribute("isEdit", false);
++            model.addAttribute("submittedCategoryId", primaryCategoryId);
++            model.addAttribute("submittedBrandId", brandId);
++            return "product/product-form";
++        } catch (IOException e) {
++            log.error("Image upload failed while creating product {}", product.getProductName(), e);
++            model.addAttribute("error", "Failed to save product images. Please try again.");
++            model.addAttribute("isEdit", false);
++            model.addAttribute("submittedCategoryId", primaryCategoryId);
++            model.addAttribute("submittedBrandId", brandId);
++            return "product/product-form";
++        } catch (RuntimeException e) {
++            log.error("Unexpected error creating product {}", product.getProductName(), e);
++            model.addAttribute("error", "Failed to save product. Please try again.");
+             model.addAttribute("isEdit", false);
+             model.addAttribute("submittedCategoryId", primaryCategoryId);
+             model.addAttribute("submittedBrandId", brandId);
+@@ -188,13 +205,29 @@ public class ProductController {
+ 
+         try {
+             productCommandService.updateProduct(incoming, categoryIds, params, imageFiles, deleteImageIds);
+-        } catch (Exception ex) {
++        } catch (IllegalArgumentException | IllegalStateException ex) {
+             model.addAttribute("error", ex.getMessage());
+             model.addAttribute("isEdit", true);
+             incoming.setImages(current.getImages());
+             incoming.setBrand(current.getBrand());
+             incoming.setCategories(current.getCategories());
+             return "product/product-update";
++        } catch (IOException ex) {
++            log.error("Image upload failed while updating product {}", incoming.getProductId(), ex);
++            model.addAttribute("error", "Failed to save product images. Please try again.");
++            model.addAttribute("isEdit", true);
++            incoming.setImages(current.getImages());
++            incoming.setBrand(current.getBrand());
++            incoming.setCategories(current.getCategories());
++            return "product/product-update";
++        } catch (RuntimeException ex) {
++            log.error("Unexpected error updating product {}", incoming.getProductId(), ex);
++            model.addAttribute("error", "Failed to update product. Please try again.");
++            model.addAttribute("isEdit", true);
++            incoming.setImages(current.getImages());
++            incoming.setBrand(current.getBrand());
++            incoming.setCategories(current.getCategories());
++            return "product/product-update";
+         }
+ 
+         return "redirect:/staff/products/list";
+diff --git a/src/main/java/com/example/PCOnlineShop/controller/staff/StaffShippingController.java b/src/main/java/com/example/PCOnlineShop/controller/staff/StaffShippingController.java
+index 46bbcb6..216829c 100644
+--- a/src/main/java/com/example/PCOnlineShop/controller/staff/StaffShippingController.java
++++ b/src/main/java/com/example/PCOnlineShop/controller/staff/StaffShippingController.java
+@@ -2,7 +2,9 @@ package com.example.PCOnlineShop.controller.staff;
+ 
+ import com.example.PCOnlineShop.model.order.Order;
+ import com.example.PCOnlineShop.service.order.OrderService;
++import jakarta.persistence.EntityNotFoundException;
+ import lombok.RequiredArgsConstructor;
++import lombok.extern.slf4j.Slf4j;
+ import org.springframework.stereotype.Controller;
+ import org.springframework.ui.Model;
+ import org.springframework.web.bind.annotation.GetMapping;
+@@ -17,6 +19,7 @@ import java.util.List;
+ @Controller
+ @RequestMapping("/staff/shipping")
+ @RequiredArgsConstructor
++@Slf4j
+ public class StaffShippingController {
+     private static final String SHIPPING_LIST_VIEW = "staffshipping/shipping-list";
+     private static final String REDIRECT_SHIPPING_LIST = "redirect:/staff/shipping/list";
+@@ -37,8 +40,11 @@ public class StaffShippingController {
+         try {
+             String result = orderService.processShippingStatusUpdate(orderId, newStatus);
+             addStatusMessage(redirectAttributes, result);
+-        } catch (Exception e) {
++        } catch (IllegalArgumentException | EntityNotFoundException e) {
+             redirectAttributes.addFlashAttribute("error", "Error: " + e.getMessage());
++        } catch (RuntimeException e) {
++            log.error("Unexpected error updating shipping status for order {}", orderId, e);
++            redirectAttributes.addFlashAttribute("error", "Unable to update shipping status. Please try again.");
+         }
+ 
+         return REDIRECT_SHIPPING_LIST;
+diff --git a/src/main/java/com/example/PCOnlineShop/dto/payment/PaymentInfoDTO.java b/src/main/java/com/example/PCOnlineShop/dto/payment/PaymentInfoDTO.java
+index fd794e3..7a2d24a 100644
+--- a/src/main/java/com/example/PCOnlineShop/dto/payment/PaymentInfoDTO.java
++++ b/src/main/java/com/example/PCOnlineShop/dto/payment/PaymentInfoDTO.java
+@@ -8,7 +8,7 @@ import java.util.Date;
+ public class PaymentInfoDTO {
+     private String gatewayPaymentId; // Mã giao dịch PayOS
+     private BigDecimal amount;
+-    private String status; // SUCCESS, FAILED, PENDING
++    private String status;
+     private Date createdAt; // Thời gian tạo
+ 
+     public PaymentInfoDTO(Payment payment) {
+@@ -17,4 +17,4 @@ public class PaymentInfoDTO {
+         this.status = payment.getStatus();
+         this.createdAt = payment.getCreatedAt();
+     }
+-}
+\ No newline at end of file
++}
+diff --git a/src/main/java/com/example/PCOnlineShop/repository/payment/PaymentRepository.java b/src/main/java/com/example/PCOnlineShop/repository/payment/PaymentRepository.java
+index 226acd2..d05fc37 100644
+--- a/src/main/java/com/example/PCOnlineShop/repository/payment/PaymentRepository.java
++++ b/src/main/java/com/example/PCOnlineShop/repository/payment/PaymentRepository.java
+@@ -2,8 +2,6 @@ package com.example.PCOnlineShop.repository.payment;
+ 
+ import com.example.PCOnlineShop.model.payment.Payment;
+ import org.springframework.data.jpa.repository.JpaRepository;
+-import org.springframework.data.jpa.repository.Query;
+-import org.springframework.data.repository.query.Param;
+ 
+ import java.util.Date;
+ import java.util.List;
+@@ -11,8 +9,7 @@ import java.util.Optional;
+ 
+ public interface PaymentRepository extends JpaRepository<Payment, Long> {
+ 
+-    @Query("SELECT p FROM Payment p WHERE p.status = 'PENDING' AND p.createdAt < :timeLimit")
+-    List<Payment> findPendingPaymentsOlderThan(@Param("timeLimit") Date timeLimit);
++    List<Payment> findByStatusAndCreatedAtBefore(String status, Date timeLimit);
+ 
+      Optional<Payment> findByOrder_OrderId(long orderId);
+ 
+diff --git a/src/main/java/com/example/PCOnlineShop/repository/product/ProductRepository.java b/src/main/java/com/example/PCOnlineShop/repository/product/ProductRepository.java
+index 021b5e6..49ea68d 100644
+--- a/src/main/java/com/example/PCOnlineShop/repository/product/ProductRepository.java
++++ b/src/main/java/com/example/PCOnlineShop/repository/product/ProductRepository.java
+@@ -7,6 +7,7 @@ import org.springframework.data.domain.Page;
+ import org.springframework.data.domain.Pageable;
+ import org.springframework.data.jpa.repository.EntityGraph;
+ import org.springframework.data.jpa.repository.JpaRepository;
++import org.springframework.data.jpa.repository.Lock;
+ import org.springframework.data.jpa.repository.Modifying;
+ import org.springframework.data.jpa.repository.Query;
+ import org.springframework.data.repository.query.Param;
+@@ -18,6 +19,8 @@ import com.example.PCOnlineShop.model.product.Category;
+ import com.example.PCOnlineShop.model.product.Product;
+ import com.example.PCOnlineShop.model.product.ProductLifecycleStatus;
+ 
++import jakarta.persistence.LockModeType;
++
+ @Repository
+ public interface ProductRepository extends JpaRepository<Product, Integer> {
+ 
+@@ -48,6 +51,10 @@ public interface ProductRepository extends JpaRepository<Product, Integer> {
+     @Query("SELECT p FROM Product p WHERE p.productId = :productId")
+     Optional<Product> findByIdWithImages(@Param("productId") Integer productId);
+ 
++    @Lock(LockModeType.PESSIMISTIC_WRITE)
++    @Query("SELECT p FROM Product p WHERE p.productId = :productId")
++    Optional<Product> findByProductIdForUpdate(@Param("productId") Integer productId);
++
+     @Query("""
+         SELECT DISTINCT p FROM Product p
+         LEFT JOIN p.brand b
+diff --git a/src/main/java/com/example/PCOnlineShop/scheduler/OrderScheduler.java b/src/main/java/com/example/PCOnlineShop/scheduler/OrderScheduler.java
+index 693567c..8b82b31 100644
+--- a/src/main/java/com/example/PCOnlineShop/scheduler/OrderScheduler.java
++++ b/src/main/java/com/example/PCOnlineShop/scheduler/OrderScheduler.java
+@@ -1,8 +1,10 @@
+ package com.example.PCOnlineShop.scheduler;
+ 
++import com.example.PCOnlineShop.constant.PaymentStatus;
+ import com.example.PCOnlineShop.model.payment.Payment;
+ import com.example.PCOnlineShop.repository.payment.PaymentRepository;
+ import com.example.PCOnlineShop.service.payment.PaymentService;
++import lombok.extern.slf4j.Slf4j;
+ import org.springframework.scheduling.annotation.Scheduled;
+ import org.springframework.stereotype.Component;
+ 
+@@ -12,6 +14,7 @@ import java.util.Date;
+ import java.util.List;
+ 
+ @Component
++@Slf4j
+ public class OrderScheduler {
+ 
+     private static final int PAYMENT_TIMEOUT_MINUTES = 15;
+@@ -28,13 +31,16 @@ public class OrderScheduler {
+     @Scheduled(fixedRate = 60000)
+     public void cancelExpiredPendingOrders() {
+         Date paymentDeadline = Date.from(Instant.now().minus(PAYMENT_TIMEOUT_MINUTES, ChronoUnit.MINUTES));
+-        List<Payment> expiredPayments = paymentRepository.findPendingPaymentsOlderThan(paymentDeadline);
++        List<Payment> expiredPayments = paymentRepository.findByStatusAndCreatedAtBefore(
++                PaymentStatus.PENDING,
++                paymentDeadline
++        );
+ 
+         for (Payment payment : expiredPayments) {
+             try {
+                 paymentService.cancelExpiredPayment(payment.getPaymentId());
+-            } catch (Exception e) {
+-                System.err.println("Unable to cancel expired payment " + payment.getPaymentId() + ": " + e.getMessage());
++            } catch (RuntimeException e) {
++                log.warn("Unable to cancel expired payment {}", payment.getPaymentId(), e);
+             }
+         }
+     }
+diff --git a/src/main/java/com/example/PCOnlineShop/service/blog/HacomScraperService.java b/src/main/java/com/example/PCOnlineShop/service/blog/HacomScraperService.java
+index 95ef9db..0c0024a 100644
+--- a/src/main/java/com/example/PCOnlineShop/service/blog/HacomScraperService.java
++++ b/src/main/java/com/example/PCOnlineShop/service/blog/HacomScraperService.java
+@@ -9,6 +9,7 @@ import org.jsoup.select.Elements;
+ import org.springframework.scheduling.annotation.Scheduled;
+ import org.springframework.stereotype.Service;
+ 
++import java.io.IOException;
+ import java.net.MalformedURLException;
+ import java.net.URL;
+ import java.util.ArrayList;
+@@ -32,7 +33,7 @@ public class HacomScraperService {
+                         cache.clear();
+                         cache.addAll(fresh);
+                         lastFetch = System.currentTimeMillis();
+-                    } catch (Exception e) {
++                    } catch (IOException e) {
+                         log.warn("Failed to refresh Hacom blog cache", e);
+                     }
+                 }
+@@ -50,12 +51,12 @@ public class HacomScraperService {
+                 cache.addAll(fresh);
+                 lastFetch = System.currentTimeMillis();
+             }
+-        } catch (Exception e) {
++        } catch (IOException e) {
+             log.warn("Scheduled Hacom blog refresh failed", e);
+         }
+     }
+ 
+-    private List<BlogLinkDto> fetchFromHacom() throws Exception {
++    private List<BlogLinkDto> fetchFromHacom() throws IOException {
+         List<BlogLinkDto> result = new ArrayList<>();
+ 
+         Document doc = Jsoup.connect(HACOM_TIN_TUC)
+diff --git a/src/main/java/com/example/PCOnlineShop/service/dashboard/DashboardService.java b/src/main/java/com/example/PCOnlineShop/service/dashboard/DashboardService.java
+index 58daca8..141130e 100644
+--- a/src/main/java/com/example/PCOnlineShop/service/dashboard/DashboardService.java
++++ b/src/main/java/com/example/PCOnlineShop/service/dashboard/DashboardService.java
+@@ -1,5 +1,6 @@
+ package com.example.PCOnlineShop.service.dashboard;
+ 
++import com.example.PCOnlineShop.constant.OrderStatus;
+ import com.example.PCOnlineShop.constant.RoleName;
+ import com.example.PCOnlineShop.dto.dashboard.AdminDashboardStatsDTO;
+ import com.example.PCOnlineShop.dto.dashboard.StaffDashboardStatsDTO;
+@@ -14,9 +15,6 @@ import org.springframework.stereotype.Service;
+ @Service
+ @RequiredArgsConstructor
+ public class DashboardService {
+-    private static final String ORDER_READY_TO_SHIP = "Ready to Ship";
+-    private static final String ORDER_COMPLETED = "Completed";
+-
+     private final AccountRepository accountRepository;
+     private final ProductRepository productRepository;
+     private final OrderRepository orderRepository;
+@@ -34,8 +32,8 @@ public class DashboardService {
+ 
+     public StaffDashboardStatsDTO getStaffStats() {
+         return new StaffDashboardStatsDTO(
+-                orderRepository.countByStatus(ORDER_READY_TO_SHIP),
+-                orderRepository.countByStatus(ORDER_COMPLETED),
++                orderRepository.countByStatus(OrderStatus.READY_TO_SHIP),
++                orderRepository.countByStatus(OrderStatus.COMPLETED),
+                 productRepository.count(),
+                 feedbackRepository.count()
+         );
+diff --git a/src/main/java/com/example/PCOnlineShop/service/feedback/FeedbackServiceImpl.java b/src/main/java/com/example/PCOnlineShop/service/feedback/FeedbackServiceImpl.java
+index 88479e5..110fd3e 100644
+--- a/src/main/java/com/example/PCOnlineShop/service/feedback/FeedbackServiceImpl.java
++++ b/src/main/java/com/example/PCOnlineShop/service/feedback/FeedbackServiceImpl.java
+@@ -13,6 +13,7 @@ import org.springframework.data.domain.Sort;
+ import org.springframework.stereotype.Service;
+ import org.springframework.transaction.annotation.Transactional;
+ 
++import com.example.PCOnlineShop.constant.OrderStatus;
+ import com.example.PCOnlineShop.model.account.Account;
+ import com.example.PCOnlineShop.model.feedback.Feedback;
+ import com.example.PCOnlineShop.model.product.Product;
+@@ -97,7 +98,7 @@ public class FeedbackServiceImpl implements FeedbackService {
+ 
+         boolean hasPurchased = orderDetailRepository
+                 .existsByOrder_Account_AccountIdAndProduct_ProductIdAndOrder_Status(
+-                        accountId, productId, "Completed");
++                        accountId, productId, OrderStatus.COMPLETED);
+ 
+         if (!hasPurchased)
+             throw new IllegalArgumentException("You can review only the products you've purchased!");
+diff --git a/src/main/java/com/example/PCOnlineShop/service/mail/MailService.java b/src/main/java/com/example/PCOnlineShop/service/mail/MailService.java
+index 944a2c2..5ca7618 100644
+--- a/src/main/java/com/example/PCOnlineShop/service/mail/MailService.java
++++ b/src/main/java/com/example/PCOnlineShop/service/mail/MailService.java
+@@ -1,6 +1,7 @@
+ package com.example.PCOnlineShop.service.mail;
+ 
+ import org.springframework.mail.SimpleMailMessage;
++import org.springframework.mail.MailException;
+ import org.springframework.mail.javamail.JavaMailSender;
+ import org.springframework.beans.factory.annotation.Value;
+ import org.springframework.stereotype.Service;
+@@ -29,7 +30,7 @@ public class MailService {
+             message.setSubject(subject);
+             message.setText(text);
+             mailSender.send(message);
+-        } catch (Exception e) {
++        } catch (MailException e) {
+             log.error("Unable to send email to {}", to, e);
+             throw new IllegalArgumentException("Unable to send email. Please try again later.");
+         }
+diff --git a/src/main/java/com/example/PCOnlineShop/service/order/OrderService.java b/src/main/java/com/example/PCOnlineShop/service/order/OrderService.java
+index 5ae0934..05f4eed 100644
+--- a/src/main/java/com/example/PCOnlineShop/service/order/OrderService.java
++++ b/src/main/java/com/example/PCOnlineShop/service/order/OrderService.java
+@@ -1,5 +1,8 @@
+ package com.example.PCOnlineShop.service.order;
+ 
++import com.example.PCOnlineShop.constant.OrderPaymentStatus;
++import com.example.PCOnlineShop.constant.OrderStatus;
++import com.example.PCOnlineShop.constant.PaymentStatus;
+ import com.example.PCOnlineShop.dto.cart.CartItemDTO;
+ import com.example.PCOnlineShop.dto.order.CheckoutDTO;
+ import com.example.PCOnlineShop.dto.order.CheckoutPageDTO;
+@@ -19,6 +22,7 @@ import com.example.PCOnlineShop.repository.product.ProductRepository;
+ import com.example.PCOnlineShop.service.address.AddressService;
+ import com.example.PCOnlineShop.service.cart.CartService;
+ import jakarta.persistence.EntityNotFoundException;
++import lombok.extern.slf4j.Slf4j;
+ import org.springframework.context.annotation.Lazy;
+ import org.springframework.stereotype.Service;
+ import org.springframework.transaction.annotation.Transactional;
+@@ -30,6 +34,7 @@ import java.util.*;
+ import java.util.stream.Collectors;
+ 
+ @Service
++@Slf4j
+ public class OrderService {
+ 
+     private final OrderRepository orderRepository;
+@@ -64,14 +69,15 @@ public class OrderService {
+         this.addressService = addressService;
+     }
+ 
+-    @Transactional
+-    public Order createOrder(Account customerAccount, Map<Integer, CartItem> cartItems,
+-                             CheckoutDTO checkoutDTO) {
++    private Order createOrder(Account customerAccount,
++                              Map<Integer, CartItem> cartItems,
++                              CheckoutDTO checkoutDTO,
++                              Map<Integer, Product> lockedProducts) {
+ 
+         Order order = new Order();
+         order.setAccount(customerAccount);
+         order.setCreatedDate(new Date());
+-        order.setStatus("Pending Payment");
++        order.setStatus(OrderStatus.PENDING_PAYMENT);
+         order.setShippingMethod(checkoutDTO.getShippingMethod());
+         order.setNote(checkoutDTO.getNote());
+         order.setShippingFullName(checkoutDTO.getShippingFullName());
+@@ -83,7 +89,10 @@ public class OrderService {
+ 
+         for (Map.Entry<Integer, CartItem> entry : cartItems.entrySet()) {
+             CartItem item = entry.getValue();
+-            Product product = item.getProduct();
++            Product product = lockedProducts.get(entry.getKey());
++            if (product == null) {
++                throw new EntityNotFoundException("Product not found: " + entry.getKey());
++            }
+             int quantityToBuy = item.getQuantity();
+ 
+ 
+@@ -146,7 +155,20 @@ public class OrderService {
+         if (checkoutMap.isEmpty()) {
+             throw new IllegalStateException("Please choose products!");
+         }
+-        return createOrder(account, checkoutMap, checkoutDTO);
++        Map<Integer, Product> lockedProducts = lockProductsForCheckout(checkoutMap);
++        return createOrder(account, checkoutMap, checkoutDTO, lockedProducts);
++    }
++
++    private Map<Integer, Product> lockProductsForCheckout(Map<Integer, CartItem> checkoutMap) {
++        Map<Integer, Product> lockedProducts = new HashMap<>();
++        checkoutMap.keySet().stream()
++                .sorted()
++                .forEach(productId -> {
++                    Product product = productRepository.findByProductIdForUpdate(productId)
++                            .orElseThrow(() -> new EntityNotFoundException("Product not found: " + productId));
++                    lockedProducts.put(productId, product);
++                });
++        return lockedProducts;
+     }
+ 
+     private void rollBackInventory(Order order) {
+@@ -162,6 +184,9 @@ public class OrderService {
+ 
+     private void reserveInventory(Product product, int quantity) {
+         Integer inventoryQuantity = product.getInventoryQuantity();
++        if (!product.isSellableOnStorefront()) {
++            throw new IllegalStateException("Product is unavailable: " + product.getProductName());
++        }
+         if (inventoryQuantity == null) {
+             return;
+         }
+@@ -178,10 +203,10 @@ public class OrderService {
+                 .orElseThrow(() -> new EntityNotFoundException("No payment found: " + paymentId));
+         Order order = payment.getOrder();
+ 
+-        if ("Pending Payment".equals(order.getStatus()) && "PENDING".equals(payment.getStatus())) {
+-            payment.setStatus("CANCELLED");
+-            order.setStatus("Cancelled");
+-            order.setPaymentStatus("CANCELLED");
++        if (OrderStatus.PENDING_PAYMENT.equals(order.getStatus()) && PaymentStatus.PENDING.equals(payment.getStatus())) {
++            payment.setStatus(PaymentStatus.CANCELLED);
++            order.setStatus(OrderStatus.CANCELLED);
++            order.setPaymentStatus(OrderPaymentStatus.CANCELLED);
+ 
+             rollBackInventory(order);
+ 
+@@ -189,7 +214,8 @@ public class OrderService {
+                 if (payment.getOrderCode() != null) {
+                     payOS.paymentRequests().cancel(payment.getOrderCode(), "Cancelled by customer or out of payment time");
+                 }
+-            } catch (Exception e) {
++            } catch (RuntimeException e) {
++                log.warn("Failed to cancel PayOS payment link for payment {}", paymentId, e);
+             }
+ 
+             paymentRepository.save(payment);
+@@ -264,8 +290,7 @@ public class OrderService {
+ 
+     @Transactional(readOnly = true)
+     public List<Order> getShippingQueueOrders() {
+-        List<String> shippingStatuses = List.of("Ready to Ship", "Delivering");
+-        return orderRepository.findByStatusIn(shippingStatuses);
++        return orderRepository.findByStatusIn(OrderStatus.SHIPPING_QUEUE);
+     }
+ 
+ 
+@@ -295,12 +320,14 @@ public class OrderService {
+         boolean isValidTransition = false;
+         Date now = new Date();
+ 
+-        if ("Ready to Ship".equals(currentStatus) && List.of("Delivering", "Completed", "Cancelled").contains(newStatus)) {
++        if (OrderStatus.READY_TO_SHIP.equals(currentStatus)
++                && List.of(OrderStatus.DELIVERING, OrderStatus.COMPLETED, OrderStatus.CANCELLED).contains(newStatus)) {
+             isValidTransition = true;
+-            if ("Delivering".equals(newStatus)) {
++            if (OrderStatus.DELIVERING.equals(newStatus)) {
+                 order.setReadyToShipDate(now);
+             }
+-        } else if ("Delivering".equals(currentStatus) && List.of("Completed", "Cancelled", "Delivery Failed").contains(newStatus)) {
++        } else if (OrderStatus.DELIVERING.equals(currentStatus)
++                && List.of(OrderStatus.COMPLETED, OrderStatus.CANCELLED, OrderStatus.DELIVERY_FAILED).contains(newStatus)) {
+             isValidTransition = true;
+         }
+ 
+diff --git a/src/main/java/com/example/PCOnlineShop/service/payment/PaymentService.java b/src/main/java/com/example/PCOnlineShop/service/payment/PaymentService.java
+index 3e0ad91..5c92690 100644
+--- a/src/main/java/com/example/PCOnlineShop/service/payment/PaymentService.java
++++ b/src/main/java/com/example/PCOnlineShop/service/payment/PaymentService.java
+@@ -1,10 +1,16 @@
+ package com.example.PCOnlineShop.service.payment;
+ 
++import com.example.PCOnlineShop.constant.OrderPaymentStatus;
++import com.example.PCOnlineShop.constant.OrderStatus;
++import com.example.PCOnlineShop.constant.PaymentStatus;
+ import com.example.PCOnlineShop.dto.payment.PaymentInfoDTO;
++import com.example.PCOnlineShop.dto.order.CheckoutDTO;
++import com.example.PCOnlineShop.model.account.Account;
+ import com.example.PCOnlineShop.model.order.Order;
+ import com.example.PCOnlineShop.model.order.OrderDetail;
+ import com.example.PCOnlineShop.model.payment.Payment;
+ import com.example.PCOnlineShop.repository.payment.PaymentRepository;
++import com.example.PCOnlineShop.service.cart.CartService;
+ import com.example.PCOnlineShop.service.order.OrderService;
+ import jakarta.persistence.EntityNotFoundException;
+ import lombok.extern.slf4j.Slf4j;
+@@ -17,6 +23,7 @@ import vn.payos.model.v2.paymentRequests.CreatePaymentLinkRequest;
+ import vn.payos.model.v2.paymentRequests.CreatePaymentLinkResponse;
+ import vn.payos.model.v2.paymentRequests.PaymentLink;
+ import vn.payos.model.v2.paymentRequests.PaymentLinkItem;
++import vn.payos.model.v2.paymentRequests.PaymentLinkStatus;
+ import vn.payos.model.webhooks.WebhookData;
+ 
+ import java.math.BigDecimal;
+@@ -29,43 +36,67 @@ import java.util.concurrent.ThreadLocalRandom;
+ @Slf4j
+ public class PaymentService {
+ 
+-    private static final String PAYMENT_PENDING = "PENDING";
+-    private static final String PAYMENT_SUCCESS = "SUCCESS";
+-    private static final String PAYOS_STATUS_PAID = "PAID";
++    private static final PaymentLinkStatus PAYOS_STATUS_PAID = PaymentLinkStatus.PAID;
++    private static final PaymentLinkStatus PAYOS_STATUS_CANCELLED = PaymentLinkStatus.CANCELLED;
++    private static final PaymentLinkStatus PAYOS_STATUS_EXPIRED = PaymentLinkStatus.EXPIRED;
+     private static final String PAYOS_SUCCESS_CODE = "00";
+-    private static final String ORDER_PENDING_PAYMENT = "Pending Payment";
+-    private static final String ORDER_READY_TO_SHIP = "Ready to Ship";
+-    private static final String ORDER_PAYMENT_PAID = "PAID";
+ 
+     private final String appBaseUrl;
+     private final PayOS payOS;
+     private final PaymentRepository paymentRepository;
+     private final OrderService orderService;
++    private final CartService cartService;
+ 
+     public PaymentService(PayOS payOS,
+                           PaymentRepository paymentRepository,
+                           @Lazy OrderService orderService,
++                          CartService cartService,
+                           @Value("${app.base-url}") String appBaseUrl) {
+         this.payOS = payOS;
+         this.paymentRepository = paymentRepository;
+         this.orderService = orderService;
++        this.cartService = cartService;
+         this.appBaseUrl = appBaseUrl;
+     }
+ 
++    public enum FailedPaymentResult {
++        CANCELLED,
++        PAID,
++        PENDING
++    }
++
++    public String createCheckoutPaymentLink(Account account, CheckoutDTO checkoutDTO) {
++        Payment payment = null;
++
++        try {
++            Order order = orderService.processCheckout(account, checkoutDTO);
++            payment = createPaymentRecord(order);
++            String checkoutUrl = createPayOSLink(payment);
++            cartService.clearSelectedItems(account);
++            return checkoutUrl;
++        } catch (RuntimeException e) {
++            if (payment != null) {
++                cancelPendingPaymentAfterCheckoutFailure(payment.getPaymentId(), e);
++            }
++            throw e;
++        }
++    }
++
+     @Transactional
+     public Payment createPaymentRecord(Order order) {
+         Payment payment = new Payment();
+         payment.setOrder(order);
+         payment.setAmount(BigDecimal.valueOf(order.getFinalAmount()));
+-        payment.setStatus(PAYMENT_PENDING);
++        payment.setStatus(PaymentStatus.PENDING);
++        payment.setOrderCode(generateUniqueOrderCode());
+         return paymentRepository.save(payment);
+     }
+ 
+-    @Transactional
+-    public String createPayOSLink(Payment payment) throws Exception {
+-        final long uniqueOrderCode = generateUniqueOrderCode();
+-        payment.setOrderCode(uniqueOrderCode);
+-        paymentRepository.save(payment);
++    public String createPayOSLink(Payment payment) {
++        if (payment.getOrderCode() == null) {
++            payment.setOrderCode(generateUniqueOrderCode());
++            payment = paymentRepository.save(payment);
++        }
+ 
+         final String description = "Payment for order #" + payment.getOrder().getOrderId();
+         final String returnUrl = buildCallbackUrl("/payment/callback/success");
+@@ -81,7 +112,7 @@ public class PaymentService {
+         }
+ 
+         CreatePaymentLinkRequest paymentData = CreatePaymentLinkRequest.builder()
+-                .orderCode(uniqueOrderCode)
++                .orderCode(payment.getOrderCode())
+                 .amount(payment.getAmount().longValue())
+                 .description(description)
+                 .items(items)
+@@ -97,11 +128,11 @@ public class PaymentService {
+     }
+ 
+     @Transactional
+-    public String getOrRegeneratePaymentUrl(long orderId) throws Exception {
++    public String getOrRegeneratePaymentUrl(long orderId) {
+         Payment payment = paymentRepository.findByOrder_OrderId(orderId)
+                 .orElseThrow(() -> new EntityNotFoundException("Payment info not found for order: " + orderId));
+ 
+-        if (!ORDER_PENDING_PAYMENT.equals(payment.getOrder().getStatus())) {
++        if (!OrderStatus.PENDING_PAYMENT.equals(payment.getOrder().getStatus())) {
+             throw new IllegalStateException("Order is not in Pending Payment state.");
+         }
+ 
+@@ -113,17 +144,18 @@ public class PaymentService {
+                     throw new IllegalStateException("Payment has already been completed for this order.");
+                 }
+             }
+-        } catch (Exception e) {
++        } catch (RuntimeException e) {
+             if (e instanceof IllegalStateException) {
+                 throw e;
+             }
++            log.warn("Unable to verify existing PayOS link for order {}", orderId, e);
+         }
+ 
+         return createPayOSLink(payment);
+     }
+ 
+     @Transactional
+-    public void handleWebhook(Object body) throws Exception {
++    public void handleWebhook(Object body) {
+         WebhookData webhookData = payOS.webhooks().verify(body);
+         long orderCode = webhookData.getOrderCode();
+         Payment payment = paymentRepository.findByOrderCode(orderCode)
+@@ -136,7 +168,7 @@ public class PaymentService {
+             payment.setRawPayload(webhookData.toString());
+         } else {
+             payment.setRawPayload(webhookData.toString());
+-            if (PAYMENT_PENDING.equals(payment.getStatus())) {
++            if (PaymentStatus.PENDING.equals(payment.getStatus())) {
+                 orderService.cancelOrderFromPaymentId(payment.getPaymentId());
+             }
+         }
+@@ -151,14 +183,14 @@ public class PaymentService {
+     public PaymentLink queryTransaction(long orderCode) {
+         try {
+             return payOS.paymentRequests().get(orderCode);
+-        } catch (Exception e) {
++        } catch (RuntimeException e) {
+             log.warn("Failed to query PayOS transaction for orderCode {}", orderCode, e);
+             return null;
+         }
+     }
+ 
+     @Transactional
+-    public boolean verifyPaymentStatus(long orderCode) throws Exception {
++    public boolean verifyPaymentStatus(long orderCode) {
+         PaymentLink transaction = queryTransaction(orderCode);
+         if (transaction == null || !PAYOS_STATUS_PAID.equals(transaction.getStatus())) {
+             return false;
+@@ -171,19 +203,29 @@ public class PaymentService {
+     }
+ 
+     @Transactional
+-    public void processFailedPayment(long orderCode) {
+-        try {
+-            Payment payment = paymentRepository.findByOrderCode(orderCode)
+-                    .orElseThrow(() -> new EntityNotFoundException("Not found"));
+-            PaymentLink transaction = queryTransaction(orderCode);
+-            if (transaction != null && PAYOS_STATUS_PAID.equals(transaction.getStatus())) {
+-                markPaymentSuccess(payment, null);
+-                return;
+-            }
++    public FailedPaymentResult processFailedPayment(long orderCode) {
++        Payment payment = paymentRepository.findByOrderCode(orderCode)
++                .orElseThrow(() -> new EntityNotFoundException("Payment info not found for orderCode: " + orderCode));
++
++        PaymentLink transaction = queryTransaction(orderCode);
++        if (transaction == null) {
++            log.warn("Skipped failed-payment cancellation because PayOS status could not be verified for orderCode {}", orderCode);
++            return FailedPaymentResult.PENDING;
++        }
++
++        PaymentLinkStatus payOSStatus = transaction.getStatus();
++        if (PAYOS_STATUS_PAID.equals(payOSStatus)) {
++            markPaymentSuccess(payment, null);
++            return FailedPaymentResult.PAID;
++        }
++
++        if (isPayOSCancellationStatus(payOSStatus)) {
+             orderService.cancelOrderFromPaymentId(payment.getPaymentId());
+-        } catch (Exception e) {
+-            log.warn("Failed to process failed payment for orderCode {}", orderCode, e);
++            return FailedPaymentResult.CANCELLED;
+         }
++
++        log.info("Failed-payment callback did not cancel orderCode {} because PayOS status is {}", orderCode, payOSStatus);
++        return FailedPaymentResult.PENDING;
+     }
+ 
+     @Transactional
+@@ -191,14 +233,18 @@ public class PaymentService {
+         Payment payment = paymentRepository.findById(paymentId)
+                 .orElseThrow(() -> new EntityNotFoundException("No payment found: " + paymentId));
+ 
+-        if (!PAYMENT_PENDING.equals(payment.getStatus())) {
++        if (!PaymentStatus.PENDING.equals(payment.getStatus())) {
+             return;
+         }
+ 
+         Long orderCode = payment.getOrderCode();
+         if (orderCode != null) {
+             PaymentLink transaction = queryTransaction(orderCode);
+-            if (transaction != null && PAYOS_STATUS_PAID.equals(transaction.getStatus())) {
++            if (transaction == null) {
++                log.warn("Skipped expiring payment {} because PayOS status could not be verified", paymentId);
++                return;
++            }
++            if (PAYOS_STATUS_PAID.equals(transaction.getStatus())) {
+                 markPaymentSuccess(payment, null);
+                 return;
+             }
+@@ -210,7 +256,7 @@ public class PaymentService {
+     public PaymentInfoDTO getPaymentInfoSafe(long orderId) {
+         try {
+             return getPaymentInfoByOrderId(orderId);
+-        } catch (Exception e) {
++        } catch (RuntimeException e) {
+             log.warn("Failed to get payment info for order {}", orderId, e);
+             return null;
+         }
+@@ -220,6 +266,20 @@ public class PaymentService {
+         return appBaseUrl.replaceAll("/+$", "") + path;
+     }
+ 
++    private void cancelPendingPaymentAfterCheckoutFailure(long paymentId, RuntimeException cause) {
++        try {
++            orderService.cancelOrderFromPaymentId(paymentId);
++        } catch (RuntimeException compensationException) {
++            log.error("Failed to compensate checkout payment {} after payment-link creation error", paymentId, compensationException);
++            cause.addSuppressed(compensationException);
++        }
++    }
++
++    private boolean isPayOSCancellationStatus(PaymentLinkStatus status) {
++        return PAYOS_STATUS_CANCELLED.equals(status)
++                || PAYOS_STATUS_EXPIRED.equals(status);
++    }
++
+     private long generateUniqueOrderCode() {
+         long orderCode;
+         do {
+@@ -229,17 +289,17 @@ public class PaymentService {
+     }
+ 
+     private void markPaymentSuccess(Payment payment, String gatewayPaymentId) {
+-        if (PAYMENT_SUCCESS.equals(payment.getStatus())) {
++        if (PaymentStatus.SUCCESS.equals(payment.getStatus())) {
+             return;
+         }
+ 
+         Order order = payment.getOrder();
+-        payment.setStatus(PAYMENT_SUCCESS);
++        payment.setStatus(PaymentStatus.SUCCESS);
+         if (gatewayPaymentId != null) {
+             payment.setGatewayPaymentId(gatewayPaymentId);
+         }
+-        order.setPaymentStatus(ORDER_PAYMENT_PAID);
+-        order.setStatus(ORDER_READY_TO_SHIP);
++        order.setPaymentStatus(OrderPaymentStatus.PAID);
++        order.setStatus(OrderStatus.READY_TO_SHIP);
+         order.setPaidAt(LocalDateTime.now());
+         paymentRepository.save(payment);
+     }
+diff --git a/src/main/java/com/example/PCOnlineShop/service/product/ComponentSpecService.java b/src/main/java/com/example/PCOnlineShop/service/product/ComponentSpecService.java
+index fbe20a9..74b3d98 100644
+--- a/src/main/java/com/example/PCOnlineShop/service/product/ComponentSpecService.java
++++ b/src/main/java/com/example/PCOnlineShop/service/product/ComponentSpecService.java
+@@ -372,7 +372,7 @@ public class ComponentSpecService {
+         try {
+             String value = params.get(key);
+             return value == null || value.isBlank() ? null : Integer.parseInt(value.trim());
+-        } catch (Exception e) {
++        } catch (NumberFormatException e) {
+             return null;
+         }
+     }
+diff --git a/src/main/java/com/example/PCOnlineShop/service/product/ProductService.java b/src/main/java/com/example/PCOnlineShop/service/product/ProductService.java
+index 613a803..96d7991 100644
+--- a/src/main/java/com/example/PCOnlineShop/service/product/ProductService.java
++++ b/src/main/java/com/example/PCOnlineShop/service/product/ProductService.java
+@@ -1,5 +1,6 @@
+ package com.example.PCOnlineShop.service.product;
+ 
++import com.example.PCOnlineShop.constant.OrderStatus;
+ import com.example.PCOnlineShop.model.product.Brand;
+ import com.example.PCOnlineShop.model.product.Category;
+ import com.example.PCOnlineShop.model.product.Product;
+@@ -22,12 +23,6 @@ public class ProductService {
+     private static final ProductLifecycleStatus PUBLIC_CATALOG_STATUS = ProductLifecycleStatus.SELLING;
+     private static final int FEATURED_PRODUCTS_LIMIT = 8;
+     private static final int RELATED_PRODUCTS_LIMIT = 8;
+-    private static final List<String> ACTIVE_ORDER_STATUSES = List.of(
+-            "Pending",
+-            "Processing",
+-            "Delivering",
+-            "Ready to Ship"
+-    );
+ 
+     private final ProductRepository productRepository;
+     private final BrandRepository brandRepository;
+@@ -117,7 +112,10 @@ public class ProductService {
+     }
+ 
+     public boolean hasActiveOrderReferences(int productId) {
+-        return orderDetailRepository.existsByProduct_ProductIdAndOrder_StatusIn(productId, ACTIVE_ORDER_STATUSES);
++        return orderDetailRepository.existsByProduct_ProductIdAndOrder_StatusIn(
++                productId,
++                OrderStatus.ACTIVE_PRODUCT_REFERENCE_STATUSES
++        );
+     }
+ 
+     public Page<Product> searchVisibleSellingProducts(Integer categoryId, Integer brandId, Pageable pageable) {

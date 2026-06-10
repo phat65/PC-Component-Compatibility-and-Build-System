@@ -6,6 +6,7 @@ import com.example.PCOnlineShop.service.order.OrderService;
 import com.example.PCOnlineShop.service.payment.PaymentService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -20,6 +21,7 @@ import java.util.Map;
 @Controller
 @RequestMapping("/payment")
 @RequiredArgsConstructor
+@Slf4j
 public class PaymentController {
 
     private final PaymentService paymentService;
@@ -37,7 +39,10 @@ public class PaymentController {
             } else {
                 redirectAttributes.addFlashAttribute("info", "Payment processing...");
             }
-        } catch (Exception e) {
+        } catch (EntityNotFoundException e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+        } catch (RuntimeException e) {
+            log.error("Unexpected error checking payment success callback for orderCode {}", orderCode, e);
             redirectAttributes.addFlashAttribute("error", "Error checking payment.");
         }
         return "redirect:/orders/list";
@@ -47,12 +52,25 @@ public class PaymentController {
     public String handleFailedCallback(@RequestParam(value = "orderCode", required = false) Long orderCode,
                                        RedirectAttributes redirectAttributes) {
         try {
-            if (orderCode != null) {
-                paymentService.processFailedPayment(orderCode);
+            if (orderCode == null) {
+                redirectAttributes.addFlashAttribute("error", "Payment Cancelled.");
+                return "redirect:/orders/list";
             }
-            redirectAttributes.addFlashAttribute("error", "Payment Cancelled.");
-        } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", "Unable to update cancelled payment.");
+
+            PaymentService.FailedPaymentResult result = paymentService.processFailedPayment(orderCode);
+            switch (result) {
+                case CANCELLED ->
+                        redirectAttributes.addFlashAttribute("error", "Payment Cancelled. Order inventory was released.");
+                case PAID ->
+                        redirectAttributes.addFlashAttribute("success", "Payment Successful. Order confirmed.");
+                case PENDING ->
+                        redirectAttributes.addFlashAttribute("info", "Payment was not confirmed as cancelled. You can continue payment from your order detail.");
+            }
+        } catch (EntityNotFoundException e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+        } catch (RuntimeException e) {
+            log.error("Unexpected error checking payment failed callback for orderCode {}", orderCode, e);
+            redirectAttributes.addFlashAttribute("error", "Unable to verify cancelled payment.");
         }
         return "redirect:/orders/list";
     }
@@ -68,8 +86,12 @@ public class PaymentController {
         } catch (SecurityException | EntityNotFoundException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
             return "redirect:/orders/list";
-        } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", "Unable to retrieve payment link: " + e.getMessage());
+        } catch (IllegalStateException e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+            return "redirect:/orders/detail/" + orderId;
+        } catch (RuntimeException e) {
+            log.error("Unexpected error retrieving payment link for order {}", orderId, e);
+            redirectAttributes.addFlashAttribute("error", "Unable to retrieve payment link. Please try again.");
             return "redirect:/orders/detail/" + orderId;
         }
     }
@@ -80,8 +102,11 @@ public class PaymentController {
         try {
             paymentService.handleWebhook(body);
             return ResponseEntity.ok("Webhook received");
-        } catch (Exception e) {
+        } catch (EntityNotFoundException | IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (RuntimeException e) {
+            log.error("Unexpected PayOS webhook processing error", e);
+            return ResponseEntity.internalServerError().body("Webhook processing failed");
         }
     }
 
@@ -100,8 +125,9 @@ public class PaymentController {
             return ResponseEntity.status(403).body(Map.of("error", e.getMessage()));
         } catch (EntityNotFoundException e) {
             return ResponseEntity.status(404).body(Map.of("error", e.getMessage()));
-        } catch (Exception e) {
-            return ResponseEntity.status(500).body(Map.of("error", e.getMessage()));
+        } catch (RuntimeException e) {
+            log.error("Unexpected error retrieving payment info for order {}", orderId, e);
+            return ResponseEntity.status(500).body(Map.of("error", "Unable to retrieve payment info."));
         }
     }
 

@@ -3,6 +3,7 @@ package com.example.PCOnlineShop.controller.blog;
 import com.example.PCOnlineShop.dto.blog.BlogLinkDto;
 import com.example.PCOnlineShop.service.blog.HacomScraperService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -13,6 +14,7 @@ import java.util.List;
 @Controller
 @RequiredArgsConstructor
 @RequestMapping("/blog")
+@Slf4j
 public class ExternalBlogController {
     private static final String HACOM_VIEW = "blog/hacom-list";
     private static final String REDIRECT_HACOM = "redirect:/blog/hacom";
@@ -26,7 +28,8 @@ public class ExternalBlogController {
         try {
             List<BlogLinkDto> links = scraperService.getLatest();
             model.addAttribute("links", links);
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
+            log.error("Unexpected error loading Hacom blog posts", e);
             model.addAttribute("links", List.of());
             model.addAttribute("error", "Unable to load blog posts at this time.");
         }

@@ -1,0 +1,98 @@
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] ----------------------< com.example:PCOnlineShop >----------------------
+[INFO] Building PCOnlineShop 0.0.1-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] >>> spring-boot:3.5.6:run (default-cli) > test-compile @ PCOnlineShop >>>
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ PCOnlineShop ---
+[INFO] Copying 3 resources from src\main\resources to target\classes
+[INFO] Copying 106 resources from src\main\resources to target\classes
+[INFO] 
+[INFO] --- compiler:3.14.0:compile (default-compile) @ PCOnlineShop ---
+[INFO] Recompiling the module because of changed source code.
+[INFO] Compiling 156 source files with javac [debug parameters release 21] to target\classes
+[WARNING] /C:/Project_phat/Team3_SWP391_SE1968_NJ/src/main/java/com/example/PCOnlineShop/config/auth/SecurityConfig.java:[54,54] org.springframework.security.web.util.matcher.AntPathRequestMatcher in org.springframework.security.web.util.matcher has been deprecated and marked for removal
+[WARNING] /C:/Project_phat/Team3_SWP391_SE1968_NJ/src/main/java/com/example/PCOnlineShop/config/auth/SecurityConfig.java:[127,51] org.springframework.security.web.util.matcher.AntPathRequestMatcher in org.springframework.security.web.util.matcher has been deprecated and marked for removal
+[INFO] /C:/Project_phat/Team3_SWP391_SE1968_NJ/src/main/java/com/example/PCOnlineShop/service/blog/HacomScraperService.java: C:\Project_phat\Team3_SWP391_SE1968_NJ\src\main\java\com\example\PCOnlineShop\service\blog\HacomScraperService.java uses or overrides a deprecated API.
+[INFO] /C:/Project_phat/Team3_SWP391_SE1968_NJ/src/main/java/com/example/PCOnlineShop/service/blog/HacomScraperService.java: Recompile with -Xlint:deprecation for details.
+[INFO] 
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ PCOnlineShop ---
+[INFO] skip non existing resourceDirectory C:\Project_phat\Team3_SWP391_SE1968_NJ\src\test\resources
+[INFO] 
+[INFO] --- compiler:3.14.0:testCompile (default-testCompile) @ PCOnlineShop ---
+[INFO] Recompiling the module because of changed dependency.
+[INFO] Compiling 7 source files with javac [debug parameters release 21] to target\test-classes
+[WARNING] /C:/Project_phat/Team3_SWP391_SE1968_NJ/src/test/java/com/example/PCOnlineShop/controller/build/CpuControllerTest.java:[31,6] org.springframework.boot.test.mock.mockito.MockBean in org.springframework.boot.test.mock.mockito has been deprecated and marked for removal
+[WARNING] /C:/Project_phat/Team3_SWP391_SE1968_NJ/src/test/java/com/example/PCOnlineShop/controller/build/CpuControllerTest.java:[31,6] org.springframework.boot.test.mock.mockito.MockBean in org.springframework.boot.test.mock.mockito has been deprecated and marked for removal
+[WARNING] /C:/Project_phat/Team3_SWP391_SE1968_NJ/src/test/java/com/example/PCOnlineShop/controller/build/CpuControllerTest.java:[31,6] org.springframework.boot.test.mock.mockito.MockBean in org.springframework.boot.test.mock.mockito has been deprecated and marked for removal
+[WARNING] /C:/Project_phat/Team3_SWP391_SE1968_NJ/src/test/java/com/example/PCOnlineShop/controller/build/CpuControllerTest.java:[31,6] org.springframework.boot.test.mock.mockito.MockBean in org.springframework.boot.test.mock.mockito has been deprecated and marked for removal
+[WARNING] /C:/Project_phat/Team3_SWP391_SE1968_NJ/src/test/java/com/example/PCOnlineShop/controller/build/CpuControllerTest.java:[31,6] org.springframework.boot.test.mock.mockito.MockBean in org.springframework.boot.test.mock.mockito has been deprecated and marked for removal
+[WARNING] /C:/Project_phat/Team3_SWP391_SE1968_NJ/src/test/java/com/example/PCOnlineShop/controller/build/CpuControllerTest.java:[34,6] org.springframework.boot.test.mock.mockito.MockBean in org.springframework.boot.test.mock.mockito has been deprecated and marked for removal
+[WARNING] /C:/Project_phat/Team3_SWP391_SE1968_NJ/src/test/java/com/example/PCOnlineShop/controller/build/CpuControllerTest.java:[34,6] org.springframework.boot.test.mock.mockito.MockBean in org.springframework.boot.test.mock.mockito has been deprecated and marked for removal
+[WARNING] /C:/Project_phat/Team3_SWP391_SE1968_NJ/src/test/java/com/example/PCOnlineShop/controller/build/CpuControllerTest.java:[34,6] org.springframework.boot.test.mock.mockito.MockBean in org.springframework.boot.test.mock.mockito has been deprecated and marked for removal
+[WARNING] /C:/Project_phat/Team3_SWP391_SE1968_NJ/src/test/java/com/example/PCOnlineShop/controller/build/CpuControllerTest.java:[34,6] org.springframework.boot.test.mock.mockito.MockBean in org.springframework.boot.test.mock.mockito has been deprecated and marked for removal
+[WARNING] /C:/Project_phat/Team3_SWP391_SE1968_NJ/src/test/java/com/example/PCOnlineShop/controller/build/CpuControllerTest.java:[34,6] org.springframework.boot.test.mock.mockito.MockBean in org.springframework.boot.test.mock.mockito has been deprecated and marked for removal
+[INFO] 
+[INFO] <<< spring-boot:3.5.6:run (default-cli) < test-compile @ PCOnlineShop <<<
+[INFO] 
+[INFO] 
+[INFO] --- spring-boot:3.5.6:run (default-cli) @ PCOnlineShop ---
+[INFO] Attaching agents: []
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v3.5.6)
+
+2026-06-10T17:33:52.647+07:00  INFO 17404 --- [pconlineshop] [           main] c.e.P.PcOnlineShopApplication            : Starting PcOnlineShopApplication using Java 21.0.10 with PID 17404 (C:\Project_phat\Team3_SWP391_SE1968_NJ\target\classes started by phank in C:\Project_phat\Team3_SWP391_SE1968_NJ)
+2026-06-10T17:33:52.649+07:00  INFO 17404 --- [pconlineshop] [           main] c.e.P.PcOnlineShopApplication            : No active profile set, falling back to 1 default profile: "dev"
+2026-06-10T17:33:53.791+07:00  INFO 17404 --- [pconlineshop] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-06-10T17:33:53.930+07:00  INFO 17404 --- [pconlineshop] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 130 ms. Found 20 JPA repository interfaces.
+2026-06-10T17:33:54.600+07:00  INFO 17404 --- [pconlineshop] [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8080 (http)
+2026-06-10T17:33:54.623+07:00  INFO 17404 --- [pconlineshop] [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-06-10T17:33:54.623+07:00  INFO 17404 --- [pconlineshop] [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.46]
+2026-06-10T17:33:54.674+07:00  INFO 17404 --- [pconlineshop] [           main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2026-06-10T17:33:54.675+07:00  INFO 17404 --- [pconlineshop] [           main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 1978 ms
+2026-06-10T17:33:55.030+07:00  INFO 17404 --- [pconlineshop] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-06-10T17:33:55.191+07:00  INFO 17404 --- [pconlineshop] [           main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@72a34537
+2026-06-10T17:33:55.192+07:00  INFO 17404 --- [pconlineshop] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2026-06-10T17:33:55.245+07:00  INFO 17404 --- [pconlineshop] [           main] org.flywaydb.core.FlywayExecutor         : Database: jdbc:mysql://localhost:3307/pconlineshop?useSSL=false&serverTimezone=Asia/Ho_Chi_Minh&allowPublicKeyRetrieval=true (MySQL 8.0)
+2026-06-10T17:33:55.461+07:00  INFO 17404 --- [pconlineshop] [           main] o.f.core.internal.command.DbValidate     : Successfully validated 15 migrations (execution time 00:00.086s)
+2026-06-10T17:33:55.478+07:00  INFO 17404 --- [pconlineshop] [           main] o.f.core.internal.command.DbMigrate      : Current version of schema `pconlineshop`: 15
+2026-06-10T17:33:55.481+07:00  INFO 17404 --- [pconlineshop] [           main] o.f.core.internal.command.DbMigrate      : Schema `pconlineshop` is up to date. No migration necessary.
+2026-06-10T17:33:55.582+07:00  INFO 17404 --- [pconlineshop] [           main] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-06-10T17:33:55.624+07:00  INFO 17404 --- [pconlineshop] [           main] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 6.6.29.Final
+2026-06-10T17:33:55.652+07:00  INFO 17404 --- [pconlineshop] [           main] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
+2026-06-10T17:33:55.884+07:00  INFO 17404 --- [pconlineshop] [           main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-06-10T17:33:55.966+07:00  INFO 17404 --- [pconlineshop] [           main] org.hibernate.orm.connections.pooling    : HHH10001005: Database info:
+	Database JDBC URL [Connecting through datasource 'HikariDataSource (HikariPool-1)']
+	Database driver: undefined/unknown
+	Database version: 8.0.45
+	Autocommit mode: undefined/unknown
+	Isolation level: undefined/unknown
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2026-06-10T17:33:57.220+07:00  INFO 17404 --- [pconlineshop] [           main] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-06-10T17:33:57.232+07:00  INFO 17404 --- [pconlineshop] [           main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-06-10T17:33:57.503+07:00  INFO 17404 --- [pconlineshop] [           main] o.s.d.j.r.query.QueryEnhancerFactory     : Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-06-10T17:33:59.994+07:00  WARN 17404 --- [pconlineshop] [           main] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2026-06-10T17:34:00.339+07:00  INFO 17404 --- [pconlineshop] [           main] o.s.b.a.e.web.EndpointLinksResolver      : Exposing 1 endpoint beneath base path '/actuator'
+2026-06-10T17:34:00.399+07:00  INFO 17404 --- [pconlineshop] [           main] r$InitializeUserDetailsManagerConfigurer : Global AuthenticationManager configured with UserDetailsService bean with name accountUserDetailsService
+2026-06-10T17:34:01.021+07:00  INFO 17404 --- [pconlineshop] [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8080 (http) with context path '/'
+2026-06-10T17:34:01.047+07:00  INFO 17404 --- [pconlineshop] [           main] c.e.P.PcOnlineShopApplication            : Started PcOnlineShopApplication in 8.865 seconds (process running for 9.195)
+2026-06-10T17:34:14.320+07:00  INFO 17404 --- [pconlineshop] [nio-8080-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-06-10T17:34:14.322+07:00  INFO 17404 --- [pconlineshop] [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2026-06-10T17:34:14.323+07:00  INFO 17404 --- [pconlineshop] [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 0 ms
+2026-06-10T17:34:14.444+07:00  WARN 17404 --- [pconlineshop] [nio-8080-exec-1] org.hibernate.orm.query                  : HHH90003004: firstResult/maxResults specified with collection fetch; applying in memory
+2026-06-10T17:45:10.463+07:00  WARN 17404 --- [pconlineshop] [nio-8080-exec-6] org.hibernate.orm.query                  : HHH90003004: firstResult/maxResults specified with collection fetch; applying in memory
+2026-06-10T17:45:20.649+07:00  WARN 17404 --- [pconlineshop] [nio-8080-exec-8] org.hibernate.orm.query                  : HHH90003004: firstResult/maxResults specified with collection fetch; applying in memory
+2026-06-10T17:45:50.414+07:00  WARN 17404 --- [pconlineshop] [nio-8080-exec-8] org.hibernate.orm.query                  : HHH90003004: firstResult/maxResults specified with collection fetch; applying in memory
+2026-06-10T17:55:32.143+07:00  WARN 17404 --- [pconlineshop] [nio-8080-exec-1] org.hibernate.orm.query                  : HHH90003004: firstResult/maxResults specified with collection fetch; applying in memory
+2026-06-10T17:55:46.991+07:00  WARN 17404 --- [pconlineshop] [nio-8080-exec-3] org.hibernate.orm.query                  : HHH90003004: firstResult/maxResults specified with collection fetch; applying in memory

@@ -9,6 +9,7 @@ import com.example.PCOnlineShop.service.address.AddressService;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -24,6 +25,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/address")
 @RequiredArgsConstructor
+@Slf4j
 public class AddressController {
 
     private final AddressService addressService;
@@ -59,7 +61,8 @@ public class AddressController {
             return ResponseEntity.ok(new AddressResponse(newAddress));
         } catch (IllegalArgumentException e) {
             return badRequest(e.getMessage());
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
+            log.error("Unexpected error adding address for account {}", account.getAccountId(), e);
             return systemError();
         }
     }
@@ -95,7 +98,8 @@ public class AddressController {
             return ResponseEntity.status(404).body(Map.of("error", e.getMessage()));
         } catch (SecurityException e) {
             return ResponseEntity.status(403).body(Map.of("error", e.getMessage()));
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
+            log.error("Unexpected error updating address {} for account {}", addressId, account.getAccountId(), e);
             return systemError();
         }
     }
@@ -117,7 +121,8 @@ public class AddressController {
             return ResponseEntity.status(404).body(Map.of("error", e.getMessage()));
         } catch (SecurityException e) {
             return ResponseEntity.status(403).body(Map.of("error", e.getMessage()));
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
+            log.error("Unexpected error setting default address {} for account {}", addressId, account.getAccountId(), e);
             return systemError();
         }
     }

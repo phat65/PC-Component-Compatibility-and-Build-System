@@ -9,6 +9,7 @@ import org.jsoup.select.Elements;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -32,7 +33,7 @@ public class HacomScraperService {
                         cache.clear();
                         cache.addAll(fresh);
                         lastFetch = System.currentTimeMillis();
-                    } catch (Exception e) {
+                    } catch (IOException e) {
                         log.warn("Failed to refresh Hacom blog cache", e);
                     }
                 }
@@ -50,12 +51,12 @@ public class HacomScraperService {
                 cache.addAll(fresh);
                 lastFetch = System.currentTimeMillis();
             }
-        } catch (Exception e) {
+        } catch (IOException e) {
             log.warn("Scheduled Hacom blog refresh failed", e);
         }
     }
 
-    private List<BlogLinkDto> fetchFromHacom() throws Exception {
+    private List<BlogLinkDto> fetchFromHacom() throws IOException {
         List<BlogLinkDto> result = new ArrayList<>();
 
         Document doc = Jsoup.connect(HACOM_TIN_TUC)

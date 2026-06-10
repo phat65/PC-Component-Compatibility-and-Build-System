@@ -2,7 +2,9 @@ package com.example.PCOnlineShop.controller.staff;
 
 import com.example.PCOnlineShop.model.order.Order;
 import com.example.PCOnlineShop.service.order.OrderService;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,6 +19,7 @@ import java.util.List;
 @Controller
 @RequestMapping("/staff/shipping")
 @RequiredArgsConstructor
+@Slf4j
 public class StaffShippingController {
     private static final String SHIPPING_LIST_VIEW = "staffshipping/shipping-list";
     private static final String REDIRECT_SHIPPING_LIST = "redirect:/staff/shipping/list";
@@ -37,8 +40,11 @@ public class StaffShippingController {
         try {
             String result = orderService.processShippingStatusUpdate(orderId, newStatus);
             addStatusMessage(redirectAttributes, result);
-        } catch (Exception e) {
+        } catch (IllegalArgumentException | EntityNotFoundException e) {
             redirectAttributes.addFlashAttribute("error", "Error: " + e.getMessage());
+        } catch (RuntimeException e) {
+            log.error("Unexpected error updating shipping status for order {}", orderId, e);
+            redirectAttributes.addFlashAttribute("error", "Unable to update shipping status. Please try again.");
         }
 
         return REDIRECT_SHIPPING_LIST;

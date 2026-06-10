@@ -1,5 +1,6 @@
 package com.example.PCOnlineShop.service.dashboard;
 
+import com.example.PCOnlineShop.constant.OrderStatus;
 import com.example.PCOnlineShop.constant.RoleName;
 import com.example.PCOnlineShop.dto.dashboard.AdminDashboardStatsDTO;
 import com.example.PCOnlineShop.dto.dashboard.StaffDashboardStatsDTO;
@@ -14,9 +15,6 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 public class DashboardService {
-    private static final String ORDER_READY_TO_SHIP = "Ready to Ship";
-    private static final String ORDER_COMPLETED = "Completed";
-
     private final AccountRepository accountRepository;
     private final ProductRepository productRepository;
     private final OrderRepository orderRepository;
@@ -34,8 +32,8 @@ public class DashboardService {
 
     public StaffDashboardStatsDTO getStaffStats() {
         return new StaffDashboardStatsDTO(
-                orderRepository.countByStatus(ORDER_READY_TO_SHIP),
-                orderRepository.countByStatus(ORDER_COMPLETED),
+                orderRepository.countByStatus(OrderStatus.READY_TO_SHIP),
+                orderRepository.countByStatus(OrderStatus.COMPLETED),
                 productRepository.count(),
                 feedbackRepository.count()
         );

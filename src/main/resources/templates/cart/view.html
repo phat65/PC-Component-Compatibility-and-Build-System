@@ -6,7 +6,14 @@
 <th:block th:fragment="content">
 <section class="commerce-page">
     <div class="container cart-container">
-        <h1 class="commerce-title">Shopping Cart</h1>
+        <div class="section-header">
+            <div>
+                <p class="section-kicker">Cart</p>
+                <h1 class="commerce-title app-mb-1">Shopping Cart</h1>
+                <p class="section-subtitle app-mb-0">Review selected components, adjust quantities, and continue to secure checkout.</p>
+            </div>
+            <a th:href="@{/products}" class="btn btn-app-outline">Continue Shopping</a>
+        </div>
 
         <div id="cart-messages">
             <div th:if="${success}" class="alert alert-success" role="alert">
@@ -92,10 +99,23 @@
 
             <div class="col-md-4">
                 <aside class="commerce-card cart-summary">
-                    <h3>Summary</h3>
+                    <h3>Order Summary</h3>
                     <div class="summary-line">
                         <span>Selected Items (<span id="selected-items-count">0</span>)</span>
                         <span id="selected-items-total" class="summary-value">$0</span>
+                    </div>
+                    <div class="summary-line">
+                        <span>Shipping Fee</span>
+                        <span class="summary-value">Calculated at checkout</span>
+                    </div>
+                    <div class="form-group app-mt-3">
+                        <label for="discount-code">Discount Code</label>
+                        <div class="input-group">
+                            <input id="discount-code" type="text" class="form-control" placeholder="Enter code">
+                            <span class="input-group-btn">
+                                <button class="btn btn-app-outline" type="button">Apply</button>
+                            </span>
+                        </div>
                     </div>
                     <div class="summary-line grand-total">
                         <span>Grand Total</span>

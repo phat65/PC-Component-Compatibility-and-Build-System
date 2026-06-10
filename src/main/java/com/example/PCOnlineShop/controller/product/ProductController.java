@@ -11,6 +11,7 @@ import com.example.PCOnlineShop.service.product.ProductService;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -18,11 +19,13 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.io.IOException;
 import java.util.*;
 
 @Controller
 @RequestMapping("/staff/products")
 @RequiredArgsConstructor
+@Slf4j
 public class ProductController {
 
     private final ProductService productService;
@@ -126,8 +129,22 @@ public class ProductController {
 
         try {
             productCommandService.createProduct(product, categoryIds, brandId, params, imageFiles);
-        } catch (Exception e) {
-            model.addAttribute("error", "Failed to save product: " + e.getMessage());
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            model.addAttribute("error", e.getMessage());
+            model.addAttribute("isEdit", false);
+            model.addAttribute("submittedCategoryId", primaryCategoryId);
+            model.addAttribute("submittedBrandId", brandId);
+            return "product/product-form";
+        } catch (IOException e) {
+            log.error("Image upload failed while creating product {}", product.getProductName(), e);
+            model.addAttribute("error", "Failed to save product images. Please try again.");
+            model.addAttribute("isEdit", false);
+            model.addAttribute("submittedCategoryId", primaryCategoryId);
+            model.addAttribute("submittedBrandId", brandId);
+            return "product/product-form";
+        } catch (RuntimeException e) {
+            log.error("Unexpected error creating product {}", product.getProductName(), e);
+            model.addAttribute("error", "Failed to save product. Please try again.");
             model.addAttribute("isEdit", false);
             model.addAttribute("submittedCategoryId", primaryCategoryId);
             model.addAttribute("submittedBrandId", brandId);
@@ -188,8 +205,24 @@ public class ProductController {
 
         try {
             productCommandService.updateProduct(incoming, categoryIds, params, imageFiles, deleteImageIds);
-        } catch (Exception ex) {
+        } catch (IllegalArgumentException | IllegalStateException ex) {
             model.addAttribute("error", ex.getMessage());
+            model.addAttribute("isEdit", true);
+            incoming.setImages(current.getImages());
+            incoming.setBrand(current.getBrand());
+            incoming.setCategories(current.getCategories());
+            return "product/product-update";
+        } catch (IOException ex) {
+            log.error("Image upload failed while updating product {}", incoming.getProductId(), ex);
+            model.addAttribute("error", "Failed to save product images. Please try again.");
+            model.addAttribute("isEdit", true);
+            incoming.setImages(current.getImages());
+            incoming.setBrand(current.getBrand());
+            incoming.setCategories(current.getCategories());
+            return "product/product-update";
+        } catch (RuntimeException ex) {
+            log.error("Unexpected error updating product {}", incoming.getProductId(), ex);
+            model.addAttribute("error", "Failed to update product. Please try again.");
             model.addAttribute("isEdit", true);
             incoming.setImages(current.getImages());
             incoming.setBrand(current.getBrand());

@@ -7,43 +7,114 @@
 <div class="storefront-page">
     <section class="page-section">
         <div class="container">
-            <div class="section-header">
-                <h1 class="section-title app-mb-0" th:text="'Category: ' + ${category.categoryName}">Category Name</h1>
-                <a th:href="@{/products}" class="btn btn-app-outline">&larr; Back to All Products</a>
+            <div class="breadcrumb-bar" aria-label="Breadcrumb">
+                <a th:href="@{/home}">Home</a>
+                <span>/</span>
+                <a th:href="@{/products}">Products</a>
+                <span>/</span>
+                <span th:text="${category.categoryName}">Category</span>
             </div>
 
-            <div th:if="${products == null or #lists.isEmpty(products)}" class="empty-state-panel">
-                <h3>No products in this category</h3>
-                <p>Browse all products or choose another category.</p>
-                <a th:href="@{/products}" class="btn btn-app-primary">Browse Products</a>
+            <div class="listing-toolbar">
+                <div>
+                    <p class="section-kicker">Category</p>
+                    <h1 class="section-title app-mb-1" th:text="${category.categoryName}">Graphics Cards</h1>
+                    <p class="section-subtitle app-mb-0"
+                       th:text="${category.description != null and !#strings.isEmpty(category.description) ? category.description : 'Browse compatible PC hardware and gaming components in this category.'}">
+                        Category description
+                    </p>
+                </div>
+                <a th:href="@{/products}" class="btn btn-app-outline">Back to All Products</a>
             </div>
-            <div class="product-grid" th:unless="${products == null or #lists.isEmpty(products)}">
-                <article class="product-card" th:each="p : ${products}"
-                         th:with="imageUrl=${(p != null and p.images != null and !p.images.isEmpty() and p.images[0].imageUrl != null and !#strings.isEmpty(p.images[0].imageUrl)) ? p.images[0].imageUrl : '/images/no-image.svg'}">
-                    <img th:src="@{${imageUrl}}"
-                         th:attr="onerror=|this.onerror=null;this.src='@{/images/no-image.svg}';|"
-                         alt="Product image"
-                         class="product-card-image">
-                    <div class="product-card-body">
-                        <h3 class="product-card-title" th:text="${p.productName}">Product Name</h3>
-                        <p class="product-price" th:text="'$' + ${p.price}">0.00</p>
-                        <a th:href="@{/products/{id}(id=${p.productId})}"
-                           class="btn btn-app-primary">View Details</a>
+
+            <div class="listing-layout">
+                <aside>
+                    <form th:action="@{'/category/' + ${category.categoryId}}" method="get" class="filter-panel">
+                        <div class="filter-group">
+                            <h3>Sort</h3>
+                            <select name="sortDir" class="form-control">
+                                <option value="desc" th:selected="${sortDir == 'desc'}">Newest / High First</option>
+                                <option value="asc" th:selected="${sortDir == 'asc'}">Low First</option>
+                            </select>
+                            <input type="hidden" name="sortField" th:value="${sortField}">
+                        </div>
+
+                        <div class="filter-group">
+                            <h3>Compatibility</h3>
+                            <label class="filter-check"><input type="checkbox" disabled> Socket AM4 / AM5</label>
+                            <label class="filter-check"><input type="checkbox" disabled> LGA1700 / LGA1200</label>
+                            <label class="filter-check"><input type="checkbox" disabled> DDR4 / DDR5</label>
+                            <label class="filter-check"><input type="checkbox" disabled> PCIe 4.0 / 5.0</label>
+                            <label class="filter-check"><input type="checkbox" disabled> ATX / Micro-ATX</label>
+                        </div>
+
+                        <div class="filter-group">
+                            <h3>Availability</h3>
+                            <label class="filter-check"><input type="checkbox" disabled checked> In stock</label>
+                            <label class="filter-check"><input type="checkbox" disabled> Rating 4 stars and up</label>
+                        </div>
+
+                        <button type="submit" class="btn btn-app-primary btn-block">Apply</button>
+                    </form>
+                </aside>
+
+                <div>
+                    <div class="listing-toolbar">
+                        <p class="app-mb-0 text-muted">
+                            <span th:text="${products != null ? #lists.size(products) : 0}">0</span>
+                            products in category
+                        </p>
+                        <div class="view-toggle" aria-label="View toggle">
+                            <button type="button" class="active" aria-label="Grid view"><i class="fa fa-th"></i></button>
+                            <button type="button" aria-label="List view"><i class="fa fa-list"></i></button>
+                        </div>
                     </div>
-                </article>
-            </div>
 
-            <nav class="app-mt-5 text-center" aria-label="Category product pages" th:if="${pageNumbers != null}">
-                <ul class="pagination">
-                    <li class="page-item" th:each="i : ${pageNumbers}"
-                        th:classappend="${i == currentPage} ? ' active' : ''">
-                        <a class="page-link"
-                           th:text="${i + 1}"
-                           th:href="@{'/category/' + ${category.categoryId} + '?page=' + ${i}}">
-                        </a>
-                    </li>
-                </ul>
-            </nav>
+                    <div th:if="${products == null or #lists.isEmpty(products)}" class="empty-state-panel">
+                        <h3>No products in this category</h3>
+                        <p>Browse all products or choose another category.</p>
+                        <a th:href="@{/products}" class="btn btn-app-primary">Browse Products</a>
+                    </div>
+
+                    <div class="product-grid" th:unless="${products == null or #lists.isEmpty(products)}">
+                        <article class="product-card" th:each="p, iter : ${products}"
+                                 th:with="imageUrl=${(p != null and p.images != null and !p.images.isEmpty() and p.images[0].imageUrl != null and !#strings.isEmpty(p.images[0].imageUrl)) ? p.images[0].imageUrl : '/images/no-image.svg'}">
+                            <span class="product-badge" th:text="${iter.index % 2 == 0 ? 'Best Seller' : 'Ready to Ship'}">Best Seller</span>
+                            <img th:src="@{${imageUrl}}"
+                                 th:attr="onerror=|this.onerror=null;this.src='@{/images/no-image.svg}';|"
+                                 alt="Product image"
+                                 class="product-card-image">
+                            <div class="product-card-body">
+                                <div class="product-brand" th:text="${p.brand != null ? p.brand.name : 'PCOnlineShop'}">Brand</div>
+                                <h3 class="product-card-title" th:text="${p.productName}">Product Name</h3>
+                                <p class="product-spec-line" th:text="${p.specification != null and !#strings.isEmpty(p.specification) ? p.specification : 'Compatible PC component'}">Specification</p>
+                                <div class="product-rating"><i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star-o"></i></div>
+                                <p class="product-price" th:text="'$' + ${p.price}">$0.00</p>
+                                <span th:class="${p.inventoryQuantity != null and p.inventoryQuantity > 0 ? 'stock-badge' : 'stock-badge out'}"
+                                      th:text="${p.inventoryQuantity != null and p.inventoryQuantity > 0 ? 'In Stock' : 'Out of Stock'}">In Stock</span>
+                                <div class="card-actions app-mt-3">
+                                    <a th:href="@{/products/{id}(id=${p.productId})}" class="btn btn-app-primary">Add to Cart</a>
+                                    <a th:href="@{/products/{id}(id=${p.productId})}" class="btn btn-app-outline">Compare</a>
+                                </div>
+                            </div>
+                        </article>
+                    </div>
+
+                    <nav class="app-mt-5 text-center" aria-label="Category product pages" th:if="${pageNumbers != null and !#lists.isEmpty(pageNumbers)}">
+                        <ul class="pagination">
+                            <li class="page-item" th:each="i : ${pageNumbers}"
+                                th:classappend="${i == currentPage} ? ' active' : ''">
+                                <a class="page-link"
+                                   th:text="${i + 1}"
+                                   th:href="@{'/category/' + ${category.categoryId} + '?page=' + ${i}
+                                        + '&sortField=' + ${sortField}
+                                        + '&sortDir=' + ${sortDir}}">
+                                </a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            </div>
         </div>
     </section>
 </div>

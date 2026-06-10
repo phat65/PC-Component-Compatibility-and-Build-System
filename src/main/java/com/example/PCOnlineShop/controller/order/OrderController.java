@@ -4,13 +4,13 @@ import com.example.PCOnlineShop.dto.order.CheckoutDTO;
 import com.example.PCOnlineShop.dto.order.CheckoutPageDTO;
 import com.example.PCOnlineShop.model.account.Account;
 import com.example.PCOnlineShop.model.order.Order;
-import com.example.PCOnlineShop.model.payment.Payment;
 import com.example.PCOnlineShop.service.account.AccountService;
-import com.example.PCOnlineShop.service.cart.CartService;
 import com.example.PCOnlineShop.service.order.OrderService;
 import com.example.PCOnlineShop.service.payment.PaymentService;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -24,10 +24,10 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 @Controller
 @RequestMapping("/orders")
 @RequiredArgsConstructor
+@Slf4j
 public class OrderController {
 
     private final OrderService orderService;
-    private final CartService cartService;
     private final PaymentService paymentService;
     private final AccountService accountService;
 
@@ -76,8 +76,12 @@ public class OrderController {
             model.addAttribute("pageTitle", "Order Detail #" + order.getOrderId());
             model.addAttribute("paymentInfo", paymentService.getPaymentInfoSafe(id));
             return "orders/order-detail";
-        } catch (Exception e) {
+        } catch (SecurityException | EntityNotFoundException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
+            return "redirect:/orders/list";
+        } catch (RuntimeException e) {
+            log.error("Unexpected error loading order detail {}", id, e);
+            redirectAttributes.addFlashAttribute("error", "Unable to load order detail.");
             return "redirect:/orders/list";
         }
     }
@@ -128,23 +132,29 @@ public class OrderController {
                 model.addAttribute("pageTitle", "Checkout");
                 model.addAttribute("postActionUrl", "/orders/checkout");
                 return "orders/checkout";
-            } catch (Exception e) {
+            } catch (IllegalStateException e) {
+                redirectAttributes.addFlashAttribute("error", e.getMessage());
+                return "redirect:/cart";
+            } catch (RuntimeException e) {
+                log.error("Unexpected error rebuilding checkout form for account {}", currentAccount.getAccountId(), e);
+                redirectAttributes.addFlashAttribute("error", "Unable to load checkout data.");
                 return "redirect:/cart";
             }
         }
 
         try {
-            Order newOrder = orderService.processCheckout(currentAccount, checkoutDTO);
-            Payment newPayment = paymentService.createPaymentRecord(newOrder);
-            String payosCheckoutUrl = paymentService.createPayOSLink(newPayment);
-            cartService.clearSelectedItems(currentAccount);
+            String payosCheckoutUrl = paymentService.createCheckoutPaymentLink(currentAccount, checkoutDTO);
             return "redirect:" + payosCheckoutUrl;
 
         } catch (IllegalStateException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
             return "redirect:/cart";
-        } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", "Unable to create payment: " + e.getMessage());
+        } catch (IllegalArgumentException | EntityNotFoundException e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+            return "redirect:/orders/checkout";
+        } catch (RuntimeException e) {
+            log.error("Unexpected error processing checkout for account {}", currentAccount.getAccountId(), e);
+            redirectAttributes.addFlashAttribute("error", "Unable to create payment. Please try again.");
             return "redirect:/orders/checkout";
         }
     }

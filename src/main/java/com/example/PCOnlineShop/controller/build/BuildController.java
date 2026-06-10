@@ -4,6 +4,8 @@ import com.example.PCOnlineShop.dto.build.BuildItemDto;
 import com.example.PCOnlineShop.model.account.Account;
 import com.example.PCOnlineShop.service.account.AccountService;
 import com.example.PCOnlineShop.service.cart.CartService;
+import jakarta.persistence.EntityNotFoundException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -18,6 +20,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 @Controller
 @SessionAttributes({"buildItems"})
 @RequestMapping("/build")
+@Slf4j
 public class BuildController {
     private static final String BUILD_START_VIEW = "build/build-pc";
     private static final String PRESET_RESULT_VIEW = "build/preset-result";
@@ -80,8 +83,12 @@ public class BuildController {
             sessionStatus.setComplete();
             redirectAttributes.addFlashAttribute("success", "PC build has been added to your cart.");
             return "redirect:/cart";
-        } catch (Exception e) {
+        } catch (IllegalArgumentException | EntityNotFoundException e) {
             redirectAttributes.addFlashAttribute("error", "Unable to save PC build: " + e.getMessage());
+            return "redirect:/build/start";
+        } catch (RuntimeException e) {
+            log.error("Unexpected error saving PC build for account {}", account.getAccountId(), e);
+            redirectAttributes.addFlashAttribute("error", "Unable to save PC build. Please try again.");
             return "redirect:/build/start";
         }
     }

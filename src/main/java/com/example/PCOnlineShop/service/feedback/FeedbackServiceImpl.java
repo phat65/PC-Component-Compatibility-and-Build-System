@@ -13,6 +13,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.example.PCOnlineShop.constant.OrderStatus;
 import com.example.PCOnlineShop.model.account.Account;
 import com.example.PCOnlineShop.model.feedback.Feedback;
 import com.example.PCOnlineShop.model.product.Product;
@@ -97,7 +98,7 @@ public class FeedbackServiceImpl implements FeedbackService {
 
         boolean hasPurchased = orderDetailRepository
                 .existsByOrder_Account_AccountIdAndProduct_ProductIdAndOrder_Status(
-                        accountId, productId, "Completed");
+                        accountId, productId, OrderStatus.COMPLETED);
 
         if (!hasPurchased)
             throw new IllegalArgumentException("You can review only the products you've purchased!");

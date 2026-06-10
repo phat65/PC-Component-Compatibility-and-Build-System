@@ -1,5 +1,6 @@
 package com.example.PCOnlineShop.service.product;
 
+import com.example.PCOnlineShop.constant.OrderStatus;
 import com.example.PCOnlineShop.model.product.Brand;
 import com.example.PCOnlineShop.model.product.Category;
 import com.example.PCOnlineShop.model.product.Product;
@@ -22,12 +23,6 @@ public class ProductService {
     private static final ProductLifecycleStatus PUBLIC_CATALOG_STATUS = ProductLifecycleStatus.SELLING;
     private static final int FEATURED_PRODUCTS_LIMIT = 8;
     private static final int RELATED_PRODUCTS_LIMIT = 8;
-    private static final List<String> ACTIVE_ORDER_STATUSES = List.of(
-            "Pending",
-            "Processing",
-            "Delivering",
-            "Ready to Ship"
-    );
 
     private final ProductRepository productRepository;
     private final BrandRepository brandRepository;
@@ -117,7 +112,10 @@ public class ProductService {
     }
 
     public boolean hasActiveOrderReferences(int productId) {
-        return orderDetailRepository.existsByProduct_ProductIdAndOrder_StatusIn(productId, ACTIVE_ORDER_STATUSES);
+        return orderDetailRepository.existsByProduct_ProductIdAndOrder_StatusIn(
+                productId,
+                OrderStatus.ACTIVE_PRODUCT_REFERENCE_STATUSES
+        );
     }
 
     public Page<Product> searchVisibleSellingProducts(Integer categoryId, Integer brandId, Pageable pageable) {

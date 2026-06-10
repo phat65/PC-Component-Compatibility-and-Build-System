@@ -7,104 +7,150 @@
 <div class="storefront-page">
     <section class="page-section">
         <div class="container">
-            <h1 class="section-title">All Products</h1>
+            <div class="breadcrumb-bar" aria-label="Breadcrumb">
+                <a th:href="@{/home}">Home</a>
+                <span>/</span>
+                <span>Products</span>
+            </div>
 
-            <form th:action="@{/products}" method="get" class="filter-panel app-mb-4">
-                <div class="row">
-                    <div class="col-md-3 col-lg-2">
-                        <label class="form-label">Category</label>
-                        <select name="category" class="form-control">
-                            <option value="">All</option>
-                            <option th:each="c : ${categories}"
-                                    th:value="${c.categoryId}"
-                                    th:text="${c.categoryName}"
-                                    th:selected="${selectedCategory == c.categoryId}">
-                            </option>
-                        </select>
-                    </div>
+            <div class="listing-toolbar">
+                <div>
+                    <p class="section-kicker">Hardware Catalog</p>
+                    <h1 class="section-title app-mb-1">PC Components and Gaming Gear</h1>
+                    <p class="section-subtitle app-mb-0">Filter by category, brand, price, and performance needs.</p>
+                </div>
+                <div class="view-toggle" aria-label="View toggle">
+                    <button type="button" class="active" aria-label="Grid view"><i class="fa fa-th"></i></button>
+                    <button type="button" aria-label="List view"><i class="fa fa-list"></i></button>
+                </div>
+            </div>
 
-                    <div class="col-md-3 col-lg-2">
-                        <label class="form-label">Brand</label>
-                        <select name="brand" class="form-control">
-                            <option value="">All</option>
-                            <option th:each="b : ${brands}"
-                                    th:value="${b.brandId}"
-                                    th:text="${b.name}"
-                                    th:selected="${selectedBrand == b.brandId}">
-                            </option>
-                        </select>
-                    </div>
-
-                    <div class="col-md-4 col-lg-3">
-                        <label class="form-label">Price Range ($)</label>
-                        <div class="input-group">
-                            <input type="number" name="minPrice" th:value="${minPrice}" placeholder="Min"
-                                   class="form-control">
-                            <span class="input-group-addon">to</span>
-                            <input type="number" name="maxPrice" th:value="${maxPrice}" placeholder="Max"
+            <div class="listing-layout">
+                <aside>
+                    <form th:action="@{/products}" method="get" class="filter-panel">
+                        <div class="filter-group">
+                            <h3>Search</h3>
+                            <input type="text" name="keyword" th:value="${keyword}" placeholder="GPU, DDR5, AM5..."
                                    class="form-control">
                         </div>
+
+                        <div class="filter-group">
+                            <h3>Category</h3>
+                            <select name="category" class="form-control">
+                                <option value="">All Categories</option>
+                                <option th:each="c : ${categories}"
+                                        th:value="${c.categoryId}"
+                                        th:text="${c.categoryName}"
+                                        th:selected="${selectedCategory == c.categoryId}">
+                                </option>
+                            </select>
+                        </div>
+
+                        <div class="filter-group">
+                            <h3>Brand</h3>
+                            <select name="brand" class="form-control">
+                                <option value="">All Brands</option>
+                                <option th:each="b : ${brands}"
+                                        th:value="${b.brandId}"
+                                        th:text="${b.name}"
+                                        th:selected="${selectedBrand == b.brandId}">
+                                </option>
+                            </select>
+                        </div>
+
+                        <div class="filter-group">
+                            <h3>Price Range</h3>
+                            <div class="row">
+                                <div class="col-xs-6">
+                                    <input type="number" name="minPrice" th:value="${minPrice}" placeholder="Min"
+                                           class="form-control">
+                                </div>
+                                <div class="col-xs-6">
+                                    <input type="number" name="maxPrice" th:value="${maxPrice}" placeholder="Max"
+                                           class="form-control">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="filter-group">
+                            <h3>Sort</h3>
+                            <select name="sortDir" class="form-control">
+                                <option value="desc" th:selected="${sortDir == 'desc'}">Price: High to Low</option>
+                                <option value="asc" th:selected="${sortDir == 'asc'}">Price: Low to High</option>
+                            </select>
+                            <input type="hidden" name="sortField" value="price">
+                        </div>
+
+                
+
+                        <div class="app-flex app-gap-2">
+                            <button type="submit" class="btn btn-app-primary btn-block">Apply</button>
+                            <a th:href="@{/products}" class="btn btn-app-outline btn-block">Clear</a>
+                        </div>
+                    </form>
+                </aside>
+
+                <div>
+                    <div class="listing-toolbar">
+                        <p class="app-mb-0 text-muted">
+                            <span th:text="${products != null ? #lists.size(products) : 0}">0</span>
+                            products shown
+                        </p>
+                        <p class="app-mb-0 text-muted">Responsive grid: 4 / 2 / 1 columns</p>
                     </div>
 
-                    <div class="col-md-3 col-lg-2">
-                        <label class="form-label">Sort by Price</label>
-                        <select name="sortDir" class="form-control">
-                            <option value="asc" th:selected="${sortDir == 'asc'}">Low to High</option>
-                            <option value="desc" th:selected="${sortDir == 'desc'}">High to Low</option>
-                        </select>
-                        <input type="hidden" name="sortField" value="price"/>
+                    <div th:if="${products == null or #lists.isEmpty(products)}" class="empty-state-panel">
+                        <h3>No products found</h3>
+                        <p>Try changing your filters or search keyword.</p>
+                        <a th:href="@{/products}" class="btn btn-app-outline">Clear Filters</a>
                     </div>
 
-                    <div class="col-md-6 col-lg-2">
-                        <label class="form-label">Search</label>
-                        <input type="text" name="keyword" th:value="${keyword}"
-                               placeholder="Search products..." class="form-control">
+                    <div class="product-grid" th:unless="${products == null or #lists.isEmpty(products)}">
+                        <article class="product-card" th:each="p, iter : ${products}"
+                                 th:with="imageUrl=${(p != null and p.images != null and !p.images.isEmpty() and p.images[0].imageUrl != null and !#strings.isEmpty(p.images[0].imageUrl)) ? p.images[0].imageUrl : '/images/no-image.svg'}">
+                            <span class="product-badge" th:text="${iter.index % 4 == 0 ? 'New' : (iter.index % 4 == 1 ? 'Best Seller' : (iter.index % 4 == 2 ? 'Sale' : 'Limited'))}">New</span>
+                            <img th:src="@{${imageUrl}}"
+                                 th:attr="onerror=|this.onerror=null;this.src='@{/images/no-image.svg}';|"
+                                 alt="Product image"
+                                 class="product-card-image">
+                            <div class="product-card-body">
+                                <div class="product-brand" th:text="${p.brand != null ? p.brand.name : 'PCOnlineShop'}">Brand</div>
+                                <h3 class="product-card-title" th:text="${p.productName}">Product Name</h3>
+                                <p class="product-spec-line" th:text="${p.specification != null and !#strings.isEmpty(p.specification) ? p.specification : 'Compatible PC component'}">Specification</p>
+                                <div class="product-rating"><i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star-o"></i></div>
+                                <p class="product-price" th:text="'$' + ${p.price}">$0.00</p>
+                                <div class="app-flex app-align-center app-justify-between app-gap-2">
+                                    <span th:class="${p.inventoryQuantity != null and p.inventoryQuantity > 0 ? (p.inventoryQuantity <= 5 ? 'stock-badge low' : 'stock-badge') : 'stock-badge out'}"
+                                          th:text="${p.inventoryQuantity != null and p.inventoryQuantity > 0 ? (p.inventoryQuantity <= 5 ? 'Limited Stock' : 'In Stock') : 'Out of Stock'}">In Stock</span>
+                                    <a th:href="@{/products/{id}(id=${p.productId})}" class="site-icon-link" aria-label="Wishlist"><i class="fa fa-heart-o"></i></a>
+                                </div>
+                                <div class="card-actions app-mt-3">
+                                    <a th:href="@{/products/{id}(id=${p.productId})}" class="btn btn-app-primary">Add to Cart</a>
+                                    <a th:href="@{/products/{id}(id=${p.productId})}" class="btn btn-app-outline">Compare</a>
+                                </div>
+                            </div>
+                        </article>
                     </div>
 
-                    <div class="col-md-2 col-lg-1">
-                        <button type="submit" class="btn btn-app-primary btn-block">Apply</button>
-                    </div>
+                    <nav class="app-mt-5 text-center" aria-label="Product pages" th:if="${pageNumbers != null and !#lists.isEmpty(pageNumbers)}">
+                        <ul class="pagination">
+                            <li class="page-item" th:each="i : ${pageNumbers}"
+                                th:classappend="${i == currentPage} ? ' active' : ''">
+                                <a class="page-link"
+                                   th:text="${i + 1}"
+                                   th:href="@{'/products?page=' + ${i}
+                                        + (${selectedCategory} != null ? '&category=' + ${selectedCategory} : '')
+                                        + (${selectedBrand} != null ? '&brand=' + ${selectedBrand} : '')
+                                        + (${minPrice} != null ? '&minPrice=' + ${minPrice} : '')
+                                        + (${maxPrice} != null ? '&maxPrice=' + ${maxPrice} : '')
+                                        + (${keyword} != null ? '&keyword=' + ${keyword} : '')
+                                        + '&sortDir=' + ${sortDir}}">
+                                </a>
+                            </li>
+                        </ul>
+                    </nav>
                 </div>
-            </form>
-
-            <div th:if="${products == null or #lists.isEmpty(products)}" class="empty-state-panel">
-                <h3>No products found</h3>
-                <p>Try changing your filters or search keyword.</p>
-                <a th:href="@{/products}" class="btn btn-app-outline">Clear Filters</a>
             </div>
-            <div class="product-grid" th:unless="${products == null or #lists.isEmpty(products)}">
-                <article class="product-card" th:each="p : ${products}"
-                         th:with="imageUrl=${(p != null and p.images != null and !p.images.isEmpty() and p.images[0].imageUrl != null and !#strings.isEmpty(p.images[0].imageUrl)) ? p.images[0].imageUrl : '/images/no-image.svg'}">
-                    <img th:src="@{${imageUrl}}"
-                         th:attr="onerror=|this.onerror=null;this.src='@{/images/no-image.svg}';|"
-                         alt="Product image"
-                         class="product-card-image">
-                    <div class="product-card-body">
-                        <h3 class="product-card-title" th:text="${p.productName}">Product Name</h3>
-                        <p class="product-price" th:text="'$' + ${p.price}">0.00</p>
-                        <a th:href="@{/products/{id}(id=${p.productId})}"
-                           class="btn btn-app-primary">View Details</a>
-                    </div>
-                </article>
-            </div>
-
-            <nav class="app-mt-5 text-center" aria-label="Product pages" th:if="${pageNumbers != null}">
-                <ul class="pagination">
-                    <li class="page-item" th:each="i : ${pageNumbers}"
-                        th:classappend="${i == currentPage} ? ' active' : ''">
-                        <a class="page-link"
-                           th:text="${i + 1}"
-                           th:href="@{'/products?page=' + ${i}
-                                + (${selectedCategory} != null ? '&category=' + ${selectedCategory} : '')
-                                + (${selectedBrand} != null ? '&brand=' + ${selectedBrand} : '')
-                                + (${minPrice} != null ? '&minPrice=' + ${minPrice} : '')
-                                + (${maxPrice} != null ? '&maxPrice=' + ${maxPrice} : '')
-                                + (${keyword} != null ? '&keyword=' + ${keyword} : '')
-                                + '&sortDir=' + ${sortDir}}">
-                        </a>
-                    </li>
-                </ul>
-            </nav>
         </div>
     </section>
 </div>

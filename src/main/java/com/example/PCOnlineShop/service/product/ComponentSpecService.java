@@ -372,7 +372,7 @@ public class ComponentSpecService {
         try {
             String value = params.get(key);
             return value == null || value.isBlank() ? null : Integer.parseInt(value.trim());
-        } catch (Exception e) {
+        } catch (NumberFormatException e) {
             return null;
         }
     }

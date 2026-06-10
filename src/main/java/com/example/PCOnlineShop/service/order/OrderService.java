@@ -1,5 +1,8 @@
 package com.example.PCOnlineShop.service.order;
 
+import com.example.PCOnlineShop.constant.OrderPaymentStatus;
+import com.example.PCOnlineShop.constant.OrderStatus;
+import com.example.PCOnlineShop.constant.PaymentStatus;
 import com.example.PCOnlineShop.dto.cart.CartItemDTO;
 import com.example.PCOnlineShop.dto.order.CheckoutDTO;
 import com.example.PCOnlineShop.dto.order.CheckoutPageDTO;
@@ -19,6 +22,7 @@ import com.example.PCOnlineShop.repository.product.ProductRepository;
 import com.example.PCOnlineShop.service.address.AddressService;
 import com.example.PCOnlineShop.service.cart.CartService;
 import jakarta.persistence.EntityNotFoundException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,6 +34,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 public class OrderService {
 
     private final OrderRepository orderRepository;
@@ -64,14 +69,15 @@ public class OrderService {
         this.addressService = addressService;
     }
 
-    @Transactional
-    public Order createOrder(Account customerAccount, Map<Integer, CartItem> cartItems,
-                             CheckoutDTO checkoutDTO) {
+    private Order createOrder(Account customerAccount,
+                              Map<Integer, CartItem> cartItems,
+                              CheckoutDTO checkoutDTO,
+                              Map<Integer, Product> lockedProducts) {
 
         Order order = new Order();
         order.setAccount(customerAccount);
         order.setCreatedDate(new Date());
-        order.setStatus("Pending Payment");
+        order.setStatus(OrderStatus.PENDING_PAYMENT);
         order.setShippingMethod(checkoutDTO.getShippingMethod());
         order.setNote(checkoutDTO.getNote());
         order.setShippingFullName(checkoutDTO.getShippingFullName());
@@ -83,7 +89,10 @@ public class OrderService {
 
         for (Map.Entry<Integer, CartItem> entry : cartItems.entrySet()) {
             CartItem item = entry.getValue();
-            Product product = item.getProduct();
+            Product product = lockedProducts.get(entry.getKey());
+            if (product == null) {
+                throw new EntityNotFoundException("Product not found: " + entry.getKey());
+            }
             int quantityToBuy = item.getQuantity();
 
 
@@ -146,7 +155,20 @@ public class OrderService {
         if (checkoutMap.isEmpty()) {
             throw new IllegalStateException("Please choose products!");
         }
-        return createOrder(account, checkoutMap, checkoutDTO);
+        Map<Integer, Product> lockedProducts = lockProductsForCheckout(checkoutMap);
+        return createOrder(account, checkoutMap, checkoutDTO, lockedProducts);
+    }
+
+    private Map<Integer, Product> lockProductsForCheckout(Map<Integer, CartItem> checkoutMap) {
+        Map<Integer, Product> lockedProducts = new HashMap<>();
+        checkoutMap.keySet().stream()
+                .sorted()
+                .forEach(productId -> {
+                    Product product = productRepository.findByProductIdForUpdate(productId)
+                            .orElseThrow(() -> new EntityNotFoundException("Product not found: " + productId));
+                    lockedProducts.put(productId, product);
+                });
+        return lockedProducts;
     }
 
     private void rollBackInventory(Order order) {
@@ -162,6 +184,9 @@ public class OrderService {
 
     private void reserveInventory(Product product, int quantity) {
         Integer inventoryQuantity = product.getInventoryQuantity();
+        if (!product.isSellableOnStorefront()) {
+            throw new IllegalStateException("Product is unavailable: " + product.getProductName());
+        }
         if (inventoryQuantity == null) {
             return;
         }
@@ -178,10 +203,10 @@ public class OrderService {
                 .orElseThrow(() -> new EntityNotFoundException("No payment found: " + paymentId));
         Order order = payment.getOrder();
 
-        if ("Pending Payment".equals(order.getStatus()) && "PENDING".equals(payment.getStatus())) {
-            payment.setStatus("CANCELLED");
-            order.setStatus("Cancelled");
-            order.setPaymentStatus("CANCELLED");
+        if (OrderStatus.PENDING_PAYMENT.equals(order.getStatus()) && PaymentStatus.PENDING.equals(payment.getStatus())) {
+            payment.setStatus(PaymentStatus.CANCELLED);
+            order.setStatus(OrderStatus.CANCELLED);
+            order.setPaymentStatus(OrderPaymentStatus.CANCELLED);
 
             rollBackInventory(order);
 
@@ -189,7 +214,8 @@ public class OrderService {
                 if (payment.getOrderCode() != null) {
                     payOS.paymentRequests().cancel(payment.getOrderCode(), "Cancelled by customer or out of payment time");
                 }
-            } catch (Exception e) {
+            } catch (RuntimeException e) {
+                log.warn("Failed to cancel PayOS payment link for payment {}", paymentId, e);
             }
 
             paymentRepository.save(payment);
@@ -264,8 +290,7 @@ public class OrderService {
 
     @Transactional(readOnly = true)
     public List<Order> getShippingQueueOrders() {
-        List<String> shippingStatuses = List.of("Ready to Ship", "Delivering");
-        return orderRepository.findByStatusIn(shippingStatuses);
+        return orderRepository.findByStatusIn(OrderStatus.SHIPPING_QUEUE);
     }
 
 
@@ -295,12 +320,14 @@ public class OrderService {
         boolean isValidTransition = false;
         Date now = new Date();
 
-        if ("Ready to Ship".equals(currentStatus) && List.of("Delivering", "Completed", "Cancelled").contains(newStatus)) {
+        if (OrderStatus.READY_TO_SHIP.equals(currentStatus)
+                && List.of(OrderStatus.DELIVERING, OrderStatus.COMPLETED, OrderStatus.CANCELLED).contains(newStatus)) {
             isValidTransition = true;
-            if ("Delivering".equals(newStatus)) {
+            if (OrderStatus.DELIVERING.equals(newStatus)) {
                 order.setReadyToShipDate(now);
             }
-        } else if ("Delivering".equals(currentStatus) && List.of("Completed", "Cancelled", "Delivery Failed").contains(newStatus)) {
+        } else if (OrderStatus.DELIVERING.equals(currentStatus)
+                && List.of(OrderStatus.COMPLETED, OrderStatus.CANCELLED, OrderStatus.DELIVERY_FAILED).contains(newStatus)) {
             isValidTransition = true;
         }
 

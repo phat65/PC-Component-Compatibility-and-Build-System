@@ -4,8 +4,10 @@ import com.example.PCOnlineShop.dto.cart.CartSummaryDTO;
 import com.example.PCOnlineShop.model.account.Account;
 import com.example.PCOnlineShop.service.account.AccountService;
 import com.example.PCOnlineShop.service.cart.CartService;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -22,6 +24,7 @@ import java.util.function.Consumer;
 @Controller
 @RequestMapping("/cart")
 @RequiredArgsConstructor
+@Slf4j
 public class CartController {
 
     private static final String LOGIN_REQUIRED_REDIRECT = "redirect:/auth/login?required";
@@ -66,8 +69,11 @@ public class CartController {
         try {
             cartService.addToCart(account, productId, quantity);
             addSuccess(redirectAttributes, "Product added to cart!");
-        } catch (Exception e) {
+        } catch (IllegalArgumentException | EntityNotFoundException e) {
             addError(redirectAttributes, e);
+        } catch (RuntimeException e) {
+            log.error("Unexpected error adding product {} to cart for account {}", productId, account.getAccountId(), e);
+            addError(redirectAttributes, "Unable to add product to cart. Please try again.");
         }
         return redirectToReferer(request);
     }
@@ -89,8 +95,11 @@ public class CartController {
         try {
             cartService.addListToCart(account, productIds, quantity);
             addSuccess(redirectAttributes, "Products added!");
-        } catch (Exception e) {
+        } catch (IllegalArgumentException | EntityNotFoundException e) {
             addError(redirectAttributes, e);
+        } catch (RuntimeException e) {
+            log.error("Unexpected error adding product list to cart for account {}", account.getAccountId(), e);
+            addError(redirectAttributes, "Unable to add products to cart. Please try again.");
         }
         return "redirect:/cart";
     }
@@ -148,8 +157,11 @@ public class CartController {
             action.accept(account);
             double newTotal = cartService.calculateSelectedTotalForAccount(account);
             return ResponseEntity.ok(Map.of("message", "Success", "newGrandTotal", newTotal));
-        } catch (Exception e) {
+        } catch (IllegalArgumentException | EntityNotFoundException | SecurityException e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        } catch (RuntimeException e) {
+            log.error("Unexpected cart action error for account {}", account.getAccountId(), e);
+            return ResponseEntity.internalServerError().body(Map.of("error", "Unable to update cart. Please try again."));
         }
     }
 
@@ -188,5 +200,9 @@ public class CartController {
 
     private void addError(RedirectAttributes redirectAttributes, Exception e) {
         redirectAttributes.addFlashAttribute("error", e.getMessage());
+    }
+
+    private void addError(RedirectAttributes redirectAttributes, String message) {
+        redirectAttributes.addFlashAttribute("error", message);
     }
 }

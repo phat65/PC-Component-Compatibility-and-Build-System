@@ -7,7 +7,11 @@
 <section class="commerce-page">
     <div class="container checkout-container">
         <div class="section-header">
-            <h1 class="commerce-title app-mb-0">Checkout</h1>
+            <div>
+                <p class="section-kicker">Checkout</p>
+                <h1 class="commerce-title app-mb-1">Secure Checkout</h1>
+                <p class="section-subtitle app-mb-0">Confirm shipping details, payment method, and order summary before placing your order.</p>
+            </div>
             <a th:href="@{/cart}" class="btn btn-app-outline">&larr; Back to Cart</a>
         </div>
 
@@ -99,6 +103,27 @@
                         <input type="hidden" th:field="*{shippingPhone}" id="shippingPhoneInput">
                         <input type="hidden" th:field="*{shippingAddress}" id="shippingAddressInput">
                     </section>
+
+                    <section class="commerce-card">
+                        <h4>Payment Method</h4>
+                        <div class="checkout-radio-group">
+                            <label class="custom-radio selected">
+                                <input type="radio" checked disabled>
+                                PayOS Online Payment
+                            </label>
+                            <label class="custom-radio">
+                                <input type="radio" disabled>
+                                Cash on Delivery
+                            </label>
+                        </div>
+                        <p class="text-muted app-mb-0">You will be redirected to PayOS to complete payment after placing the order.</p>
+                    </section>
+
+                    <section class="commerce-card">
+                        <h4>Order Notes</h4>
+                        <textarea th:field="*{note}" rows="4" class="form-control"
+                                  placeholder="Delivery notes, preferred receiving time, or build instructions"></textarea>
+                    </section>
                 </div>
 
                 <div class="col-md-4">
@@ -108,6 +133,14 @@
                             <span>Subtotal</span>
                             <span class="summary-value"
                                   th:text="'$' + ${#numbers.formatDecimal(grandTotal, 0, 'COMMA', 2, 'POINT')}">$0.00</span>
+                        </div>
+                        <div class="summary-line">
+                            <span>Shipping Fee</span>
+                            <span class="summary-value">Calculated by shipping method</span>
+                        </div>
+                        <div class="summary-line">
+                            <span>Discount</span>
+                            <span class="summary-value">$0.00</span>
                         </div>
                         <div class="summary-line grand-total">
                             <span>Grand Total</span>

@@ -74,10 +74,10 @@ public class BuildSuggestionController {
             return ResponseEntity.badRequest()
                 .body("Invalid preset: " + request.getPreset());
 
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             log.error("Error generating build suggestion", e);
             return ResponseEntity.internalServerError()
-                .body("Error generating build suggestion: " + e.getMessage());
+                .body("Error generating build suggestion. Please try again.");
         }
     }
 
@@ -106,10 +106,10 @@ public class BuildSuggestionController {
             return ResponseEntity.badRequest()
                 .body("Invalid build plan: " + e.getMessage());
 
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             log.error("Error applying build to session", e);
             return ResponseEntity.internalServerError()
-                .body("Error applying build: " + e.getMessage());
+                .body("Error applying build. Please try again.");
         }
     }
 
