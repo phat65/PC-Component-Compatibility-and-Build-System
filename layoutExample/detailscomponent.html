@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>MAKR 75 Custom Keyboard | CORE PERFORMANCE</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&amp;family=JetBrains+Mono:wght@400;600&amp;family=Hanken+Grotesk:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface": "#121414",
+                        "on-primary-fixed": "#1c1b1b",
+                        "background": "#121414",
+                        "secondary-fixed-dim": "#c8c6c5",
+                        "on-surface": "#e2e2e2",
+                        "on-tertiary-container": "#947600",
+                        "surface-container": "#1e2020",
+                        "on-tertiary-fixed": "#241a00",
+                        "glass-border": "rgba(255, 255, 255, 0.1)",
+                        "surface-elevated": "#262626",
+                        "secondary-fixed": "#e5e2e1",
+                        "surface-variant": "#333535",
+                        "on-secondary-container": "#b7b5b4",
+                        "rgb-cyan": "#00F2FF",
+                        "on-background": "#e2e2e2",
+                        "on-surface-variant": "#c4c7c7",
+                        "secondary": "#c8c6c5",
+                        "status-warning": "#F5C400",
+                        "on-primary": "#313030",
+                        "on-tertiary-fixed-variant": "#584400",
+                        "outline-variant": "#444748",
+                        "surface-dim": "#121414",
+                        "error-container": "#93000a",
+                        "inverse-primary": "#5f5e5e",
+                        "outline": "#8e9192",
+                        "surface-container-highest": "#333535",
+                        "on-primary-fixed-variant": "#474646",
+                        "surface-container-lowest": "#0c0f0f",
+                        "on-tertiary": "#3d2f00",
+                        "primary-fixed-dim": "#c9c6c5",
+                        "tertiary-fixed": "#ffe08b",
+                        "primary": "#c9c6c5",
+                        "on-secondary-fixed-variant": "#474746",
+                        "on-primary-container": "#7b7979",
+                        "on-secondary-fixed": "#1b1b1c",
+                        "inverse-on-surface": "#2f3131",
+                        "secondary-container": "#474746",
+                        "error": "#ffb4ab",
+                        "primary-fixed": "#e5e2e1",
+                        "on-error-container": "#ffdad6",
+                        "surface-container-low": "#1a1c1c",
+                        "tertiary": "#f1c100",
+                        "surface-tint": "#c9c6c5",
+                        "surface-container-high": "#282a2b",
+                        "tertiary-fixed-dim": "#f1c100",
+                        "tertiary-container": "#0f0900",
+                        "primary-container": "#0a0a0a",
+                        "on-error": "#690005",
+                        "on-secondary": "#303030",
+                        "surface-bright": "#37393a",
+                        "rgb-magenta": "#FF00E5",
+                        "inverse-surface": "#e2e2e2"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "base": "8px",
+                        "margin-desktop": "64px",
+                        "gutter": "24px",
+                        "margin-mobile": "16px",
+                        "container-max": "1440px"
+                    },
+                    "fontFamily": {
+                        "headline-lg": ["Montserrat"],
+                        "label-caps": ["JetBrains Mono"],
+                        "headline-md": ["Montserrat"],
+                        "body-lg": ["Hanken Grotesk"],
+                        "body-md": ["Hanken Grotesk"],
+                        "display-lg": ["Montserrat"],
+                        "display-lg-mobile": ["Montserrat"]
+                    },
+                    "fontSize": {
+                        "headline-lg": ["32px", {"lineHeight": "1.2", "letterSpacing": "0.02em", "fontWeight": "700"}],
+                        "label-caps": ["12px", {"lineHeight": "1.0", "letterSpacing": "0.1em", "fontWeight": "600"}],
+                        "headline-md": ["24px", {"lineHeight": "1.3", "fontWeight": "700"}],
+                        "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                        "body-md": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                        "display-lg": ["64px", {"lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "800"}],
+                        "display-lg-mobile": ["40px", {"lineHeight": "1.1", "letterSpacing": "-0.01em", "fontWeight": "800"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-panel {
+            background: rgba(31, 31, 31, 0.8);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .glow-cyan { box-shadow: 0 0 20px rgba(0, 242, 255, 0.15); }
+        .glow-yellow { box-shadow: 0 0 20px rgba(241, 193, 0, 0.2); }
+        .hero-gradient { background: radial-gradient(circle at top right, rgba(0, 242, 255, 0.05), transparent); }
+        .underglow-pulse:hover { animation: underglow 2s infinite ease-in-out; }
+        @keyframes underglow {
+            0%, 100% { box-shadow: 0 0 5px rgba(0, 242, 255, 0.2); }
+            50% { box-shadow: 0 0 20px rgba(0, 242, 255, 0.4); }
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body-md selection:bg-tertiary selection:text-on-tertiary">
+<!-- TopNavBar -->
+<nav class="bg-surface/90 backdrop-blur-xl border-b border-glass-border docked full-width top-0 z-50 sticky shadow-[0_0_20px_rgba(0,242,255,0.1)]">
+<div class="flex justify-between items-center w-full px-margin-desktop py-4 max-w-container-max mx-auto">
+<div class="flex items-center gap-12">
+<a class="font-display-lg text-display-lg-mobile tracking-tighter text-on-surface uppercase" href="#">CORE PERFORMANCE</a>
+<div class="hidden md:flex gap-8 items-center">
+<a class="font-label-caps text-label-caps text-on-surface-variant hover:text-on-surface transition-colors duration-300" href="#">SYSTEMS</a>
+<a class="font-label-caps text-label-caps text-tertiary border-b-2 border-tertiary pb-1" href="#">COMPONENTS</a>
+<a class="font-label-caps text-label-caps text-on-surface-variant hover:text-on-surface transition-colors duration-300" href="#">PERIPHERALS</a>
+<a class="font-label-caps text-label-caps text-on-surface-variant hover:text-on-surface transition-colors duration-300" href="#">GAMING GEAR</a>
+<a class="font-label-caps text-label-caps text-on-surface-variant hover:text-on-surface transition-colors duration-300" href="#">SOFTWARE</a>
+<a class="font-label-caps text-label-caps text-on-surface-variant hover:text-on-surface transition-colors duration-300" href="#">SUPPORT</a>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<button class="text-on-surface-variant hover:text-on-surface transition-colors">
+<span class="material-symbols-outlined">shopping_cart</span>
+</button>
+<button class="text-on-surface-variant hover:text-on-surface transition-colors">
+<span class="material-symbols-outlined">person</span>
+</button>
+</div>
+</div>
+</nav>
+<main class="max-w-container-max mx-auto px-margin-desktop py-12 hero-gradient">
+<!-- Breadcrumbs -->
+<div class="flex items-center gap-2 mb-8 font-label-caps text-[10px] text-outline uppercase tracking-widest">
+<a class="hover:text-rgb-cyan transition-colors" href="#">Shop</a>
+<span class="material-symbols-outlined text-[12px]">chevron_right</span>
+<a class="hover:text-rgb-cyan transition-colors" href="#">Keyboards</a>
+<span class="material-symbols-outlined text-[12px]">chevron_right</span>
+<span class="text-on-surface">MAKR 75</span>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-12">
+<!-- Left: Gallery Section (7 Cols) -->
+<div class="lg:col-span-7 space-y-gutter">
+<div class="glass-panel overflow-hidden group relative">
+<img alt="MAKR 75 Custom Keyboard Main View" class="w-full aspect-[4/3] object-cover transition-transform duration-700 group-hover:scale-105" src="https://lh3.googleusercontent.com/aida/AP1WRLuYpwDp3vVGpUAOStexVdnFWRy6f1KrON19UUg26qXTYqsOMqmho6Lgl3rcasTVrbfQEpu9sQb7UeGGxdKijaOD410J84--pA4nmgTxhSgNAV7I9fE3JYJZ4pR7zB0qi88RW-H576ZCaFlAjySEftu_mu_HWpxfcdHSd4LuoUAUxdXDPj03yK52h0ZvyKDzt1p46Y14_SrVDpfFN00B_0dek4XJZ0At7ht3ran3_1sLgmqg3P2d_iWgxb8"/>
+<div class="absolute bottom-6 left-6 flex gap-3">
+<span class="bg-surface-elevated/80 backdrop-blur px-3 py-1 font-label-caps text-[10px] text-rgb-cyan border border-glass-border">LIMITED EDITION</span>
+<span class="bg-surface-elevated/80 backdrop-blur px-3 py-1 font-label-caps text-[10px] text-on-surface border border-glass-border">CHERRY BLOSSOM</span>
+</div>
+</div>
+<div class="grid grid-cols-3 gap-gutter">
+<div class="glass-panel overflow-hidden cursor-pointer hover:border-tertiary transition-colors group">
+<img alt="Cherry Blossom Edition Detail" class="w-full aspect-square object-cover transition-transform duration-500 group-hover:scale-110" src="https://lh3.googleusercontent.com/aida/AP1WRLsCB0Gi6FSBUhKYyKWPtbDi7i-UufDyvtyN0Rez08l3DiUk3r-RxkP7gaj2b52mQH5v4b8muL9OdvPAYQPNH2XbC16h73oeCtclVSBGglo3LVzT-4TJWAhAcg0ee9RfZaLmRPA_3UUBIIpuYWulVBHzVhyULzZvs1FqShB-DHvLIk6XSRHv4JGcy8YpvyGaqU3-cesyRR3SVbNZP_UYfROuLX7tgkTr7arIhWLVG2nkryNsTtLQJHd1LAY"/>
+</div>
+<div class="glass-panel overflow-hidden cursor-pointer hover:border-tertiary transition-colors group">
+<div class="bg-surface-elevated w-full h-full flex items-center justify-center p-4">
+<img class="w-full h-full object-cover" data-alt="Close up high-detail macro shot of mechanical keyboard switches, specifically tactile brown switches with transparent housing. The lighting is dramatic and technical, using deep blacks and vibrant cyan highlights to emphasize the precise engineering and clear components of the enthusiast-grade hardware." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD3Lv842Fhz92oqyzAB3OmQnHHw6BrOp-GE6O7ar2Nrx9IwGzpQsvxOtKcwOt5G9EoYQVyoKzWnLA46nB8BjjykfFSY2SNVWP6FCBIWVZt6e751eptNb0UQK1tN2jWbQ1S2RSOCuVJgwl2vL2qTLl01945y3yhBRxn4mqstyTvqTjUyfOD4Y__co_g3DKn3paOWg6bRmAcHazKun_WEy2SFIaS8jD3VPeQG5sRppcwxzRHboKuWJXFRWXioI-ko0j7VlRVZbD5J0HSF"/>
+</div>
+</div>
+<div class="glass-panel overflow-hidden cursor-pointer hover:border-tertiary transition-colors group">
+<div class="bg-surface-elevated w-full h-full flex items-center justify-center p-4">
+<img class="w-full h-full object-cover" data-alt="Industrial top-down shot of a CNC machined aluminum keyboard case in a gunmetal grey finish. The metal texture is fine and premium, with sharp beveled edges reflecting a single cold light source. The mood is professional and masculine, emphasizing structural integrity and high-end manufacturing quality in a dark studio setting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDVq5nUg6g2aQ2jS5eQP28VPn77WbsTi8EHmyqJsICjR5vVuDNyIJH-c81vHYrs8oW_yTob0_W8bmn5pdbI6UWHfOA7HmabdLdS2u7ygaZUTyRQCEikeGnsWXB7XOPvfUr_BFQAlt8hbQ2iTx1H61ISvymh5ox9jF6XN5B-ivyobMjc19kXGtoWKdkVhzVkbdx4lGaavxmyqAF_jx0Z_DpFQPLyCYgin9ptcnKOKPKJpTUdXjSEHN7_A6rEcFeyQUqUyRHiTIHssxra"/>
+</div>
+</div>
+</div>
+<!-- Technical Features Section (Below Fold) -->
+<div class="pt-20 space-y-12">
+<div class="space-y-4">
+<h3 class="font-headline-lg text-headline-lg uppercase text-on-surface">ENGINEERED PRECISION</h3>
+<p class="text-on-surface-variant font-body-lg max-w-2xl leading-relaxed">
+                            The MAKR 75 is not just a keyboard; it's a statement of performance. Every component from the gasket-mounted PCB to the precision-milled aluminum chassis has been optimized for the enthusiast.
+                        </p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-gutter">
+<div class="glass-panel p-8 space-y-4">
+<span class="material-symbols-outlined text-tertiary text-4xl">precision_manufacturing</span>
+<h4 class="font-headline-md text-headline-md uppercase">CNC Aluminum Body</h4>
+<p class="text-on-surface-variant">Aircraft-grade 6061 aluminum frame with a sandblasted finish for unparalleled weight and stability.</p>
+</div>
+<div class="glass-panel p-8 space-y-4">
+<span class="material-symbols-outlined text-rgb-cyan text-4xl" style="font-variation-settings: 'FILL' 1;">layers</span>
+<h4 class="font-headline-md text-headline-md uppercase">Gasket Mount Pro</h4>
+<p class="text-on-surface-variant">Multi-layer silicone dampening provides a soft, cushioned typing experience and deep acoustic profile.</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Right: Configuration & Buy (5 Cols) -->
+<div class="lg:col-span-5">
+<div class="sticky top-28 space-y-10">
+<!-- Title & Specs -->
+<div class="space-y-4 border-b border-glass-border pb-8">
+<div class="flex justify-between items-start">
+<div>
+<h1 class="font-display-lg text-display-lg-mobile text-on-surface leading-none mb-2">MAKR 75</h1>
+<p class="font-label-caps text-label-caps text-tertiary tracking-[0.2em]">PROFESSIONAL CUSTOM KEYBOARD</p>
+</div>
+<div class="text-right">
+<div class="font-display-lg text-display-lg-mobile text-on-surface">$249.99</div>
+<p class="text-[10px] text-outline font-label-caps">IN STOCK / READY TO SHIP</p>
+</div>
+</div>
+<div class="flex flex-wrap gap-2 pt-4">
+<div class="bg-surface-elevated px-3 py-2 rounded-sm border border-glass-border flex items-center gap-3">
+<span class="material-symbols-outlined text-outline text-lg">bolt</span>
+<span class="font-label-caps text-[11px] text-on-surface-variant">8000Hz Polling</span>
+</div>
+<div class="bg-surface-elevated px-3 py-2 rounded-sm border border-glass-border flex items-center gap-3">
+<span class="material-symbols-outlined text-outline text-lg">bluetooth</span>
+<span class="font-label-caps text-[11px] text-on-surface-variant">Tri-Mode Connectivity</span>
+</div>
+<div class="bg-surface-elevated px-3 py-2 rounded-sm border border-glass-border flex items-center gap-3">
+<span class="material-symbols-outlined text-outline text-lg">palette</span>
+<span class="font-label-caps text-[11px] text-on-surface-variant">Per-key RGB</span>
+</div>
+</div>
+</div>
+<!-- Configuration Section -->
+<div class="space-y-8">
+<!-- Switch Selection -->
+<div class="space-y-4">
+<label class="font-label-caps text-label-caps text-outline uppercase">Switch Type</label>
+<div class="grid grid-cols-3 gap-3">
+<button class="p-4 border-2 border-tertiary bg-surface-elevated text-left group transition-all glow-yellow">
+<div class="font-label-caps text-on-surface text-[12px] mb-1">STRIKE LINEAR</div>
+<div class="text-[10px] text-outline">Pre-lubed, 45g</div>
+</button>
+<button class="p-4 border border-glass-border bg-surface-variant/20 text-left hover:border-outline transition-all group">
+<div class="font-label-caps text-on-surface-variant text-[12px] mb-1">STRIKE TACTILE</div>
+<div class="text-[10px] text-outline">Pre-lubed, 55g</div>
+</button>
+<button class="p-4 border border-glass-border bg-surface-variant/20 text-left hover:border-outline transition-all group">
+<div class="font-label-caps text-on-surface-variant text-[12px] mb-1">BAREBONES</div>
+<div class="text-[10px] text-outline">No Switches</div>
+</button>
+</div>
+</div>
+<!-- Keycap Selection -->
+<div class="space-y-4">
+<label class="font-label-caps text-label-caps text-outline uppercase">Keycap Set</label>
+<div class="flex gap-4">
+<button class="w-16 h-16 rounded-lg border-2 border-tertiary p-1 group">
+<div class="w-full h-full bg-pink-300 rounded-sm relative overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A close-up aesthetic shot of soft pink cherry blossom petals resting on a pristine white surface. The lighting is soft and ethereal, capturing the delicate texture and vibrant pink hues of the flowers against a minimalist background. The style is clean, modern, and feminine, aligning with a high-end designer aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDffyKlAUaWqZT-JcPGL2RehtryKVtRTaQgFsotdAp8ssluJ8hKyuvqoJAZy4xmX23sLxZRBojHJJiU8uImOMwWlbAlcr7T6V-f-8IjuvLHZ7DC2t9KL1DMeN4Oo2IhfWFUx8J3TOAGmDaluierPo-fYWxzRRAt7Y4PR64qV6imBD6dBIUVZlkb8qJz0sCsJi9C3qZMbnWxGOX1l5vzXXAQaU_li-t5tkLg-MKEtxwevLmvbN-V1s_RCkhuIBDTGGE-cgqHdDSvygqb"/>
+</div>
+</button>
+<button class="w-16 h-16 rounded-lg border border-glass-border p-1 hover:border-outline transition-colors">
+<div class="w-full h-full bg-neutral-800 rounded-sm"></div>
+</button>
+<button class="w-16 h-16 rounded-lg border border-glass-border p-1 hover:border-outline transition-colors">
+<div class="w-full h-full bg-blue-900 rounded-sm"></div>
+</button>
+</div>
+</div>
+<!-- Layout Selection -->
+<div class="space-y-4">
+<label class="font-label-caps text-label-caps text-outline uppercase">Layout</label>
+<div class="flex gap-3">
+<button class="px-6 py-2 border border-tertiary bg-surface-elevated font-label-caps text-[11px] text-on-surface">ANSI (US)</button>
+<button class="px-6 py-2 border border-glass-border font-label-caps text-[11px] text-on-surface-variant hover:border-outline">ISO (UK)</button>
+</div>
+</div>
+</div>
+<!-- CTA Section -->
+<div class="space-y-4 pt-6">
+<button class="w-full bg-tertiary text-on-primary-fixed font-headline-md py-5 uppercase tracking-wider hover:brightness-110 transition-all shadow-[0_0_20px_rgba(241,193,0,0.3)] active:scale-[0.98]">
+                            ADD TO CART
+                        </button>
+<button class="w-full border border-outline-variant text-on-surface font-label-caps py-4 uppercase hover:bg-surface-elevated transition-colors">
+                            CONFIGURE BUILDER
+                        </button>
+</div>
+<!-- Trust Badges -->
+<div class="grid grid-cols-2 gap-4 pt-4 border-t border-glass-border">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-outline text-xl">verified</span>
+<span class="text-[11px] font-label-caps text-outline">2 YEAR WARRANTY</span>
+</div>
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-outline text-xl">local_shipping</span>
+<span class="text-[11px] font-label-caps text-outline">FREE GLOBAL SHIPPING</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Detail Sections -->
+<section class="mt-32 space-y-24">
+<!-- Bento Feature Grid -->
+<div class="grid grid-cols-1 md:grid-cols-4 gap-gutter">
+<div class="md:col-span-2 glass-panel p-12 flex flex-col justify-end min-h-[400px] relative overflow-hidden group">
+<img class="absolute inset-0 w-full h-full object-cover opacity-30 group-hover:scale-110 transition-transform duration-1000" data-alt="A dramatic high-angle shot of a custom mechanical keyboard on a dark technical workspace. The scene is lit by a cool blue light from one side and a warm magenta light from the other, creating high-contrast shadows. The keyboard's aluminum body glints in the light, showcasing its premium build quality in a high-octane, tech-focused environment." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAGhDEKvi38v9v5QwEF31BWBZUWaAsJEtPJ9FCPIWF8kKIvIwPj7iYghSMSMSdId085_BBZeA3e3sSN-7M4rtirZZzwhNP5mPVDADTuSBs-jS83BSNW0uc4BWxnAWzoI6P8gExNSGNXYy11jqBXhbyN3EGOiYqy33quoX2ayqxgqjyM2dhrcfBomNZJIFW6s9XguYRIWc6VU-XLLVloF3bnHxq6h9C5xJCOZxdBsH8fxF3-ktYNwDxNQw2Ji_RXtZ70dw-Gl-wYDsJB"/>
+<div class="relative z-10 space-y-4">
+<h3 class="font-headline-lg text-headline-lg uppercase">Superior Acoustics</h3>
+<p class="text-on-surface-variant max-w-sm">Every internal cavity is precision filled with Poron foam to eliminate metallic ping and deliver the perfect 'thock'.</p>
+</div>
+</div>
+<div class="glass-panel p-8 flex flex-col justify-between border-t-2 border-t-rgb-cyan">
+<span class="material-symbols-outlined text-rgb-cyan text-5xl">memory</span>
+<div class="space-y-2">
+<h4 class="font-headline-md text-headline-md uppercase">VIA / QMK</h4>
+<p class="text-sm text-on-surface-variant">Fully programmable keymaps and macros via web-based interface.</p>
+</div>
+</div>
+<div class="glass-panel p-8 flex flex-col justify-between border-t-2 border-t-rgb-magenta">
+<span class="material-symbols-outlined text-rgb-magenta text-5xl">flash_on</span>
+<div class="space-y-2">
+<h4 class="font-headline-md text-headline-md uppercase">Low Latency</h4>
+<p class="text-sm text-on-surface-variant">Next-gen wireless protocol with sub-1ms response time.</p>
+</div>
+</div>
+</div>
+<!-- Full Width Lifestyle -->
+<div class="glass-panel h-[500px] relative overflow-hidden flex items-center justify-center text-center px-12">
+<img class="absolute inset-0 w-full h-full object-cover opacity-50" data-alt="A high-end cinematic lifestyle shot of a minimalist gamer's setup at night. A premium custom keyboard sits on a wide leather desk mat, flanked by a high-resolution curved monitor displaying code. The room is dark, illuminated only by the soft glow of RGB peripherals and a subtle accent strip on the wall, creating an atmosphere of focused, professional gaming performance." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA7Qm8lq16nD7NRFiBZ-An5k5in33hiZo86E8mGokjD9rkFFj2V8DW_MHAwIz7avix4D_geboSBViAofMEwn7FefjzKguWySdIcesq4s0Rd7NXm7NMZoDDI6dcY0CBageHyolirsgpkMrcWTYS5JYd4Ooy5a1R8-d0-wHB1ZjrpZeanr31Is0fk7Z6fFJdXTmDVQgOP6Q9nE3TB6lQRladb9ER881OnyQM2YypPJg2SFSxcvyDsKZbI5uXQ3GzCJC2tvvUTwYcoNfdy"/>
+<div class="relative z-10 max-w-3xl space-y-6">
+<h2 class="font-display-lg text-display-lg uppercase tracking-tight">ELEVATE YOUR COMMAND</h2>
+<p class="font-body-lg text-on-surface">Designed for developers, gamers, and artists who demand perfection from their primary interface.</p>
+</div>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="bg-surface-container-lowest border-t border-outline-variant full-width relative mt-20">
+<div class="grid grid-cols-1 md:grid-cols-4 gap-gutter px-margin-desktop py-16 max-w-container-max mx-auto">
+<div class="space-y-6">
+<h3 class="font-headline-md text-headline-md text-tertiary uppercase">CORE PERFORMANCE</h3>
+<p class="text-on-surface-variant text-sm max-w-xs">Precision engineered peripherals for the global enthusiast community.</p>
+<div class="flex gap-4">
+<a class="text-outline hover:text-rgb-cyan transition-all transform hover:scale-110" href="#">
+<span class="material-symbols-outlined">public</span>
+</a>
+<a class="text-outline hover:text-rgb-magenta transition-all transform hover:scale-110" href="#">
+<span class="material-symbols-outlined">share</span>
+</a>
+</div>
+</div>
+<div class="space-y-6">
+<h4 class="font-label-caps text-label-caps text-on-surface">PRODUCTS</h4>
+<ul class="space-y-3">
+<li><a class="text-outline hover:text-on-surface transition-colors font-label-caps text-[11px]" href="#">KEYBOARDS</a></li>
+<li><a class="text-outline hover:text-on-surface transition-colors font-label-caps text-[11px]" href="#">MICE</a></li>
+<li><a class="text-outline hover:text-on-surface transition-colors font-label-caps text-[11px]" href="#">AUDIO</a></li>
+<li><a class="text-outline hover:text-on-surface transition-colors font-label-caps text-[11px]" href="#">ACCESSORIES</a></li>
+</ul>
+</div>
+<div class="space-y-6">
+<h4 class="font-label-caps text-label-caps text-on-surface">SUPPORT</h4>
+<ul class="space-y-3">
+<li><a class="text-outline hover:text-on-surface transition-colors font-label-caps text-[11px]" href="#">SOFTWARE DOWNLOADS</a></li>
+<li><a class="text-outline hover:text-on-surface transition-colors font-label-caps text-[11px]" href="#">WARRANTY INFO</a></li>
+<li><a class="text-outline hover:text-on-surface transition-colors font-label-caps text-[11px]" href="#">CONTACT US</a></li>
+</ul>
+</div>
+<div class="space-y-6">
+<h4 class="font-label-caps text-label-caps text-on-surface">LEGAL</h4>
+<ul class="space-y-3">
+<li><a class="text-outline hover:text-on-surface transition-colors font-label-caps text-[11px]" href="#">PRIVACY POLICY</a></li>
+<li><a class="text-outline hover:text-on-surface transition-colors font-label-caps text-[11px]" href="#">TERMS OF SERVICE</a></li>
+</ul>
+</div>
+</div>
+<div class="max-w-container-max mx-auto px-margin-desktop py-8 border-t border-glass-border flex justify-between items-center">
+<span class="font-label-caps text-[10px] text-outline">© 2024 CORE PERFORMANCE. ENGINEERED FOR ENTHUSIASTS.</span>
+<div class="flex gap-6">
+<span class="material-symbols-outlined text-outline text-xl hover:text-rgb-cyan cursor-pointer transition-colors">payments</span>
+<span class="material-symbols-outlined text-outline text-xl hover:text-rgb-cyan cursor-pointer transition-colors">shield_with_heart</span>
+</div>
+</div>
+</footer>
+<script>
+        // Micro-interactions for button underglow
+        document.querySelectorAll('button').forEach(btn => {
+            btn.classList.add('underglow-pulse');
+        });
+
+        // Config selection logic
+        const configButtons = document.querySelectorAll('.grid button, .flex button');
+        configButtons.forEach(btn => {
+            btn.addEventListener('click', function() {
+                const parent = this.parentElement;
+                parent.querySelectorAll('button').forEach(b => {
+                    b.classList.remove('border-tertiary', 'glow-yellow');
+                    b.classList.add('border-glass-border');
+                });
+                this.classList.add('border-tertiary', 'glow-yellow');
+                this.classList.remove('border-glass-border');
+            });
+        });
+    </script>
+</body></html>

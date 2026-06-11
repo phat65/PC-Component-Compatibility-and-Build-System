@@ -64,6 +64,7 @@
                      th:classappend="${buildItems.mainboard?.product?.productId == mb.product.productId} ? 'selected' : ''"
                      th:attr="data-id=${mb.product.productId},data-price=${mb.product.price}"
                      th:data-name="${mb.product.productName}"
+                     th:data-brand="${mb.product.brand != null ? mb.product.brand.name : ''}"
                      th:data-socket="${mb.socket}"
                      th:data-ramtype="${mb.memoryType}"
                      th:data-formfactor="${mb.formFactor}"

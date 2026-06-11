@@ -64,6 +64,7 @@
                      th:classappend="${buildItems.powerSupply?.product?.productId == psu.product.productId} ? 'selected' : ''"
                      th:attr="data-id=${psu.product.productId},data-price=${psu.product.price}"
                      th:data-name="${psu.product.productName}"
+                     th:data-brand="${psu.product.brand != null ? psu.product.brand.name : ''}"
                      th:data-wattage="${psu.wattage}"
                      th:data-formfactor="${psu.formFactor}"
                      th:data-efficiency="${psu.efficiency}"

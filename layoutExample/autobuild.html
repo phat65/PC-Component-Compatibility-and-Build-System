@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>CORE PERFORMANCE | PC Configurator</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800&amp;family=Hanken+Grotesk:wght@400;600&amp;family=JetBrains+Mono:wght@600&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@100..900&amp;family=JetBrains+Mono:wght@100..900&amp;family=Montserrat:wght@100..900&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-panel {
+            background: rgba(31, 31, 31, 0.8);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .neon-cyan-glow {
+            box-shadow: 0 0 20px rgba(0, 242, 255, 0.15);
+        }
+        .neon-cyan-text {
+            text-shadow: 0 0 8px rgba(0, 242, 255, 0.5);
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #444748;
+            border-radius: 10px;
+        }
+        @keyframes pulse-glow {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
+        }
+        .animate-glow-pulse {
+            animation: pulse-glow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface": "#121414",
+                        "on-primary-fixed": "#1c1b1b",
+                        "background": "#121414",
+                        "secondary-fixed-dim": "#c8c6c5",
+                        "on-surface": "#e2e2e2",
+                        "on-tertiary-container": "#947600",
+                        "surface-container": "#1e2020",
+                        "on-tertiary-fixed": "#241a00",
+                        "glass-border": "rgba(255, 255, 255, 0.1)",
+                        "surface-elevated": "#262626",
+                        "secondary-fixed": "#e5e2e1",
+                        "surface-variant": "#333535",
+                        "on-secondary-container": "#b7b5b4",
+                        "rgb-cyan": "#00F2FF",
+                        "on-background": "#e2e2e2",
+                        "on-surface-variant": "#c4c7c7",
+                        "secondary": "#c8c6c5",
+                        "status-warning": "#F5C400",
+                        "on-primary": "#313030",
+                        "on-tertiary-fixed-variant": "#584400",
+                        "outline-variant": "#444748",
+                        "surface-dim": "#121414",
+                        "error-container": "#93000a",
+                        "inverse-primary": "#5f5e5e",
+                        "outline": "#8e9192",
+                        "surface-container-highest": "#333535",
+                        "on-primary-fixed-variant": "#474646",
+                        "surface-container-lowest": "#0c0f0f",
+                        "on-tertiary": "#3d2f00",
+                        "primary-fixed-dim": "#c9c6c5",
+                        "tertiary-fixed": "#ffe08b",
+                        "primary": "#c9c6c5",
+                        "on-secondary-fixed-variant": "#474746",
+                        "on-primary-container": "#7b7979",
+                        "on-secondary-fixed": "#1b1b1c",
+                        "inverse-on-surface": "#2f3131",
+                        "secondary-container": "#474746",
+                        "error": "#ffb4ab",
+                        "primary-fixed": "#e5e2e1",
+                        "on-error-container": "#ffdad6",
+                        "surface-container-low": "#1a1c1c",
+                        "tertiary": "#f1c100",
+                        "surface-tint": "#c9c6c5",
+                        "surface-container-high": "#282a2b",
+                        "tertiary-fixed-dim": "#f1c100",
+                        "tertiary-container": "#0f0900",
+                        "primary-container": "#0a0a0a",
+                        "on-error": "#690005",
+                        "on-secondary": "#303030",
+                        "surface-bright": "#37393a",
+                        "rgb-magenta": "#FF00E5",
+                        "inverse-surface": "#e2e2e2"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "base": "8px",
+                        "margin-desktop": "64px",
+                        "gutter": "24px",
+                        "margin-mobile": "16px",
+                        "container-max": "1440px"
+                    },
+                    "fontFamily": {
+                        "headline-lg": ["Montserrat"],
+                        "label-caps": ["JetBrains Mono"],
+                        "headline-md": ["Montserrat"],
+                        "body-lg": ["Hanken Grotesk"],
+                        "body-md": ["Hanken Grotesk"],
+                        "display-lg": ["Montserrat"],
+                        "display-lg-mobile": ["Montserrat"]
+                    },
+                    "fontSize": {
+                        "headline-lg": ["32px", {"lineHeight": "1.2", "letterSpacing": "0.02em", "fontWeight": "700"}],
+                        "label-caps": ["12px", {"lineHeight": "1.0", "letterSpacing": "0.1em", "fontWeight": "600"}],
+                        "headline-md": ["24px", {"lineHeight": "1.3", "fontWeight": "700"}],
+                        "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                        "body-md": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                        "display-lg": ["64px", {"lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "800"}],
+                        "display-lg-mobile": ["40px", {"lineHeight": "1.1", "letterSpacing": "-0.01em", "fontWeight": "800"}]
+                    }
+                },
+            },
+        }
+    </script>
+</head>
+<body class="bg-background text-on-surface font-body-md min-h-screen flex flex-col overflow-x-hidden">
+<!-- TopNavBar -->
+<header class="bg-surface/90 backdrop-blur-xl border-b border-glass-border docked full-width top-0 z-50 sticky shadow-[0_0_20px_rgba(0,242,255,0.1)]">
+<div class="flex justify-between items-center w-full px-margin-desktop py-4 max-w-container-max mx-auto">
+<div class="flex items-center gap-8">
+<span class="font-display-lg text-headline-md tracking-tighter text-on-surface">CORE PERFORMANCE</span>
+<nav class="hidden md:flex gap-6">
+<a class="font-label-caps text-label-caps text-on-surface-variant hover:text-on-surface transition-colors duration-300" href="#">SYSTEMS</a>
+<a class="font-label-caps text-label-caps text-tertiary border-b-2 border-tertiary pb-1" href="#">COMPONENTS</a>
+<a class="font-label-caps text-label-caps text-on-surface-variant hover:text-on-surface transition-colors duration-300" href="#">PERIPHERALS</a>
+<a class="font-label-caps text-label-caps text-on-surface-variant hover:text-on-surface transition-colors duration-300" href="#">GAMING GEAR</a>
+<a class="font-label-caps text-label-caps text-on-surface-variant hover:text-on-surface transition-colors duration-300" href="#">SOFTWARE</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<div class="relative hidden sm:block">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-sm">search</span>
+<input class="bg-primary-container border-b border-outline-variant focus:border-rgb-cyan text-on-surface text-[12px] font-label-caps pl-10 pr-4 py-2 w-64 outline-none transition-all" placeholder="SEARCH HARDWARE..." type="text"/>
+</div>
+<button class="p-2 hover:bg-surface-elevated/50 transition-all rounded-full"><span class="material-symbols-outlined">shopping_cart</span></button>
+<button class="p-2 hover:bg-surface-elevated/50 transition-all rounded-full"><span class="material-symbols-outlined">person</span></button>
+</div>
+</div>
+</header>
+<main class="flex-grow w-full max-w-container-max mx-auto px-margin-desktop py-8 grid grid-cols-12 gap-gutter relative">
+<!-- Left Column: Component Checklist -->
+<aside class="col-span-3 space-y-6 flex flex-col h-[calc(100vh-160px)] sticky top-28">
+<div class="space-y-1">
+<h2 class="font-headline-md text-headline-md text-on-surface">SYSTEM BUILDER</h2>
+<p class="font-label-caps text-label-caps text-outline uppercase">Master Configuration v4.2</p>
+</div>
+<div class="flex-grow overflow-y-auto custom-scrollbar pr-2 space-y-4">
+<!-- Step Item: CPU -->
+<div class="glass-panel p-4 rounded-lg border-l-4 border-tertiary">
+<div class="flex justify-between items-start mb-2">
+<span class="font-label-caps text-label-caps text-tertiary">STEP 01</span>
+<span class="material-symbols-outlined text-tertiary text-sm" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+<p class="font-headline-md text-[18px] text-on-surface mb-1">PROCESSOR (CPU)</p>
+<p class="font-label-caps text-[10px] text-on-surface-variant">INTEL CORE I9-14900K</p>
+</div>
+<!-- Step Item: GPU (Active) -->
+<div class="bg-surface-elevated p-4 rounded-lg border-l-4 border-rgb-cyan shadow-[0_0_15px_rgba(0,242,255,0.1)] relative overflow-hidden">
+<div class="absolute top-0 right-0 p-1 bg-rgb-cyan/20 text-rgb-cyan font-label-caps text-[8px] animate-glow-pulse px-2">CURRENT</div>
+<div class="flex justify-between items-start mb-2">
+<span class="font-label-caps text-label-caps text-rgb-cyan">STEP 02</span>
+<span class="material-symbols-outlined text-rgb-cyan text-sm">pending</span>
+</div>
+<p class="font-headline-md text-[18px] text-on-surface mb-1">GRAPHICS CARD (GPU)</p>
+<p class="font-label-caps text-[10px] text-outline">SELECT YOUR POWER...</p>
+</div>
+<!-- Other Steps -->
+<div class="glass-panel p-4 rounded-lg border-l-4 border-outline-variant opacity-60">
+<div class="flex justify-between items-start mb-2">
+<span class="font-label-caps text-label-caps text-outline">STEP 03</span>
+<span class="material-symbols-outlined text-outline text-sm">radio_button_unchecked</span>
+</div>
+<p class="font-headline-md text-[18px] text-on-surface mb-1">MOTHERBOARD</p>
+<p class="font-label-caps text-[10px] text-outline">LGA1700 SOCKET REQUIRED</p>
+</div>
+<div class="glass-panel p-4 rounded-lg border-l-4 border-outline-variant opacity-60">
+<div class="flex justify-between items-start mb-2">
+<span class="font-label-caps text-label-caps text-outline">STEP 04</span>
+<span class="material-symbols-outlined text-outline text-sm">radio_button_unchecked</span>
+</div>
+<p class="font-headline-md text-[18px] text-on-surface mb-1">MEMORY (RAM)</p>
+<p class="font-label-caps text-[10px] text-outline">DDR5 COMPATIBLE ONLY</p>
+</div>
+<div class="glass-panel p-4 rounded-lg border-l-4 border-outline-variant opacity-60">
+<div class="flex justify-between items-start mb-2">
+<span class="font-label-caps text-label-caps text-outline">STEP 05</span>
+<span class="material-symbols-outlined text-outline text-sm">radio_button_unchecked</span>
+</div>
+<p class="font-headline-md text-[18px] text-on-surface mb-1">PC CASE</p>
+<p class="font-label-caps text-[10px] text-outline">MID-TOWER ATX</p>
+</div>
+</div>
+</aside>
+<!-- Center Column: 3D Preview -->
+<section class="col-span-6 relative group h-[calc(100vh-160px)] flex flex-col items-center justify-center">
+<div class="absolute inset-0 z-0 overflow-hidden rounded-xl">
+
+</div>
+<!-- Preview Interaction Controls -->
+<div class="absolute top-4 left-4 flex gap-2 z-10">
+<button class="bg-surface-elevated/80 backdrop-blur border border-glass-border p-2 rounded hover:text-rgb-cyan transition-colors">
+<span class="material-symbols-outlined">360</span>
+</button>
+<button class="bg-surface-elevated/80 backdrop-blur border border-glass-border p-2 rounded hover:text-rgb-cyan transition-colors">
+<span class="material-symbols-outlined">zoom_in</span>
+</button>
+</div>
+<!-- Main Hardware Render Overlay -->
+<div class="relative z-10 w-full h-full flex items-center justify-center pointer-events-none">
+<img alt="PC Case Render" class="max-h-[80%] object-contain drop-shadow-[0_0_50px_rgba(241,193,0,0.15)]" data-alt="A futuristic professional PC build render featuring a sleek matte black tempered glass chassis with intense RGB interior lighting. The internal components are illuminated by vibrant magenta and cyan LEDs, with three intake fans glowing on the front panel. The camera angle is a dramatic low-profile three-quarter view that emphasizes the technical precision and metallic textures of the gaming rig. The background is a clean, dark industrial workspace with subtle blue atmospheric haze." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBiTXFMQg93yD39XjmlN0Rn9EF8Bevk0uZ1dIgMewN-5SFgaWAV4RWl-iKE0H6IrynC087uPQ5CDDWc1wWDFepDBqK5DZXU-gTPh3Ki8ePSfbGP_rAh_2GoolXRwwUUndlezmTzcDAtqCMzfsAUwEjBfJviIwishoK8oc5ckTphaoL1IcstXisZ66hjHcD9upu9Sb5bmMmny4DnMt32JT76mrXTL3jR5YLH1-1ftENTflCMFuKPvWosy5TwmO1spC9BpCPqkGJ7NO-J"/>
+<!-- Dynamic Callouts -->
+<div class="absolute top-1/4 right-[15%] flex items-center gap-4 animate-bounce hover:animate-none pointer-events-auto cursor-pointer">
+<div class="w-8 h-8 rounded-full border-2 border-rgb-cyan flex items-center justify-center bg-background/50 backdrop-blur">
+<div class="w-2 h-2 rounded-full bg-rgb-cyan animate-ping"></div>
+</div>
+<div class="glass-panel p-2 rounded px-4">
+<p class="font-label-caps text-[10px] text-rgb-cyan">SLOT: PCI-E 5.0</p>
+<p class="font-headline-md text-sm">GPU MOUNT POINT</p>
+</div>
+</div>
+</div>
+<!-- Bottom Control Bar -->
+<div class="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 flex gap-4 bg-surface/80 backdrop-blur-md px-6 py-3 rounded-full border border-glass-border">
+<button class="flex items-center gap-2 group">
+<span class="material-symbols-outlined text-outline group-hover:text-on-surface">light_mode</span>
+<span class="font-label-caps text-[10px]">RGB SYNC</span>
+</button>
+<div class="w-[1px] h-4 bg-outline-variant"></div>
+<button class="flex items-center gap-2 group">
+<span class="material-symbols-outlined text-outline group-hover:text-on-surface">view_in_ar</span>
+<span class="font-label-caps text-[10px]">EXPANDED VIEW</span>
+</button>
+</div>
+</section>
+<!-- Right Column: Summary & Checkout -->
+<aside class="col-span-3 space-y-6 h-[calc(100vh-160px)] flex flex-col sticky top-28">
+<div class="glass-panel rounded-xl overflow-hidden flex flex-col flex-grow">
+<div class="p-6 border-b border-glass-border">
+<h3 class="font-headline-md text-on-surface mb-1">BUILD SUMMARY</h3>
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]"></span>
+<span class="font-label-caps text-[10px] text-on-surface-variant uppercase">All Compatibility Checks Passed</span>
+</div>
+</div>
+<div class="flex-grow p-6 overflow-y-auto custom-scrollbar space-y-4">
+<div class="flex justify-between items-end border-b border-outline-variant pb-2">
+<div>
+<p class="font-label-caps text-[10px] text-outline">CORE i9-14900K</p>
+<p class="font-body-md text-sm">INTEL PROCESSOR</p>
+</div>
+<p class="font-label-caps text-sm">$589.00</p>
+</div>
+<div class="flex justify-between items-end border-b border-outline-variant pb-2 border-dashed">
+<div>
+<p class="font-label-caps text-[10px] text-rgb-cyan">RTX 4090 OC</p>
+<p class="font-body-md text-sm text-on-surface-variant italic">SELECTING...</p>
+</div>
+<p class="font-label-caps text-sm text-outline">TBD</p>
+</div>
+<div class="flex justify-between items-end border-b border-outline-variant pb-2">
+<div>
+<p class="font-label-caps text-[10px] text-outline">EST. POWER DRAW</p>
+<p class="font-body-md text-sm">340W / 1000W</p>
+</div>
+<div class="w-20 h-1 bg-surface-container-highest rounded-full overflow-hidden">
+<div class="bg-gradient-to-r from-rgb-cyan to-rgb-magenta h-full w-[34%]"></div>
+</div>
+</div>
+</div>
+<div class="p-6 bg-surface-container-high/50 border-t border-glass-border space-y-4">
+<div class="flex justify-between items-baseline">
+<span class="font-label-caps text-on-surface-variant">SUBTOTAL</span>
+<span class="font-display-lg text-headline-md">$1,245.99</span>
+</div>
+<p class="font-label-caps text-[10px] text-center text-outline">EST. SHIPPING: 3-5 BUSINESS DAYS</p>
+<button class="w-full bg-tertiary hover:bg-tertiary-fixed-dim text-on-tertiary font-headline-md py-4 rounded-lg flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(241,193,0,0.2)] transition-all transform active:scale-[0.98]">
+                        COMPLETE BUILD
+                        <span class="material-symbols-outlined">arrow_forward</span>
+</button>
+<button class="w-full border border-outline-variant hover:bg-surface-elevated py-2 rounded-lg font-label-caps text-[12px] text-on-surface-variant transition-all">
+                        SAVE CONFIGURATION
+                    </button>
+</div>
+</div>
+<!-- Support/Help Badge -->
+<div class="glass-panel p-4 rounded-xl flex items-center gap-4">
+<div class="w-10 h-10 rounded-full bg-rgb-cyan/20 flex items-center justify-center text-rgb-cyan">
+<span class="material-symbols-outlined">headset_mic</span>
+</div>
+<div>
+<p class="font-headline-md text-sm">NEED EXPERT HELP?</p>
+<p class="font-label-caps text-[10px] text-on-surface-variant underline cursor-pointer">CHAT WITH AN ENGINEER</p>
+</div>
+</div>
+</aside>
+</main>
+<!-- Footer -->
+<footer class="bg-surface-container-lowest border-t border-outline-variant mt-20">
+<div class="grid grid-cols-1 md:grid-cols-4 gap-gutter px-margin-desktop py-16 max-w-container-max mx-auto">
+<div class="space-y-4">
+<span class="font-headline-md text-headline-md text-tertiary">CORE PERFORMANCE</span>
+<p class="font-body-md text-on-surface-variant max-w-xs">Precision engineered components for the ultimate enthusiast. Dominate the digital frontier.</p>
+</div>
+<div class="flex flex-col gap-3">
+<h4 class="font-label-caps text-on-surface mb-2">QUICK LINKS</h4>
+<a class="font-label-caps text-[12px] text-outline hover:text-rgb-cyan transition-colors duration-300" href="#">Privacy Policy</a>
+<a class="font-label-caps text-[12px] text-outline hover:text-rgb-cyan transition-colors duration-300" href="#">Terms of Service</a>
+<a class="font-label-caps text-[12px] text-outline hover:text-rgb-cyan transition-colors duration-300" href="#">Warranty Info</a>
+</div>
+<div class="flex flex-col gap-3">
+<h4 class="font-label-caps text-on-surface mb-2">RESOURCES</h4>
+<a class="font-label-caps text-[12px] text-outline hover:text-rgb-cyan transition-colors duration-300" href="#">Contact Us</a>
+<a class="font-label-caps text-[12px] text-outline hover:text-rgb-cyan transition-colors duration-300" href="#">Software Downloads</a>
+<a class="font-label-caps text-[12px] text-outline hover:text-rgb-cyan transition-colors duration-300" href="#">Legacy Builds</a>
+</div>
+<div class="space-y-4">
+<h4 class="font-label-caps text-on-surface mb-2">CONNECT</h4>
+<div class="flex gap-4">
+<a class="text-outline hover:text-rgb-magenta transition-all transform hover:scale-110" href="#"><span class="material-symbols-outlined">forum</span></a>
+<a class="text-outline hover:text-rgb-magenta transition-all transform hover:scale-110" href="#"><span class="material-symbols-outlined">share</span></a>
+<a class="text-outline hover:text-rgb-magenta transition-all transform hover:scale-110" href="#"><span class="material-symbols-outlined">alternate_email</span></a>
+</div>
+</div>
+</div>
+<div class="border-t border-glass-border py-6 px-margin-desktop text-center">
+<p class="font-label-caps text-[12px] text-outline">© 2024 CORE PERFORMANCE. ENGINEERED FOR ENTHUSIASTS.</p>
+</div>
+</footer>
+<script>
+        // Micro-interactions for build steps
+        document.querySelectorAll('.glass-panel').forEach(panel => {
+            panel.addEventListener('mouseenter', () => {
+                panel.classList.add('neon-cyan-glow');
+            });
+            panel.addEventListener('mouseleave', () => {
+                panel.classList.remove('neon-cyan-glow');
+            });
+        });
+
+        // Simulating price updates or selection logic
+        const steps = document.querySelectorAll('aside .glass-panel');
+        steps.forEach(step => {
+            step.addEventListener('click', () => {
+                console.log('Component slot selected');
+            });
+        });
+    </script>
+</body></html>

@@ -64,6 +64,7 @@
                      th:classappend="${buildItems.pcCase?.product?.productId == case.productId} ? 'selected' : ''"
                      th:attr="data-id=${case.productId},data-price=${case.product.price}"
                      th:data-name="${case.product.productName}"
+                     th:data-brand="${case.product.brand != null ? case.product.brand.name : ''}"
                      th:data-formfactor="${case.formFactor}"
                      th:data-gpumaxlength="${case.gpuMaxLength}"
                      th:data-cpumaxheight="${case.cpuMaxCoolerHeight}"

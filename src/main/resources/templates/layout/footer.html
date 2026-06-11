@@ -6,14 +6,20 @@
         <div class="footer-top">
             <div class="footer-brand">
                 <a th:href="@{/home}" class="site-logo">
-                    <span class="site-logo-mark" aria-hidden="true"><i class="fa fa-bolt"></i></span>
+                    <img th:src="@{/assets/image/logo.jpg}" alt="PCOnlineShop logo" class="site-logo-img">
                     <span class="site-logo-text">PCOnlineShop</span>
                 </a>
                 <p>High-performance components, gaming gear, and PC building tools for reliable custom systems.</p>
                 <div class="footer-social" aria-label="Social links">
-                    <a href="#" aria-label="Facebook"><i class="fa fa-facebook"></i></a>
-                    <a href="#" aria-label="YouTube"><i class="fa fa-youtube-play"></i></a>
-                    <a href="#" aria-label="Instagram"><i class="fa fa-instagram"></i></a>
+                    <a href="#" aria-label="Facebook">
+                        <img th:src="@{/images/facebook-network-communication-internet-interaction-svgrepo-com.svg}" alt="Facebook">
+                    </a>
+                    <a href="#" aria-label="YouTube">
+                        <img th:src="@{/images/youtube-svgrepo-com.svg}" alt="YouTube">
+                    </a>
+                    <a href="#" aria-label="Instagram">
+                        <img th:src="@{/images/instagram-1-svgrepo-com.svg}" alt="Instagram">
+                    </a>
                 </div>
             </div>
 
@@ -57,13 +63,6 @@
         <div class="footer-bottom">
             <span>Copyright 2026 PCOnlineShop. All rights reserved.</span>
             <span class="footer-payments">Visa / Mastercard / PayOS / COD</span>
-            <label>
-                <span class="sr-only">Language</span>
-                <select aria-label="Language selector">
-                    <option>English</option>
-                    <option>Vietnamese</option>
-                </select>
-            </label>
         </div>
     </div>
 </footer>

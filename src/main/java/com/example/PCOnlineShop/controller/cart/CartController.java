@@ -9,6 +9,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -76,6 +77,30 @@ public class CartController {
             addError(redirectAttributes, "Unable to add product to cart. Please try again.");
         }
         return redirectToReferer(request);
+    }
+
+    @PostMapping(value = "/add/{productId}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+    public ResponseEntity<?> addToCartAjax(@PathVariable int productId,
+                                           @RequestParam(defaultValue = "1") int quantity,
+                                           @AuthenticationPrincipal UserDetails currentUser) {
+        Account account = getCurrentAccount(currentUser);
+        if (account == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Please log in."));
+        }
+
+        try {
+            cartService.addToCart(account, productId, quantity);
+            return ResponseEntity.ok(Map.of(
+                    "message", "Product added to cart!",
+                    "cartItemCount", cartService.countItems(account)
+            ));
+        } catch (IllegalArgumentException | EntityNotFoundException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        } catch (RuntimeException e) {
+            log.error("Unexpected error adding product {} to cart for account {}", productId, account.getAccountId(), e);
+            return ResponseEntity.internalServerError().body(Map.of("error", "Unable to add product to cart. Please try again."));
+        }
     }
 
     @GetMapping("/addListItem")
@@ -147,6 +172,19 @@ public class CartController {
         return "redirect:/cart";
     }
 
+    @PostMapping("/clear-selected")
+    @ResponseBody
+    public ResponseEntity<?> clearSelectedCartItems(@RequestParam(required = false) List<Integer> cartItemIds,
+                                                    @AuthenticationPrincipal UserDetails currentUser) {
+        return handleCartAction(currentUser, account -> {
+            if (cartItemIds == null || cartItemIds.isEmpty()) {
+                cartService.clearSelectedItems(account);
+                return;
+            }
+            cartService.removeItemsFromCart(account, cartItemIds);
+        });
+    }
+
     private ResponseEntity<?> handleCartAction(UserDetails currentUser, Consumer<Account> action) {
         Account account = getCurrentAccount(currentUser);
         if (account == null) {
@@ -156,7 +194,12 @@ public class CartController {
         try {
             action.accept(account);
             double newTotal = cartService.calculateSelectedTotalForAccount(account);
-            return ResponseEntity.ok(Map.of("message", "Success", "newGrandTotal", newTotal));
+            int cartItemCount = cartService.countItems(account);
+            return ResponseEntity.ok(Map.of(
+                    "message", "Success",
+                    "newGrandTotal", newTotal,
+                    "cartItemCount", cartItemCount
+            ));
         } catch (IllegalArgumentException | EntityNotFoundException | SecurityException e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         } catch (RuntimeException e) {

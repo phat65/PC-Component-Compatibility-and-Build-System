@@ -64,6 +64,7 @@
                      th:classappend="${buildItems.cooling?.product?.productId == cl.product.productId} ? 'selected' : ''"
                      th:attr="data-id=${cl.product.productId},data-price=${cl.product.price}"
                      th:data-name="${cl.product.productName}"
+                     th:data-brand="${cl.product.brand != null ? cl.product.brand.name : ''}"
                      th:data-type="${cl.type}"
                      th:data-fansize="${cl.fanSize}"
                      th:data-tdp="${cl.tdp}">

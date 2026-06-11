@@ -1,6 +1,56 @@
 document.addEventListener("DOMContentLoaded", function () {
     const priceTotal = document.getElementById("priceTotal");
     const productGrid = document.querySelector(".product-grid");
+    const mainContent = document.querySelector(".build-page .main-content:not(.start-screen)");
+    const detailHeader = document.querySelector(".build-page .detail-header");
+
+    function componentTitleFromHeader(text) {
+        const normalized = String(text || "").replace(/^select\s+/i, "").trim().toUpperCase();
+        const titles = {
+            GPU: "Graphics Cards",
+            CPU: "Processors",
+            MOTHERBOARD: "Motherboards",
+            MAINBOARD: "Motherboards",
+            CASE: "PC Cases",
+            COOLING: "Cooling",
+            MEMORY: "Memory",
+            STORAGE: "Storage",
+            PSU: "Power Supplies",
+            OTHER: "Add-ons"
+        };
+
+        return titles[normalized] || normalized || "Components";
+    }
+
+    function currentCartCount() {
+        const existingCount = document.querySelector(".cart-count");
+        return existingCount ? existingCount.textContent.trim() || "0" : "0";
+    }
+
+    if (mainContent && detailHeader && !mainContent.querySelector(".build-topbar")) {
+        const topbar = document.createElement("div");
+        topbar.className = "build-topbar";
+
+        const title = document.createElement("h1");
+        title.className = "build-component-title";
+        title.textContent = componentTitleFromHeader(detailHeader.textContent);
+
+        const actions = document.createElement("div");
+        actions.className = "build-top-actions";
+        actions.innerHTML = `
+            <a href="/cart" class="build-icon-link site-cart-link" aria-label="Cart">
+                <img src="/images/shopping_cart_40dp_E3E3E3_FILL0_wght400_GRAD0_opsz40.svg" alt="">
+                <span class="cart-count">${currentCartCount()}</span>
+            </a>
+            <a href="/profile" class="build-icon-link" aria-label="Account">
+                <img src="/images/account_circle_40dp_E3E3E3_FILL0_wght400_GRAD0_opsz40.svg" alt="">
+            </a>
+        `;
+
+        topbar.appendChild(title);
+        topbar.appendChild(actions);
+        mainContent.prepend(topbar);
+    }
 
     const knownHiddenIds = [
         "selectedMainboardId",
@@ -95,6 +145,63 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function value(card, name) {
         return card.getAttribute("data-" + name) || "";
+    }
+
+    function normalizeFilterText(text) {
+        return String(text || "").trim().toLowerCase();
+    }
+
+    function createFilterOption(value, label) {
+        const option = document.createElement("option");
+        option.value = value;
+        option.textContent = label;
+        return option;
+    }
+
+    function enhanceFilterBar() {
+        const filterBar = document.querySelector(".build-page .filter-bar");
+        if (!filterBar || filterBar.querySelector(".build-brand-filter")) {
+            return;
+        }
+
+        const brandSelect = document.createElement("select");
+        brandSelect.className = "build-brand-filter";
+        brandSelect.setAttribute("aria-label", "Filter by brand");
+        brandSelect.appendChild(createFilterOption("", "All Brands"));
+
+        document.querySelectorAll("#filterPopup input[name='brands']").forEach(input => {
+            brandSelect.appendChild(createFilterOption(input.value, input.value));
+        });
+
+        const priceSelect = document.createElement("select");
+        priceSelect.className = "build-price-filter";
+        priceSelect.setAttribute("aria-label", "Filter by price");
+        [
+            ["", "All Prices"],
+            ["0-100", "Under $100"],
+            ["100-300", "$100 - $300"],
+            ["300-700", "$300 - $700"],
+            ["700-1200", "$700 - $1200"],
+            ["1200-", "Over $1200"]
+        ].forEach(([value, label]) => priceSelect.appendChild(createFilterOption(value, label)));
+
+        const label = document.createElement("span");
+        label.className = "build-filter-label";
+        label.textContent = "Filter by:";
+
+        const searchBox = document.getElementById("searchBox");
+        if (searchBox && searchBox.nextSibling) {
+            filterBar.insertBefore(label, searchBox.nextSibling);
+            filterBar.insertBefore(brandSelect, label.nextSibling);
+            filterBar.insertBefore(priceSelect, brandSelect.nextSibling);
+        } else {
+            filterBar.appendChild(label);
+            filterBar.appendChild(brandSelect);
+            filterBar.appendChild(priceSelect);
+        }
+
+        brandSelect.addEventListener("change", filterProducts);
+        priceSelect.addEventListener("change", filterProducts);
     }
 
     function setText(element, label, content, suffix) {
@@ -364,8 +471,14 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     ensureSearchEmptyState();
+    enhanceFilterBar();
     if (initiallySelectedCard) {
         updateDetailPanel(initiallySelectedCard);
+    } else {
+        const firstCard = document.querySelector(".product-card");
+        if (firstCard) {
+            updateDetailPanel(firstCard);
+        }
     }
     updateSearchEmptyState();
 });
@@ -380,21 +493,23 @@ function normalizeSearchText(text) {
 
 function filterProducts() {
     const searchBox = document.getElementById("searchBox");
-    if (!searchBox) {
-        return;
-    }
-
-    const query = normalizeSearchText(searchBox.value);
+    const brandSelect = document.querySelector(".build-brand-filter");
+    const priceSelect = document.querySelector(".build-price-filter");
+    const query = normalizeSearchText(searchBox ? searchBox.value : "");
+    const selectedBrand = normalizeFilterText(brandSelect ? brandSelect.value : "");
+    const selectedPrice = priceSelect ? priceSelect.value : "";
     const cards = document.querySelectorAll(".product-card");
 
     cards.forEach(card => {
-        if (!query) {
-            card.style.display = "flex";
-            return;
-        }
-
         const name = normalizeSearchText(card.getAttribute("data-name"));
-        card.style.display = name.includes(query) ? "flex" : "none";
+        const brand = normalizeFilterText(card.getAttribute("data-brand"));
+        const price = parseFloat(card.getAttribute("data-price") || "0");
+
+        const matchesSearch = !query || name.includes(query);
+        const matchesBrand = !selectedBrand || brand === selectedBrand;
+        const matchesPrice = !selectedPrice || priceMatchesRange(price, selectedPrice);
+
+        card.style.display = matchesSearch && matchesBrand && matchesPrice ? "flex" : "none";
     });
 
     const emptyState = document.getElementById("buildSearchEmpty");
@@ -403,10 +518,29 @@ function filterProducts() {
     }
 }
 
+function normalizeFilterText(text) {
+    return String(text || "").trim().toLowerCase();
+}
+
+function priceMatchesRange(price, range) {
+    const [minValue, maxValue] = String(range).split("-");
+    const min = minValue ? parseFloat(minValue) : 0;
+    const max = maxValue ? parseFloat(maxValue) : Number.POSITIVE_INFINITY;
+    return price >= min && price < max;
+}
+
 function clearFilter() {
     const searchBox = document.getElementById("searchBox");
     if (searchBox) {
         searchBox.value = "";
+    }
+    const brandSelect = document.querySelector(".build-brand-filter");
+    if (brandSelect) {
+        brandSelect.value = "";
+    }
+    const priceSelect = document.querySelector(".build-price-filter");
+    if (priceSelect) {
+        priceSelect.value = "";
     }
 
     document.querySelectorAll(".product-card").forEach(card => {

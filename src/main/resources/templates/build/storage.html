@@ -64,6 +64,7 @@
                      th:classappend="${buildItems.storage?.product?.productId == storage.product.productId} ? 'selected' : ''"
                      th:attr="data-id=${storage.product.productId},data-price=${storage.product.price}"
                      th:data-name="${storage.product.productName}"
+                     th:data-brand="${storage.product.brand != null ? storage.product.brand.name : ''}"
                      th:data-type="${storage.type}"
                      th:data-capacity="${storage.capacity}">
                     <!-- Product Image -->

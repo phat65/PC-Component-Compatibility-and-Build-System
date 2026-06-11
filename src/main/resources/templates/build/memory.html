@@ -64,6 +64,7 @@
                      th:classappend="${buildItems.memory?.product?.productId == memory.product.productId} ? 'selected' : ''"
                      th:attr="data-id=${memory.product.productId},data-price=${memory.product.price}"
                      th:data-name="${memory.product.productName}"
+                     th:data-brand="${memory.product.brand != null ? memory.product.brand.name : ''}"
                      th:data-type="${memory.type}"
                      th:data-capacity="${memory.capacity}"
                      th:data-speed="${memory.speed}"

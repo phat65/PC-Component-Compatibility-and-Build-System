@@ -81,6 +81,15 @@ public class CartService {
         return calculateSelectedTotal(getCartItems(account));
     }
 
+    public int countItems(Account account) {
+        return cartRepository.findByAccount(account)
+                .map(cart -> cartItemRepository.findByCart(cart)
+                        .stream()
+                        .mapToInt(CartItem::getQuantity)
+                        .sum())
+                .orElse(0);
+    }
+
     public void addToCart(Account account, int productId, int quantity) {
         Cart cart = getOrCreateCart(account);
         Product product = getPurchasableProduct(productId);
@@ -141,6 +150,14 @@ public class CartService {
             throw new SecurityException("Not authorized");
         }
         cartItemRepository.delete(item);
+    }
+
+    public void removeItemsFromCart(Account account, List<Integer> cartItemIds) {
+        if (cartItemIds == null || cartItemIds.isEmpty()) {
+            throw new IllegalArgumentException("Please select at least one item to delete.");
+        }
+
+        cartItemIds.forEach(cartItemId -> removeFromCart(account, cartItemId));
     }
 
     public Map<Integer, CartItem> getCartMapForCheckout(Account account) {

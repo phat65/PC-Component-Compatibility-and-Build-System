@@ -61,6 +61,7 @@
                      th:classappend="${buildItems.gpu?.product?.productId == gpu.productId} ? 'selected' : ''"
                      th:attr="data-id=${gpu.productId},data-price=${gpu.product.price}"
                      th:data-name="${gpu.product.productName}"
+                     th:data-brand="${gpu.product.brand != null ? gpu.product.brand.name : ''}"
                      th:data-pcie="${gpu.pcieVersion}"
                      th:data-tdp="${gpu.tdp}"
                      th:data-vram="${gpu.vram}">

@@ -86,7 +86,7 @@
                         </p>
                     </div>
 
-                    <form th:action="@{'/cart/add/' + ${product.productId}}" method="post" class="app-mb-3">
+                    <form th:action="@{'/cart/add/' + ${product.productId}}" method="post" class="ajax-add-to-cart app-mb-3">
                         <div class="app-flex app-flex-wrap app-align-center app-gap-3">
                             <label for="quantity"><strong>Quantity</strong></label>
                             <input type="number" id="quantity" name="quantity" value="1" min="1"
@@ -94,6 +94,7 @@
                                    class="form-control text-center quantity-input-compact"
                                    required
                                    th:disabled="${product.inventoryQuantity == null or product.inventoryQuantity <= 0}">
+                            <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
 
                             <button type="submit"
                                     class="btn btn-app-primary"

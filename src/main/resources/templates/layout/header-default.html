@@ -4,7 +4,7 @@
 <header th:fragment="header-default" class="site-header">
     <div class="site-header-inner">
         <a th:href="@{/home}" class="site-logo" aria-label="PCOnlineShop home">
-            <span class="site-logo-mark" aria-hidden="true"><i class="fa fa-bolt"></i></span>
+            <img th:src="@{/assets/image/logo.jpg}" alt="PCOnlineShop logo" class="site-logo-img">
             <span class="site-logo-text">PCOnlineShop</span>
         </a>
 
@@ -70,14 +70,23 @@
             <form class="site-search" th:action="@{/products}" method="get" role="search">
                 <label class="sr-only" for="header-search-default">Search products</label>
                 <input id="header-search-default" name="keyword" type="search" placeholder="Search components">
-                <button type="submit" aria-label="Search"><i class="fa fa-search"></i></button>
+                <button type="submit" aria-label="Search">
+                    <img th:src="@{/images/search_40dp_E3E3E3_FILL0_wght400_GRAD0_opsz40.svg}" alt="" class="site-icon-img">
+                </button>
             </form>
-            <a th:href="@{/auth/login}" class="site-icon-link" aria-label="Login"><i class="fa fa-user"></i></a>
-            <a th:href="@{/auth/login}" class="site-icon-link" aria-label="Wishlist"><i class="fa fa-heart-o"></i></a>
-            <a th:href="@{/cart}" class="site-icon-link site-cart-link" aria-label="Cart">
-                <i class="fa fa-shopping-cart"></i>
-                <span class="cart-count">0</span>
+            <a th:href="@{/auth/login(required=true)}" class="site-icon-link site-cart-link" aria-label="Cart">
+                <img th:src="@{/images/shopping_cart_40dp_E3E3E3_FILL0_wght400_GRAD0_opsz40.svg}" alt="Cart" class="site-icon-img">
+                <span class="cart-count" th:text="${cartItemCount ?: 0}">0</span>
             </a>
+            <div class="account-menu">
+                <button id="guestProfileToggle" class="account-toggle account-icon-toggle" type="button" aria-label="Account menu" aria-expanded="false">
+                    <img th:src="@{/images/account_circle_40dp_E3E3E3_FILL0_wght400_GRAD0_opsz40.svg}" alt="" class="site-icon-img">
+                </button>
+                <div id="guestProfileDropdown" class="account-dropdown" role="menu" aria-hidden="true">
+                    <a th:href="@{/auth/login}" role="menuitem">Login</a>
+                    <a th:href="@{/auth/register}" role="menuitem">Register</a>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -86,8 +95,26 @@
             const header = document.currentScript.closest('.site-header');
             const toggle = header.querySelector('[data-nav-toggle]');
             const nav = header.querySelector('[data-site-nav]');
+            const profileToggle = header.querySelector('#guestProfileToggle');
+            const dropdown = header.querySelector('#guestProfileDropdown');
+
             toggle.addEventListener('click', function () {
                 nav.classList.toggle('is-open');
+            });
+
+            profileToggle.addEventListener('click', function (event) {
+                event.stopPropagation();
+                const open = dropdown.classList.toggle('show');
+                profileToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+                dropdown.setAttribute('aria-hidden', open ? 'false' : 'true');
+            });
+
+            document.addEventListener('click', function (event) {
+                if (!dropdown.contains(event.target) && event.target !== profileToggle) {
+                    dropdown.classList.remove('show');
+                    profileToggle.setAttribute('aria-expanded', 'false');
+                    dropdown.setAttribute('aria-hidden', 'true');
+                }
             });
         })();
     </script>

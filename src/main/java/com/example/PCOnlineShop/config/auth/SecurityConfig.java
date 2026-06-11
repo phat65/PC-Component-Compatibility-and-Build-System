@@ -24,6 +24,7 @@ import org.springframework.security.web.authentication.SavedRequestAwareAuthenti
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfFilter;
 import org.springframework.security.web.csrf.CsrfToken;
+import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -49,9 +50,17 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        CsrfTokenRequestAttributeHandler csrfRequestHandler = new CsrfTokenRequestAttributeHandler();
+        csrfRequestHandler.setCsrfRequestAttributeName("_csrf");
+
         http.csrf(csrf -> csrf
                         .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
-                        .ignoringRequestMatchers(new AntPathRequestMatcher("/payment/webhook", HttpMethod.POST.name()))
+                        .csrfTokenRequestHandler(csrfRequestHandler)
+                        .ignoringRequestMatchers(
+                                new AntPathRequestMatcher("/payment/webhook", HttpMethod.POST.name()),
+                                new AntPathRequestMatcher("/cart/add/**", HttpMethod.POST.name()),
+                                new AntPathRequestMatcher("/api/build/**", HttpMethod.POST.name())
+                        )
                 )
                 .addFilterAfter(csrfCookieFilter(), CsrfFilter.class)
                 .authorizeHttpRequests(auth -> auth
@@ -74,6 +83,8 @@ public class SecurityConfig {
                         .requestMatchers("/orders/checkout").hasRole("CUSTOMER")
                         .requestMatchers("/orders/list", "/orders/detail/**", "/payment/info/**", "/payment/continue/**")
                                 .hasAnyRole("CUSTOMER", "STAFF", "ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/cart").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/cart/add/**").permitAll()
                         .requestMatchers("/cart/**", "/checkout/**").hasRole("CUSTOMER")
                         .requestMatchers("/profile/**").hasAnyRole("CUSTOMER", "STAFF")
                         .requestMatchers("/orders/update-all-status").hasAnyRole("STAFF", "ADMIN")

@@ -39,11 +39,9 @@
                             <span>Select All (<span id="total-items-count" th:text="${#lists.size(cartItems)}">0</span>)</span>
                         </label>
 
-                        <form th:action="@{/cart/clear}" method="post" id="clear-cart-form">
-                            <button type="button" class="clear-cart-icon-btn icon-button" title="Clear entire cart">
-                                <i class="fa fa-trash"></i>
-                            </button>
-                        </form>
+                        <button type="button" class="delete-selected-cart-btn icon-button" title="Delete selected items">
+                            <img th:src="@{/images/bin.svg}" alt="" class="cart-bin-icon">
+                        </button>
                     </div>
 
                     <div class="cart-items-list">
@@ -89,7 +87,7 @@
 
                             <div class="item-remove">
                                 <button type="button" class="remove-item-btn icon-button" title="Remove item">
-                                    <i class="fa fa-trash"></i>
+                                    <img th:src="@{/images/bin.svg}" alt="" class="cart-bin-icon">
                                 </button>
                             </div>
                         </div>

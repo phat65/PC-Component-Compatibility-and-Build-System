@@ -93,7 +93,15 @@
                                 <span th:class="${p.inventoryQuantity != null and p.inventoryQuantity > 0 ? 'stock-badge' : 'stock-badge out'}"
                                       th:text="${p.inventoryQuantity != null and p.inventoryQuantity > 0 ? 'In Stock' : 'Out of Stock'}">In Stock</span>
                                 <div class="card-actions app-mt-3">
-                                    <a th:href="@{/products/{id}(id=${p.productId})}" class="btn btn-app-primary">Add to Cart</a>
+                                    <form th:action="@{/cart/add/{id}(id=${p.productId})}" method="post" class="ajax-add-to-cart product-card-cart-form">
+                                        <input type="hidden" name="quantity" value="1">
+                                        <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                                        <button type="submit"
+                                                class="btn btn-app-primary"
+                                                th:disabled="${p.inventoryQuantity == null or p.inventoryQuantity <= 0}">
+                                            Add to Cart
+                                        </button>
+                                    </form>
                                     <a th:href="@{/products/{id}(id=${p.productId})}" class="btn btn-app-outline">Compare</a>
                                 </div>
                             </div>

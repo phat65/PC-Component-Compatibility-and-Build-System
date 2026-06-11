@@ -5,25 +5,64 @@
 <body>
 <th:block th:fragment="content">
 <div class="storefront-page">
-    <section class="store-hero">
-        <div class="container store-hero-inner">
-            <div>
-                <span class="eyebrow">New Deals Available</span>
-                <h1>Build Your Perfect PC</h1>
-                <p>Shop high-performance components, gaming gear, and compatible PC parts in one place.</p>
+    <section class="store-hero layout-example-hero">
+        <div class="layout-example-hero-media" aria-hidden="true">
+            <img th:src="@{/images/layout-example/hero-black-build.png}" alt="">
+        </div>
+        <div class="container layout-example-hero-content">
+            <div class="layout-example-hero-copy">
+                <span class="eyebrow">New Arrival</span>
+                <h1>PCOnlineShop</h1>
+                <p>High-performance PC components, gaming gear, and builder-ready parts for your next setup.</p>
                 <div class="hero-actions">
-                    <a th:href="@{/products}" class="btn btn-lg btn-app-primary">Shop Components</a>
+                    <a th:href="@{/products}" class="btn btn-lg btn-app-primary">Shop Hardware</a>
                     <a th:href="@{/build/start}" class="btn btn-lg btn-app-outline">Start PC Builder</a>
                 </div>
-                <div class="hero-feature-list" aria-label="Store features">
-                    <span>Compatible Parts</span>
-                    <span>Fast Checkout</span>
-                    <span>Trusted Brands</span>
-                    <span>Gaming Performance</span>
-                </div>
             </div>
-            <div class="hero-visual" aria-label="High-end gaming PC visual">
-                <div class="hero-rig"></div>
+            <div class="layout-example-hero-strip" aria-label="Store features">
+                <span>Compatible Parts</span>
+                <span>Fast Checkout</span>
+                <span>Trusted Brands</span>
+                <span>Gaming Performance</span>
+            </div>
+        </div>
+    </section>
+
+    <section class="page-section-tight home-showcase-section layout-example-bento">
+        <div class="container">
+            <div class="layout-section-heading">
+                <div>
+                    <p class="section-kicker">// Featured Hardware</p>
+                    <h2 class="section-title app-mb-0">Build a Complete Setup</h2>
+                </div>
+                <a th:href="@{/products}" class="btn btn-app-outline">View Collections</a>
+            </div>
+            <div class="home-showcase-grid">
+                <a th:href="@{/products(keyword='Case')}" class="home-showcase-card home-showcase-card-large">
+                    <img th:src="@{/images/layout-example/hero-white-build.png}" alt="White PC build with RGB cooling">
+                    <div class="home-showcase-content">
+                        <span class="section-kicker">Ultimate Performance</span>
+                        <h2>High-Airflow PC Builds</h2>
+                        <p>Find cases, cooling, GPU clearance, and power parts for a balanced gaming setup.</p>
+                        <span class="layout-card-action">Shop Now</span>
+                    </div>
+                </a>
+                <a th:href="@{/build/start}" class="home-showcase-card">
+                    <img th:src="@{/images/layout-example/hero-black-build.png}" alt="Black RGB PC build">
+                    <div class="home-showcase-content">
+                        <span class="section-kicker">PC Builder</span>
+                        <h3>Match Compatible Parts</h3>
+                        <span class="layout-card-action">Get Started</span>
+                    </div>
+                </a>
+                <a th:href="@{/products(keyword='Keyboard')}" class="home-showcase-card">
+                    <img th:src="@{/images/layout-example/hero-gaming-gear.png}" alt="Gaming keyboard and mouse setup">
+                    <div class="home-showcase-content">
+                        <span class="section-kicker">Gaming Gear</span>
+                        <h3>Upgrade Your Desk</h3>
+                        <span class="layout-card-action">Order Now</span>
+                    </div>
+                </a>
             </div>
         </div>
     </section>
@@ -148,9 +187,15 @@
                                   th:text="${p.inventoryQuantity != null and p.inventoryQuantity > 0 ? 'In Stock' : 'Out of Stock'}">In Stock</span>
                             <a th:href="@{/products/{id}(id=${p.productId})}" class="btn btn-app-outline btn-sm">Compare</a>
                         </div>
-                        <a th:href="@{/products/{id}(id=${p.productId})}" class="btn btn-app-primary btn-block app-mt-3">
-                            <i class="fa fa-shopping-cart"></i> Add to Cart
-                        </a>
+                        <form th:action="@{/cart/add/{id}(id=${p.productId})}" method="post" class="ajax-add-to-cart app-mt-3">
+                            <input type="hidden" name="quantity" value="1">
+                            <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                            <button type="submit"
+                                    class="btn btn-app-primary btn-block"
+                                    th:disabled="${p.inventoryQuantity == null or p.inventoryQuantity <= 0}">
+                                <i class="fa fa-shopping-cart"></i> Add to Cart
+                            </button>
+                        </form>
                     </div>
                 </article>
             </div>

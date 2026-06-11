@@ -64,6 +64,7 @@
                      th:classappend="${buildItems.cpu?.product?.productId == cpu.productId} ? 'selected' : ''"
                      th:attr="data-id=${cpu.productId},data-price=${cpu.product.price}"
                      th:data-name="${cpu.product.productName}"
+                     th:data-brand="${cpu.product.brand != null ? cpu.product.brand.name : ''}"
                      th:data-socket="${cpu.socket}"
                      th:data-tdp="${cpu.tdp}"
                      th:data-igpu="${cpu.hasIGPU}">

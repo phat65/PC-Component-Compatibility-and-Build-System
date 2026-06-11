@@ -52,8 +52,19 @@
         suggestedBuild: null
     };
     function getCsrfToken() {
+        const csrfMeta = document.querySelector('meta[name="_csrf"]');
+        const metaToken = csrfMeta ? csrfMeta.getAttribute('content') : '';
+        if (metaToken) {
+            return metaToken;
+        }
+
         const match = document.cookie.match(/(?:^|; )XSRF-TOKEN=([^;]+)/);
         return match ? decodeURIComponent(match[1]) : '';
+    }
+
+    function getCsrfHeader() {
+        const csrfHeaderMeta = document.querySelector('meta[name="_csrf_header"]');
+        return csrfHeaderMeta ? csrfHeaderMeta.getAttribute('content') : 'X-XSRF-TOKEN';
     }
 
     function withCsrfHeaders(headers) {
@@ -64,7 +75,7 @@
 
         return {
             ...headers,
-            'X-XSRF-TOKEN': csrfToken
+            [getCsrfHeader()]: csrfToken
         };
     }
 
@@ -232,6 +243,10 @@
                 })
             });
 
+            if (response.status === 403) {
+                throw new Error('PC Builder is available for customers and guests. Please switch from admin/staff account.');
+            }
+
             if (!response.ok) {
                 const errorText = await response.text();
                 throw new Error(errorText || 'Failed to generate suggestion');
@@ -325,6 +340,9 @@
             body: JSON.stringify(state.suggestedBuild)
         })
         .then(response => {
+            if (response.status === 403) {
+                throw new Error('PC Builder is available for customers and guests. Please switch from admin/staff account.');
+            }
             if (!response.ok) {
                 throw new Error('Failed to apply build');
             }
@@ -336,7 +354,7 @@
         })
         .catch(error => {
             console.error('Error applying build:', error);
-            showError('Failed to apply build. Please try again.');
+            showError(error.message || 'Failed to apply build. Please try again.');
         });
     }
 

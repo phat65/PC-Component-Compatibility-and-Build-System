@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>CORE PERFORMANCE | High-Octane Gaming Hardware</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800&amp;family=JetBrains+Mono:wght@600&amp;family=Hanken+Grotesk:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface": "#121414",
+                    "on-primary-fixed": "#1c1b1b",
+                    "background": "#121414",
+                    "secondary-fixed-dim": "#c8c6c5",
+                    "on-surface": "#e2e2e2",
+                    "on-tertiary-container": "#947600",
+                    "surface-container": "#1e2020",
+                    "on-tertiary-fixed": "#241a00",
+                    "glass-border": "rgba(255, 255, 255, 0.1)",
+                    "surface-elevated": "#262626",
+                    "secondary-fixed": "#e5e2e1",
+                    "surface-variant": "#333535",
+                    "on-secondary-container": "#b7b5b4",
+                    "rgb-cyan": "#00F2FF",
+                    "on-background": "#e2e2e2",
+                    "on-surface-variant": "#c4c7c7",
+                    "secondary": "#c8c6c5",
+                    "status-warning": "#F5C400",
+                    "on-primary": "#313030",
+                    "on-tertiary-fixed-variant": "#584400",
+                    "outline-variant": "#444748",
+                    "surface-dim": "#121414",
+                    "error-container": "#93000a",
+                    "inverse-primary": "#5f5e5e",
+                    "outline": "#8e9192",
+                    "surface-container-highest": "#333535",
+                    "on-primary-fixed-variant": "#474646",
+                    "surface-container-lowest": "#0c0f0f",
+                    "on-tertiary": "#3d2f00",
+                    "primary-fixed-dim": "#c9c6c5",
+                    "tertiary-fixed": "#ffe08b",
+                    "primary": "#c9c6c5",
+                    "on-secondary-fixed-variant": "#474746",
+                    "on-primary-container": "#7b7979",
+                    "on-secondary-fixed": "#1b1b1c",
+                    "inverse-on-surface": "#2f3131",
+                    "secondary-container": "#474746",
+                    "error": "#ffb4ab",
+                    "primary-fixed": "#e5e2e1",
+                    "on-error-container": "#ffdad6",
+                    "surface-container-low": "#1a1c1c",
+                    "tertiary": "#f1c100",
+                    "surface-tint": "#c9c6c5",
+                    "surface-container-high": "#282a2b",
+                    "tertiary-fixed-dim": "#f1c100",
+                    "tertiary-container": "#0f0900",
+                    "primary-container": "#0a0a0a",
+                    "on-error": "#690005",
+                    "on-secondary": "#303030",
+                    "surface-bright": "#37393a",
+                    "rgb-magenta": "#FF00E5",
+                    "inverse-surface": "#e2e2e2"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "base": "8px",
+                    "margin-desktop": "64px",
+                    "gutter": "24px",
+                    "margin-mobile": "16px",
+                    "container-max": "1440px"
+            },
+            "fontFamily": {
+                    "headline-lg": ["Montserrat"],
+                    "label-caps": ["JetBrains Mono"],
+                    "headline-md": ["Montserrat"],
+                    "body-lg": ["Hanken Grotesk"],
+                    "body-md": ["Hanken Grotesk"],
+                    "display-lg": ["Montserrat"],
+                    "display-lg-mobile": ["Montserrat"]
+            },
+            "fontSize": {
+                    "headline-lg": ["32px", {"lineHeight": "1.2", "letterSpacing": "0.02em", "fontWeight": "700"}],
+                    "label-caps": ["12px", {"lineHeight": "1.0", "letterSpacing": "0.1em", "fontWeight": "600"}],
+                    "headline-md": ["24px", {"lineHeight": "1.3", "fontWeight": "700"}],
+                    "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                    "body-md": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                    "display-lg": ["64px", {"lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "800"}],
+                    "display-lg-mobile": ["40px", {"lineHeight": "1.1", "letterSpacing": "-0.01em", "fontWeight": "800"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            display: inline-block;
+            vertical-align: middle;
+        }
+        
+        .neon-underglow {
+            box-shadow: 0 10px 30px -10px rgba(0, 242, 255, 0.3);
+        }
+        
+        .glass-card {
+            background: rgba(31, 31, 31, 0.8);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #121414;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #f1c100;
+        }
+        
+        .hero-gradient {
+            background: linear-gradient(180deg, rgba(18, 20, 20, 0) 0%, rgba(18, 20, 20, 1) 100%);
+        }
+
+        .glow-pulse:hover {
+            box-shadow: 0 0 20px rgba(241, 193, 0, 0.4);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body-md selection:bg-tertiary selection:text-on-tertiary custom-scrollbar overflow-x-hidden">
+<!-- TopNavBar -->
+<header class="bg-surface/90 backdrop-blur-xl border-b border-glass-border docked full-width top-0 z-50 sticky shadow-[0_0_20px_rgba(0,242,255,0.1)]">
+<div class="flex justify-between items-center w-full px-margin-desktop py-4 max-w-container-max mx-auto">
+<div class="flex items-center gap-12">
+<a class="font-display-lg text-display-lg-mobile md:text-[32px] tracking-tighter text-on-surface font-extrabold" href="#">
+                    CORE<span class="text-tertiary">PERFORMANCE</span>
+</a>
+<nav class="hidden md:flex items-center gap-8">
+<a class="font-label-caps text-label-caps text-tertiary border-b-2 border-tertiary pb-1" href="#">SYSTEMS</a>
+<a class="font-label-caps text-label-caps text-on-surface-variant hover:text-on-surface transition-colors duration-300" href="#">COMPONENTS</a>
+<a class="font-label-caps text-label-caps text-on-surface-variant hover:text-on-surface transition-colors duration-300" href="#">PERIPHERALS</a>
+<a class="font-label-caps text-label-caps text-on-surface-variant hover:text-on-surface transition-colors duration-300" href="#">GAMING GEAR</a>
+<a class="font-label-caps text-label-caps text-on-surface-variant hover:text-on-surface transition-colors duration-300" href="#">SOFTWARE</a>
+</nav>
+</div>
+<div class="flex items-center gap-6">
+<div class="hidden lg:flex items-center bg-surface-container px-4 py-2 rounded-full border border-outline-variant/30">
+<span class="material-symbols-outlined text-outline text-[20px]">search</span>
+<input class="bg-transparent border-none focus:ring-0 text-label-caps text-body-md w-48 placeholder:text-outline/50" placeholder="SEARCH HARDWARE" type="text"/>
+</div>
+<div class="flex items-center gap-4">
+<button class="hover:bg-surface-elevated/50 p-2 transition-all duration-200">
+<span class="material-symbols-outlined text-on-surface">person</span>
+</button>
+<button class="hover:bg-surface-elevated/50 p-2 transition-all duration-200 relative">
+<span class="material-symbols-outlined text-on-surface">shopping_cart</span>
+<span class="absolute top-1 right-1 w-2 h-2 bg-tertiary rounded-full"></span>
+</button>
+</div>
+</div>
+</div>
+</header>
+<main>
+<!-- Hero Banner: NIGHTSWORD -->
+<section class="relative min-h-[90vh] flex items-center overflow-hidden">
+<div class="absolute inset-0 z-0">
+<img alt="Nightsword Gaming Mouse" class="w-full h-full object-cover object-center scale-105" data-alt="A cinematic, low-angle close-up of a futuristic high-performance gaming mouse with carbon fiber textures and intricate ergonomic contours. The device is illuminated by striking cyan and magenta RGB lighting that glows from within its internal honeycomb structure. Set against a dark, industrial gunmetal background with subtle atmospheric smoke and a sharp, technological aesthetic." src="https://lh3.googleusercontent.com/aida/AP1WRLtR44lq5ksH4cHlg1veX0q4bYK0I_mciBPK6vhBUS7hKkrrDzurNE8PPhkUmQImVjztDs92Juha7Ds22FuPbNrs5v5URFC8WTLIJKAGC-qWOWyKqjtpLmoBHzs_ammJlbF_Q332RGL-CG0jVnGAy_EpgyfaOCl060IQuCf9LwGuU6ZqUHVjw1hGYTCmvcxVGOVmB4ylDbBMY7fnPA5XEV3MWyTGfNxXfVKCI4fAvPasigSo0C7My8Tiuw6n"/>
+<div class="absolute inset-0 bg-gradient-to-r from-background via-background/40 to-transparent"></div>
+<div class="absolute inset-0 hero-gradient"></div>
+</div>
+<div class="relative z-10 max-w-container-max mx-auto px-margin-desktop w-full">
+<div class="max-w-2xl">
+<span class="font-label-caps text-label-caps text-tertiary tracking-[0.3em] mb-4 block">NEW ARRIVAL</span>
+<h1 class="font-display-lg text-display-lg md:text-[84px] leading-tight mb-6">NIGHTSWORD</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant mb-10 max-w-lg">
+                        STREAM DECK INTEGRATED GAMING MOUSE. Precision-engineered with an 8000Hz polling rate and customizable weight system for the ultimate competitive edge.
+                    </p>
+<div class="flex flex-wrap gap-6">
+<button class="bg-tertiary text-on-primary-fixed font-headline-md text-headline-md px-10 py-5 rounded-none hover:bg-tertiary-fixed transition-all duration-300 glow-pulse">
+                            LEARN MORE
+                        </button>
+<button class="border border-outline-variant text-on-surface font-headline-md text-headline-md px-10 py-5 rounded-none hover:bg-surface-elevated transition-all duration-300">
+                            WATCH TRAILER
+                        </button>
+</div>
+</div>
+</div>
+</section>
+<!-- Bento Grid: Featured Products -->
+<section class="max-w-container-max mx-auto px-margin-desktop py-24">
+<div class="grid grid-cols-1 md:grid-cols-12 gap-gutter h-full">
+<!-- VENGEANCE PC -->
+<div class="md:col-span-8 group relative overflow-hidden glass-card p-1">
+<div class="relative h-[600px] bg-surface-container overflow-hidden">
+<img alt="VENGEANCE a7500 Gaming PC" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" data-alt="A high-end custom gaming PC with a tempered glass side panel showcasing a complex liquid cooling system and glowing RGB fans. The internal components include a massive high-performance GPU and illuminated RAM modules, creating a vibrant wash of neon colors against the sleek black chassis. The setting is a clean, modern enthusiast's desk with a minimalist aesthetic and premium industrial materials." src="https://lh3.googleusercontent.com/aida/AP1WRLvIrTYxZswiaGaQXmkwPw2FvhcKjB-Ts6ucWp7W41XNNH5F4CSHp58olcOP4pPLotByFR2li8c-EwCWCOvHQkIz9pOYMxJYTSTg8_suOaPP7sL3nk5kj4AQNjTxPrJHl2BrXJUP6MTUb2TZXhLhxa9i8ZZXHOQdpwPyYy14YYzOvd9J1gISjLz-6P5Pe1mdzhntI0T0CNUgTsCH6pZcGKaErhzSBrScNqd1xeh3xgkVs7tyoizTaGfsz6Rt"/>
+<div class="absolute inset-0 bg-gradient-to-t from-surface-container-lowest via-transparent to-transparent"></div>
+<div class="absolute bottom-10 left-10">
+<span class="font-label-caps text-label-caps text-tertiary mb-2 block">ULTIMATE PERFORMANCE</span>
+<h2 class="font-headline-lg text-headline-lg mb-4">VENGEANCE a7500</h2>
+<p class="text-on-surface-variant max-w-md mb-6">AMD RYZEN 9 9900X3D | GEFORCE RTX 5080 | 32GB DDR5</p>
+<button class="bg-tertiary text-on-primary px-8 py-3 font-label-caps text-label-caps tracking-widest hover:bg-white transition-colors">SHOP NOW</button>
+</div>
+</div>
+</div>
+<!-- Clipper Pro Mini -->
+<div class="md:col-span-4 group relative glass-card p-1">
+<div class="relative h-[600px] bg-surface-container overflow-hidden flex flex-col">
+<div class="flex-1 overflow-hidden">
+<img alt="Clipper Pro Mini Keyboard" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" data-alt="An ultra-compact 60% mechanical gaming keyboard with white and black keycaps, featuring intense blue underglow lighting. The image focuses on the sharp tactile edges of the keycaps and the premium brushed aluminum frame. The background is a dark, tech-focused environment with blueprint-like graphics on a designer desk mat, emphasizing engineered precision." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCQn5kvRzcs2rl9Y3_TPbH3XoipUrUDyn6-ug5Y_NOVsFEHqsVPm0KDmW2vt5uN_hsCIVemF8r9F-MsF7zacy4eMe4MjIkjlBEujDYM8YHNWEw2DO9hgp9vquOgEgCw2SnXNEnc_Ee1c9d6biJBxFntSTs2Rxf_UU9JS-tsfba_Wu1hOXCuIyRjvP6rQ6DKX4zzRPKENcVKUO6U1thiqsYb64b1D3c5nM1RX-RWIfPJLkzxqKIg2-2NxHkUQnn_7x-ZJ5wb76P94Dkf"/>
+</div>
+<div class="p-8">
+<span class="font-label-caps text-label-caps text-rgb-cyan mb-2 block">NEW FORM FACTOR</span>
+<h2 class="font-headline-lg text-headline-lg mb-4">CLIPPER PRO MINI</h2>
+<p class="text-on-surface-variant mb-6">HALL EFFECT PRECISION</p>
+<button class="w-full py-4 border border-outline text-label-caps text-label-caps hover:bg-on-surface hover:text-surface transition-all">ORDER NOW</button>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Shop by Category Section -->
+<section class="bg-surface-container-low py-24 border-y border-glass-border">
+<div class="max-w-container-max mx-auto px-margin-desktop">
+<div class="flex items-end justify-between mb-16">
+<div>
+<span class="font-label-caps text-label-caps text-tertiary tracking-widest block mb-4">// NAVIGATE INVENTORY</span>
+<h2 class="font-display-lg text-display-lg-mobile md:text-headline-lg font-bold">SHOP BY CATEGORY</h2>
+</div>
+<a class="text-tertiary font-label-caps text-label-caps border-b border-tertiary pb-1 hidden md:block" href="#">VIEW ALL COLLECTIONS</a>
+</div>
+<div class="grid grid-cols-2 lg:grid-cols-5 gap-8">
+<!-- Category Item -->
+<a class="group flex flex-col items-center p-8 bg-surface border border-outline-variant/30 hover:border-tertiary transition-all duration-300" href="#">
+<span class="material-symbols-outlined text-[48px] text-outline group-hover:text-tertiary transition-colors mb-6">desktop_windows</span>
+<span class="font-label-caps text-label-caps text-center group-hover:text-on-surface transition-colors">PC CASES</span>
+</a>
+<a class="group flex flex-col items-center p-8 bg-surface border border-outline-variant/30 hover:border-tertiary transition-all duration-300" href="#">
+<span class="material-symbols-outlined text-[48px] text-outline group-hover:text-tertiary transition-colors mb-6">memory</span>
+<span class="font-label-caps text-label-caps text-center group-hover:text-on-surface transition-colors">MEMORY</span>
+</a>
+<a class="group flex flex-col items-center p-8 bg-surface border border-outline-variant/30 hover:border-tertiary transition-all duration-300" href="#">
+<span class="material-symbols-outlined text-[48px] text-outline group-hover:text-tertiary transition-colors mb-6">keyboard</span>
+<span class="font-label-caps text-label-caps text-center group-hover:text-on-surface transition-colors">KEYBOARDS</span>
+</a>
+<a class="group flex flex-col items-center p-8 bg-surface border border-outline-variant/30 hover:border-tertiary transition-all duration-300" href="#">
+<span class="material-symbols-outlined text-[48px] text-outline group-hover:text-tertiary transition-colors mb-6">mouse</span>
+<span class="font-label-caps text-label-caps text-center group-hover:text-on-surface transition-colors">GAMING MICE</span>
+</a>
+<a class="group flex flex-col items-center p-8 bg-surface border border-outline-variant/30 hover:border-tertiary transition-all duration-300" href="#">
+<span class="material-symbols-outlined text-[48px] text-outline group-hover:text-tertiary transition-colors mb-6">headphones</span>
+<span class="font-label-caps text-label-caps text-center group-hover:text-on-surface transition-colors">HEADSETS</span>
+</a>
+</div>
+</div>
+</section>
+<!-- Customize Your Setup CTA -->
+<section class="relative py-32 overflow-hidden">
+<div class="absolute inset-0 z-0">
+
+<div class="absolute inset-0 bg-background/80"></div>
+</div>
+<div class="relative z-10 max-w-container-max mx-auto px-margin-desktop text-center">
+<span class="font-label-caps text-label-caps text-rgb-magenta mb-6 block tracking-[0.5em]">PERSONALIZATION ENGINE</span>
+<h2 class="font-display-lg text-display-lg-mobile md:text-[64px] mb-8">CUSTOMIZE YOUR SETUP</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-3xl mx-auto mb-12">
+                    Start from scratch or pick a collection. Unleash your creativity by customizing each part of your gear for a personalized aesthetic and feel. From keycap legends to cable sleeves, make it yours.
+                </p>
+<div class="flex flex-col md:flex-row justify-center gap-6">
+<button class="bg-white text-black font-headline-md text-headline-md px-12 py-5 hover:bg-tertiary transition-all glow-pulse">
+                        START WITH A PRODUCT
+                    </button>
+<button class="bg-transparent border border-rgb-cyan text-rgb-cyan font-headline-md text-headline-md px-12 py-5 hover:bg-rgb-cyan hover:text-black transition-all">
+                        EXPLORE COLLECTIONS
+                    </button>
+</div>
+</div>
+</section>
+<!-- Experience Corsair Grid -->
+<section class="max-w-container-max mx-auto px-margin-desktop py-24">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-gutter">
+<div class="relative group h-[400px] overflow-hidden glass-card">
+<img alt="PC Builder" class="w-full h-full object-cover opacity-60 group-hover:scale-105 transition-transform duration-700" data-alt="A macro photography shot of computer hardware components like processors and RAM modules resting on an anti-static technical mat. The lighting is cold and clinical with blue highlights, giving it a laboratory-grade feel. High-tech diagrams and measurements are overlaid in a semi-transparent HUD style, conveying a theme of professional system building and engineering." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBfRBJCbV2NI5ZVnkJeA20se4_9-ndVcjtB0T92CODacJXcNMTPmnjCkXR7UyiaqfEA58I9Wnnr87xrxwhH_yUgKA610ykHf5jqefWNlZtF3bZhE7qqiFeTd58bVy0M18KjqZm-wxWSElnO8XCG2nlsgIzeP98vEDOlJZz7_R8LWM0Vtt7mI_pY8yE1FtdWN18yrN3pvdZ-i9ttmckzx65JqgIWmvYghl0jbACsp5YlPILHd3sEsHFNm9hOnxDKalPhCA5uvQ7XaYUT"/>
+<div class="absolute inset-0 p-12 flex flex-col justify-end bg-gradient-to-t from-black to-transparent">
+<h3 class="font-headline-lg text-headline-lg mb-4">PC BUILDER</h3>
+<p class="text-on-surface-variant mb-6">Plan your build with real-time compatibility checks.</p>
+<a class="text-tertiary font-label-caps text-label-caps flex items-center gap-2 group-hover:translate-x-2 transition-transform" href="#">
+                            GET STARTED <span class="material-symbols-outlined">arrow_forward</span>
+</a>
+</div>
+</div>
+<div class="relative group h-[400px] overflow-hidden glass-card">
+<img alt="Special Offers" class="w-full h-full object-cover opacity-60 group-hover:scale-105 transition-transform duration-700" data-alt="A dark and moody composition of high-end gaming accessories including a headset and controller, accented by vibrant gold and yellow backlighting. The scene feels premium and exclusive, with deep shadows and sharp metallic highlights. Soft smoke and atmospheric lens flares add to the high-stakes gaming environment, suggesting special rewards and elite gear." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD0eOxNBXpWHtyn00RwBdKYoUG584ZEZoMGqr2LmUTA3kCdBRtPE9y601N8xiJnQZ_rtzUhGwSFNzLIc-zHlnC0SgCp8WWtoSCvOi7Vw8jNjnK2yUvmv3SXWYm4ts-HQpkW2m3YhzaBBqR4Qmkd1D694U2JxeDTesP-8PTlDnrb5sL0d3EhSE_EUSBMqhUSbqdZBXhQCsDs6qzlFT5kewcUTQD48C98gMPD3ZE7iIi2sTm-cVxJ1LGCc5_J-nxILynMbbzzuiRxgceU"/>
+<div class="absolute inset-0 p-12 flex flex-col justify-end bg-gradient-to-t from-black to-transparent">
+<h3 class="font-headline-lg text-headline-lg mb-4">SPECIAL OFFERS</h3>
+<p class="text-on-surface-variant mb-6">Exclusive bundles and time-limited performance upgrades.</p>
+<a class="text-tertiary font-label-caps text-label-caps flex items-center gap-2 group-hover:translate-x-2 transition-transform" href="#">
+                            VIEW OFFERS <span class="material-symbols-outlined">arrow_forward</span>
+</a>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="bg-surface-container-lowest border-t border-outline-variant full-width relative mt-20">
+<div class="grid grid-cols-1 md:grid-cols-4 gap-gutter px-margin-desktop py-16 max-w-container-max mx-auto">
+<div class="col-span-1 md:col-span-1">
+<h4 class="font-headline-md text-headline-md text-tertiary mb-8">CORE PERFORMANCE</h4>
+<p class="text-outline text-body-md mb-8 max-w-xs">
+                    Engineering the future of high-stakes gaming. Performance without compromise.
+                </p>
+<div class="flex gap-4">
+<a class="text-outline hover:text-rgb-magenta transition-colors duration-300 hover:scale-110 transform" href="#">
+<span class="material-symbols-outlined">public</span>
+</a>
+<a class="text-outline hover:text-rgb-cyan transition-colors duration-300 hover:scale-110 transform" href="#">
+<span class="material-symbols-outlined">share</span>
+</a>
+<a class="text-outline hover:text-tertiary transition-colors duration-300 hover:scale-110 transform" href="#">
+<span class="material-symbols-outlined">smart_display</span>
+</a>
+</div>
+</div>
+<div>
+<h5 class="font-label-caps text-label-caps text-on-surface mb-6">SHOP</h5>
+<ul class="space-y-4">
+<li><a class="text-outline hover:text-on-surface font-label-caps text-[11px] transition-colors" href="#">NEW PRODUCTS</a></li>
+<li><a class="text-outline hover:text-on-surface font-label-caps text-[11px] transition-colors" href="#">SPECIAL OFFERS</a></li>
+<li><a class="text-outline hover:text-on-surface font-label-caps text-[11px] transition-colors" href="#">EXCLUSIVES</a></li>
+<li><a class="text-outline hover:text-on-surface font-label-caps text-[11px] transition-colors" href="#">CERTIFIED REFURBISHED</a></li>
+</ul>
+</div>
+<div>
+<h5 class="font-label-caps text-label-caps text-on-surface mb-6">EXPLORE</h5>
+<ul class="space-y-4">
+<li><a class="text-outline hover:text-on-surface font-label-caps text-[11px] transition-colors" href="#">AI SOFTWARE STACK</a></li>
+<li><a class="text-outline hover:text-on-surface font-label-caps text-[11px] transition-colors" href="#">PC BUILDER</a></li>
+<li><a class="text-outline hover:text-on-surface font-label-caps text-[11px] transition-colors" href="#">WALLPAPERS</a></li>
+<li><a class="text-outline hover:text-on-surface font-label-caps text-[11px] transition-colors" href="#">BLOG</a></li>
+</ul>
+</div>
+<div>
+<h5 class="font-label-caps text-label-caps text-on-surface mb-6">NEWSLETTER</h5>
+<p class="text-outline text-body-md mb-6">Get technical updates and gear drops.</p>
+<div class="relative">
+<input class="w-full bg-surface border-b border-outline-variant focus:border-tertiary transition-colors py-3 px-0 text-label-caps text-[12px] focus:ring-0 outline-none" placeholder="EMAIL ADDRESS" type="email"/>
+<button class="absolute right-0 top-1/2 -translate-y-1/2 text-tertiary font-bold font-label-caps text-[12px]">SIGN UP</button>
+</div>
+</div>
+</div>
+<div class="max-w-container-max mx-auto px-margin-desktop py-8 border-t border-outline-variant/30 flex flex-col md:flex-row justify-between items-center gap-6">
+<span class="text-outline font-label-caps text-[10px]">© 2024 CORE PERFORMANCE. ENGINEERED FOR ENTHUSIASTS.</span>
+<div class="flex gap-8">
+<a class="text-outline hover:text-on-surface font-label-caps text-[10px]" href="#">PRIVACY POLICY</a>
+<a class="text-outline hover:text-on-surface font-label-caps text-[10px]" href="#">TERMS OF SERVICE</a>
+<a class="text-outline hover:text-on-surface font-label-caps text-[10px]" href="#">WARRANTY INFO</a>
+</div>
+</div>
+</footer>
+<script>
+        // Subtle scroll reveal effect
+        window.addEventListener('scroll', () => {
+            const elements = document.querySelectorAll('.glass-card');
+            elements.forEach(el => {
+                const rect = el.getBoundingClientRect();
+                const viewHeight = Math.max(document.documentElement.clientHeight, window.innerHeight);
+                if (!(rect.bottom < 0 || rect.top - viewHeight >= 0)) {
+                    el.style.opacity = '1';
+                    el.style.transform = 'translateY(0)';
+                }
+            });
+        });
+        
+        // Navigation active state highlight simulation
+        const navLinks = document.querySelectorAll('nav a');
+        navLinks.forEach(link => {
+            link.addEventListener('click', (e) => {
+                navLinks.forEach(l => {
+                    l.classList.remove('text-tertiary', 'border-b-2', 'border-tertiary');
+                    l.classList.add('text-on-surface-variant');
+                });
+                link.classList.add('text-tertiary', 'border-b-2', 'border-tertiary');
+                link.classList.remove('text-on-surface-variant');
+            });
+        });
+    </script>
+</body></html>

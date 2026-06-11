@@ -19,10 +19,6 @@
                     <h1 class="section-title app-mb-1">PC Components and Gaming Gear</h1>
                     <p class="section-subtitle app-mb-0">Filter by category, brand, price, and performance needs.</p>
                 </div>
-                <div class="view-toggle" aria-label="View toggle">
-                    <button type="button" class="active" aria-label="Grid view"><i class="fa fa-th"></i></button>
-                    <button type="button" aria-label="List view"><i class="fa fa-list"></i></button>
-                </div>
             </div>
 
             <div class="listing-layout">
@@ -125,7 +121,15 @@
                                     <a th:href="@{/products/{id}(id=${p.productId})}" class="site-icon-link" aria-label="Wishlist"><i class="fa fa-heart-o"></i></a>
                                 </div>
                                 <div class="card-actions app-mt-3">
-                                    <a th:href="@{/products/{id}(id=${p.productId})}" class="btn btn-app-primary">Add to Cart</a>
+                                    <form th:action="@{/cart/add/{id}(id=${p.productId})}" method="post" class="ajax-add-to-cart product-card-cart-form">
+                                        <input type="hidden" name="quantity" value="1">
+                                        <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                                        <button type="submit"
+                                                class="btn btn-app-primary"
+                                                th:disabled="${p.inventoryQuantity == null or p.inventoryQuantity <= 0}">
+                                            Add to Cart
+                                        </button>
+                                    </form>
                                     <a th:href="@{/products/{id}(id=${p.productId})}" class="btn btn-app-outline">Compare</a>
                                 </div>
                             </div>
