@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<article th:fragment="product-card (item)"
+         th:object="${item}"
+         th:with="imageUrl=${item != null and item.images != null and !item.images.isEmpty() and item.images[0].imageUrl != null and !#strings.isEmpty(item.images[0].imageUrl) ? item.images[0].imageUrl : '/images/no-image.svg'}"
+         class="product-card">
+    <div class="product-card__image-wrap">
+        <img th:src="${imageUrl}"
+             onerror="this.onerror=null;this.src='/images/no-image.svg';"
+             alt="Product image"
+             class="product-card__image">
+    </div>
+    <div class="product-card__body">
+        <h3 class="product-card__name" th:text="*{productName}">Product Name</h3>
+        <p class="product-card__price"
+           th:text="${item != null ? '$' + #numbers.formatDecimal(item.price, 1, 2) : '$0.00'}">$0.00</p>
+        <a th:href="@{/products/{id}(id=*{productId})}"
+           class="product-card__cta">View Details</a>
+    </div>
+</article>
+</body>
+</html>

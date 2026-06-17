@@ -1,139 +1,118 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org"
       xmlns:sec="https://www.thymeleaf.org/extras/spring-security"
-      th:replace="~{layout/app :: page('Shopping Cart', null, ~{::content})}">
+      th:replace="~{layout/base-storefront :: storefront(
+          ~{::title},
+          'storefront-page',
+          ~{::main},
+          ~{::page-styles},
+          ${false}
+      )}">
+<head>
+    <title>Shopping Cart – PCOnlineShop</title>
+    <th:block th:fragment="page-styles">
+        <link rel="stylesheet" th:href="@{/css/pages/cart.css}">
+    </th:block>
+</head>
 <body>
-<th:block th:fragment="content">
-<section class="commerce-page">
-    <div class="container cart-container">
-        <div class="section-header">
-            <div>
-                <p class="section-kicker">Cart</p>
-                <h1 class="commerce-title app-mb-1">Shopping Cart</h1>
-                <p class="section-subtitle app-mb-0">Review selected components, adjust quantities, and continue to secure checkout.</p>
-            </div>
-            <a th:href="@{/products}" class="btn btn-app-outline">Continue Shopping</a>
-        </div>
+<main th:fragment="main" class="cart-page page-section">
+    <div class="page-container">
 
-        <div id="cart-messages">
-            <div th:if="${success}" class="alert alert-success" role="alert">
+        <h1>Your Shopping Cart</h1>
+
+        <div id="cart-messages" class="cart-messages">
+            <div th:if="${success}" class="alert alert--success" role="alert" id="success-alert">
                 <span th:text="${success}"></span>
             </div>
-            <div th:if="${error}" class="alert alert-danger" role="alert">
+            <div th:if="${error}" class="alert alert--error" role="alert" id="error-alert">
                 <span th:text="${error}"></span>
             </div>
         </div>
 
-        <div th:if="${isEmpty}" class="empty-state-panel">
-            <h3>Your cart is empty</h3>
-            <p>Looks like you have not added anything to your cart yet.</p>
-            <a th:href="@{/products}" class="btn btn-app-primary">Continue Shopping</a>
+        <div th:if="${isEmpty}" class="empty-cart">
+            <h3>Your cart is empty!</h3>
+            <p>Looks like you haven't added anything to your cart yet.</p>
+            <a th:href="@{/products}" class="btn-primary">Continue Shopping</a>
         </div>
 
-        <div th:unless="${isEmpty}" class="row">
-            <div class="col-md-8">
-                <div class="commerce-card">
-                    <div class="cart-toolbar">
-                        <label class="app-flex app-align-center app-gap-1 app-mb-0" for="select-all-checkbox">
-                            <input type="checkbox" id="select-all-checkbox" class="cart-checkbox">
-                            <span>Select All (<span id="total-items-count" th:text="${#lists.size(cartItems)}">0</span>)</span>
-                        </label>
-
-                        <button type="button" class="delete-selected-cart-btn icon-button" title="Delete selected items">
-                            <img th:src="@{/images/bin.svg}" alt="" class="cart-bin-icon">
-                        </button>
+        <div th:unless="${isEmpty}" class="cart-layout">
+            <div class="cart-main">
+                <div class="cart-header">
+                    <div class="select-all-container">
+                        <input type="checkbox" id="select-all-checkbox" class="cart-checkbox">
+                        <label for="select-all-checkbox">Select All (<span id="total-items-count"
+                               th:text="${#lists.size(cartItems)}">0</span>)</label>
                     </div>
+                    <div class="cart-column-headers">
+                        <span>Price</span>
+                        <span>Quantity</span>
+                        <span>Subtotal</span>
+                    </div>
+                    <form th:action="@{/cart/clear}" method="post" id="clear-cart-form">
+                        <button type="button" class="clear-cart-icon-btn" title="Clear Entire Cart">🗑️</button>
+                    </form>
+                </div>
 
-                    <div class="cart-items-list">
-                        <div class="cart-item" th:each="item : ${cartItems}"
-                             th:attr="data-cart-item-id=${item.cartItemId}, data-price=${item.price}, data-inventory=${item.inventoryQuantity}">
-
-                            <div class="item-selection">
-                                <input type="checkbox" class="cart-item-checkbox cart-checkbox"
-                                       th:data-cart-item-id="${item.cartItemId}"
-                                       th:checked="${item.selected}">
-                            </div>
-
-                            <div class="item-image">
-                                <a th:href="@{/products/{id}(id=${item.productId})}">
-                                    <img th:src="${item.imageUrl != null ? item.imageUrl : '/images/no-image.svg'}"
-                                         onerror="this.onerror=null;this.src='/images/no-image.svg';"
-                                         alt="Product image">
-                                </a>
-                            </div>
-
-                            <div class="item-details">
-                                <a th:href="@{/products/{id}(id=${item.productId})}"
-                                   class="product-name"
-                                   th:text="${item.productName}">Product Name</a>
-                            </div>
-
-                            <div class="item-price"
-                                 th:text="'$' + ${#numbers.formatInteger(item.price, 1, 'COMMA')}">Price</div>
-
-                            <div class="item-quantity">
-                                <button type="button" class="quantity-change-btn decrease-qty-btn btn btn-default btn-sm"
-                                        th:disabled="${item.quantity <= 1}">-
-                                </button>
-                                <input type="text" class="quantity-display form-control input-sm"
-                                       th:value="${item.quantity}" readonly>
-                                <button type="button" class="quantity-change-btn increase-qty-btn btn btn-default btn-sm"
-                                        th:disabled="${item.quantity >= item.inventoryQuantity}">+
-                                </button>
-                            </div>
-
-                            <div class="item-subtotal"
-                                 th:text="'$' + ${#numbers.formatInteger(item.subtotal, 1, 'COMMA')}">Subtotal</div>
-
-                            <div class="item-remove">
-                                <button type="button" class="remove-item-btn icon-button" title="Remove item">
-                                    <img th:src="@{/images/bin.svg}" alt="" class="cart-bin-icon">
-                                </button>
-                            </div>
+                <div class="cart-items-list cart-container">
+                    <div class="cart-item" th:each="item : ${cartItems}"
+                         th:attr="data-cart-item-id=${item.cartItemId}, data-price=${item.price}, data-inventory=${item.inventoryQuantity}">
+                        <div class="item-selection">
+                            <input type="checkbox" class="cart-item-checkbox cart-checkbox"
+                                   th:data-cart-item-id="${item.cartItemId}"
+                                   th:checked="${item.selected}">
+                        </div>
+                        <div class="item-image">
+                            <a th:href="@{'/products/' + ${item.productId}}">
+                                <img th:src="${item.imageUrl}" alt="Product Image" class="product-image">
+                            </a>
+                        </div>
+                        <div class="item-details">
+                            <a th:href="@{'/products/' + ${item.productId}}" class="product-link product-name"
+                               th:text="${item.productName}">Product Name</a>
+                        </div>
+                        <div class="item-price"
+                             th:text="${#numbers.formatInteger(item.price, 1, 'COMMA')} + ' $'">Price</div>
+                        <div class="item-quantity">
+                            <button type="button" class="quantity-change-btn decrease-qty-btn qty-btn"
+                                    th:disabled="${item.quantity <= 1}">-</button>
+                            <input type="text" class="quantity-display" th:value="${item.quantity}" readonly>
+                            <button type="button" class="quantity-change-btn increase-qty-btn qty-btn"
+                                    th:disabled="${item.quantity >= item.inventoryQuantity}">+</button>
+                        </div>
+                        <div class="item-subtotal"
+                             th:text="${#numbers.formatInteger(item.subtotal, 1, 'COMMA')} + ' $'">Subtotal</div>
+                        <div class="item-remove">
+                            <button type="button" class="remove-item-btn" title="Remove item">🗑️</button>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="col-md-4">
-                <aside class="commerce-card cart-summary">
-                    <h3>Order Summary</h3>
+            <aside class="cart-sidebar">
+                <div class="cart-summary">
+                    <h3>Summary</h3>
                     <div class="summary-line">
-                        <span>Selected Items (<span id="selected-items-count">0</span>)</span>
-                        <span id="selected-items-total" class="summary-value">$0</span>
+                        <span>Selected Items (<span id="selected-items-count">0</span>):</span>
+                        <span id="selected-items-total">0 $</span>
                     </div>
-                    <div class="summary-line">
-                        <span>Shipping Fee</span>
-                        <span class="summary-value">Calculated at checkout</span>
-                    </div>
-                    <div class="form-group app-mt-3">
-                        <label for="discount-code">Discount Code</label>
-                        <div class="input-group">
-                            <input id="discount-code" type="text" class="form-control" placeholder="Enter code">
-                            <span class="input-group-btn">
-                                <button class="btn btn-app-outline" type="button">Apply</button>
-                            </span>
-                        </div>
-                    </div>
+                    <hr>
                     <div class="summary-line grand-total">
-                        <span>Grand Total</span>
+                        <span>Grand Total:</span>
                         <span id="grand-total-value"
-                              class="summary-value"
                               th:data-raw-total="${grandTotal}"
-                              th:text="'$' + ${#numbers.formatInteger(grandTotal, 1, 'COMMA')}">$0</span>
+                              th:text="${#numbers.formatInteger(grandTotal, 1, 'COMMA')} + ' $'">0 $</span>
                     </div>
                     <a th:href="@{/orders/checkout}" id="checkout-link"
-                       class="btn btn-app-primary btn-block app-mt-4"
+                       class="checkout-btn btn-primary"
                        th:classappend="${grandTotal == 0} ? ' disabled' : ''">
                         Proceed to Checkout
                     </a>
-                </aside>
-            </div>
+                </div>
+            </aside>
         </div>
-    </div>
-</section>
 
-<script th:src="@{/js/cart.js}"></script>
-</th:block>
+    </div>
+    <script th:src="@{/js/cart.js}"></script>
+</main>
 </body>
 </html>

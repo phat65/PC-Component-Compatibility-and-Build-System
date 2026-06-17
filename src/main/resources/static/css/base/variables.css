@@ -1,0 +1,51 @@
+/* Design tokens – see Design.md */
+
+:root {
+    /* Brand */
+    --color-primary: #F4C542;
+    --color-primary-hover: #FFD65A;
+    --color-primary-pressed: #D4AA32;
+
+    /* Background */
+    --color-canvas: #000000;
+    --color-surface-1: #0A0A0A;
+    --color-surface-2: #121212;
+    --color-surface-3: #1A1A1A;
+
+    /* Text */
+    --color-text-primary: #FFFFFF;
+    --color-text-secondary: #B3B3B3;
+    --color-text-muted: #808080;
+
+    /* Border */
+    --color-border: #2A2A2A;
+    --color-border-strong: #3A3A3A;
+
+    /* Semantic */
+    --color-success: #00E676;
+    --color-error: #FF5252;
+    --color-warning: #FFC107;
+
+    /* Elevation */
+    --shadow-card: 0 10px 30px rgba(0, 0, 0, 0.5);
+    --glow-primary: 0 0 20px rgba(244, 197, 66, 0.4);
+
+    /* Shape */
+    --rounded-sm: 6px;
+    --rounded-md: 10px;
+    --rounded-lg: 12px;
+
+    /* Layout */
+    --max-width: 1440px;
+    --section-padding: 80px;
+
+    /* Spacing */
+    --spacing-xs: 8px;
+    --spacing-sm: 16px;
+    --spacing-md: 24px;
+    --spacing-lg: 32px;
+    --spacing-xl: 48px;
+
+    /* Typography */
+    --font-family: 'Inter', Roboto, Arial, sans-serif;
+}

@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<a th:fragment="brand-chip (brand, isActive, isClone)"
+   th:href="@{'/home?brand=' + ${brand.brandId}}"
+   class="brand-chip"
+   th:classappend="${isActive} ? ' is-active' : ''"
+   th:attr="aria-current=${isActive} ? 'true' : null,
+            tabindex=${isClone} ? '-1' : null,
+            aria-hidden=${isClone} ? 'true' : null">
+    <span class="brand-chip__text" th:text="${brand.name}">Brand</span>
+</a>
+</body>
+</html>

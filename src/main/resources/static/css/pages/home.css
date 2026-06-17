@@ -1,0 +1,755 @@
+/* Home page – hero, neon, 3D, categories, brands */
+
+.home-main {
+    overflow-x: hidden;
+    --neon-cyan: #00f0ff;
+    --neon-magenta: #ff00aa;
+    --neon-yellow: #f4c542;
+    --neon-purple: #9d4edd;
+}
+
+/* ========== HERO ========== */
+.hero {
+    position: relative;
+    min-height: 85vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    overflow: hidden;
+    perspective: 1200px;
+}
+
+.hero__bg {
+    position: absolute;
+    inset: 0;
+    background:
+        linear-gradient(180deg, rgba(0, 0, 0, 0.35) 0%, rgba(0, 0, 0, 0.75) 55%, #000 100%),
+        radial-gradient(ellipse at 30% 40%, rgba(120, 60, 220, 0.35) 0%, transparent 55%),
+        radial-gradient(ellipse at 70% 60%, rgba(40, 100, 220, 0.3) 0%, transparent 50%),
+        url('/image/Lian%20Li%20O11%20Dynamic%20EVO%20Black%20Case.jpg') center / cover no-repeat;
+    z-index: 0;
+}
+
+/* Neon ambient glow */
+.hero__neon {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+}
+
+.neon-orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(40px);
+    opacity: 0.35;
+    animation: orb-drift 12s ease-in-out infinite;
+}
+
+.neon-orb--1 {
+    width: 280px;
+    height: 280px;
+    background: var(--neon-cyan);
+    top: 15%;
+    left: 10%;
+}
+
+.neon-orb--2 {
+    width: 220px;
+    height: 220px;
+    background: var(--neon-magenta);
+    bottom: 20%;
+    right: 12%;
+    animation-delay: -4s;
+}
+
+.neon-orb--3 {
+    width: 180px;
+    height: 180px;
+    background: var(--neon-purple);
+    top: 40%;
+    right: 25%;
+    animation-delay: -8s;
+}
+
+/* 3D rig – floating neon rings */
+.hero__scene {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    perspective: 1000px;
+}
+
+.hero__rig {
+    position: relative;
+    width: 320px;
+    height: 320px;
+    transform-style: preserve-3d;
+    animation: rig-spin 24s linear infinite;
+    opacity: 0.55;
+}
+
+.hero__ring {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    transform-style: preserve-3d;
+}
+
+.hero__ring--outer {
+    border-color: var(--neon-cyan);
+    box-shadow:
+        0 0 10px var(--neon-cyan),
+        inset 0 0 10px rgba(0, 240, 255, 0.2);
+    transform: rotateX(72deg) rotateZ(0deg);
+    animation: ring-tilt-a 8s ease-in-out infinite;
+}
+
+.hero__ring--mid {
+    inset: 28px;
+    border-color: var(--neon-magenta);
+    box-shadow:
+        0 0 10px var(--neon-magenta),
+        inset 0 0 10px rgba(255, 0, 170, 0.2);
+    transform: rotateX(55deg) rotateY(40deg);
+    animation: ring-tilt-b 6s ease-in-out infinite reverse;
+}
+
+.hero__ring--inner {
+    inset: 56px;
+    border-color: var(--neon-yellow);
+    box-shadow:
+        0 0 10px var(--neon-yellow),
+        inset 0 0 10px rgba(244, 197, 66, 0.25);
+    transform: rotateX(40deg) rotateY(-30deg);
+    animation: ring-tilt-c 5s ease-in-out infinite;
+}
+
+.hero__core {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 48px;
+    height: 48px;
+    margin: -24px 0 0 -24px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, var(--neon-cyan), var(--neon-magenta));
+    box-shadow:
+        0 0 20px var(--neon-cyan),
+        0 0 40px var(--neon-magenta);
+    transform: translateZ(40px);
+    animation: core-pulse 2s ease-in-out infinite;
+}
+
+.hero__content {
+    position: relative;
+    z-index: 2;
+    padding: 48px 24px 80px;
+    max-width: 900px;
+}
+
+.hero__eyebrow {
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--neon-cyan);
+    margin-bottom: 16px;
+}
+
+.hero__neon-text--title {
+    color: #fff;
+    text-shadow:
+        0 0 10px rgba(255, 255, 255, 0.8),
+        0 0 30px var(--neon-cyan),
+        0 0 60px rgba(0, 240, 255, 0.4),
+        0 0 90px rgba(255, 0, 170, 0.2);
+    animation: title-glow 3s ease-in-out infinite;
+}
+
+.hero__title {
+    font-size: clamp(42px, 8vw, 72px);
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    line-height: 1.05;
+    margin: 0 0 16px;
+}
+
+.hero__subtitle {
+    font-size: clamp(14px, 2vw, 18px);
+    font-weight: 400;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-text-secondary);
+    margin: 0 0 36px;
+}
+
+.hero__cta {
+    position: relative;
+    box-shadow:
+        0 0 20px rgba(244, 197, 66, 0.5),
+        0 0 40px rgba(244, 197, 66, 0.2);
+    animation: cta-glow 2.5s ease-in-out infinite;
+}
+
+.hero__scroll {
+    position: absolute;
+    bottom: 32px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 2;
+    color: var(--color-primary);
+    font-size: 24px;
+    animation: bounce 2s infinite;
+    text-decoration: none;
+}
+
+.hero__scroll--neon {
+    color: var(--neon-cyan);
+    text-shadow: 0 0 12px var(--neon-cyan), 0 0 24px var(--neon-cyan);
+}
+
+/* Section neon headers */
+.section-header--neon {
+    position: relative;
+    margin-bottom: 48px;
+}
+
+.section-header__neon-line {
+    width: 120px;
+    height: 3px;
+    margin: 16px auto 0;
+    background: linear-gradient(90deg, transparent, var(--neon-cyan), var(--neon-magenta), var(--neon-yellow), transparent);
+    border-radius: 2px;
+    box-shadow: 0 0 12px var(--neon-cyan), 0 0 24px rgba(255, 0, 170, 0.3);
+    animation: neon-line-pulse 2.5s ease-in-out infinite;
+}
+
+.home-main .section-header__title {
+    text-shadow: 0 0 30px rgba(0, 240, 255, 0.15);
+}
+
+/* ========== KEYFRAMES ========== */
+@keyframes bounce {
+    0%, 100% { transform: translateX(-50%) translateY(0); }
+    50% { transform: translateX(-50%) translateY(8px); }
+}
+
+@keyframes orb-drift {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    33% { transform: translate(30px, -20px) scale(1.08); }
+    66% { transform: translate(-20px, 25px) scale(0.95); }
+}
+
+@keyframes rig-spin {
+    from { transform: rotateY(0deg) rotateX(12deg); }
+    to { transform: rotateY(360deg) rotateX(12deg); }
+}
+
+@keyframes ring-tilt-a {
+    0%, 100% { transform: rotateX(72deg) rotateZ(0deg); }
+    50% { transform: rotateX(65deg) rotateZ(25deg); }
+}
+
+@keyframes ring-tilt-b {
+    0%, 100% { transform: rotateX(55deg) rotateY(40deg); }
+    50% { transform: rotateX(48deg) rotateY(55deg); }
+}
+
+@keyframes ring-tilt-c {
+    0%, 100% { transform: rotateX(40deg) rotateY(-30deg); }
+    50% { transform: rotateX(50deg) rotateY(-45deg); }
+}
+
+@keyframes core-pulse {
+    0%, 100% { transform: translateZ(40px) scale(1); box-shadow: 0 0 20px var(--neon-cyan), 0 0 40px var(--neon-magenta); }
+    50% { transform: translateZ(55px) scale(1.12); box-shadow: 0 0 30px var(--neon-cyan), 0 0 60px var(--neon-magenta); }
+}
+
+@keyframes title-glow {
+    0%, 100% { text-shadow: 0 0 10px rgba(255,255,255,0.8), 0 0 30px var(--neon-cyan), 0 0 60px rgba(0,240,255,0.4); }
+    50% { text-shadow: 0 0 15px rgba(255,255,255,0.9), 0 0 40px var(--neon-cyan), 0 0 80px rgba(255,0,170,0.35); }
+}
+
+@keyframes cta-glow {
+    0%, 100% { box-shadow: 0 0 20px rgba(244,197,66,0.5), 0 0 40px rgba(244,197,66,0.2); }
+    50% { box-shadow: 0 0 30px rgba(244,197,66,0.7), 0 0 60px rgba(244,197,66,0.35); }
+}
+
+@keyframes neon-line-pulse {
+    0%, 100% { opacity: 0.8; transform: scaleX(1); }
+    50% { opacity: 1; transform: scaleX(1.15); }
+}
+
+@keyframes led-scan {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+/* ========== CATEGORY GRID ========== */
+.categories-section {
+    padding: var(--section-padding) 0;
+    background: var(--color-canvas);
+    position: relative;
+}
+
+.categories-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--neon-cyan), var(--neon-magenta), transparent);
+    opacity: 0.5;
+}
+
+.category-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
+    perspective: 900px;
+}
+
+.category-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    min-height: 220px;
+    padding: 20px;
+    background: radial-gradient(circle at 50% 35%, #2b2b2b 0%, #111111 100%);
+    border: 1px solid transparent;
+    text-decoration: none;
+    color: var(--color-text-primary);
+    overflow: hidden;
+    transform-style: preserve-3d;
+    transition: transform 0.35s ease, border-color 0.25s ease, box-shadow 0.35s ease;
+    --tilt-x: 0deg;
+    --tilt-y: 0deg;
+    transform: rotateX(var(--tilt-x)) rotateY(var(--tilt-y));
+}
+
+.category-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(135deg, var(--neon-cyan), transparent 40%, transparent 60%, var(--neon-magenta));
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    opacity: 0;
+    transition: opacity 0.35s ease;
+    pointer-events: none;
+}
+
+.category-card::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--neon-cyan), var(--neon-yellow), var(--neon-magenta));
+    background-size: 200% 100%;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    animation: led-scan 3s linear infinite;
+}
+
+.category-card:hover {
+    border-color: var(--color-border-strong);
+    box-shadow:
+        var(--shadow-card),
+        0 0 24px rgba(0, 240, 255, 0.15),
+        0 0 48px rgba(255, 0, 170, 0.08);
+}
+
+.category-card:hover::before,
+.category-card:hover::after {
+    opacity: 1;
+}
+
+.category-card.is-active {
+    border-color: var(--color-primary);
+    box-shadow: var(--glow-primary), 0 0 30px rgba(0, 240, 255, 0.2);
+}
+
+.category-card.is-active::after {
+    opacity: 1;
+}
+
+.category-card__visual {
+    position: absolute;
+    top: 10%;
+    left: 50%;
+    transform: translateX(-50%) translateZ(20px);
+    width: 75%;
+    height: 55%;
+    background-size: contain;
+    background-position: center;
+    background-repeat: no-repeat;
+    transition: transform 0.4s ease;
+    pointer-events: none;
+}
+
+.category-card:hover .category-card__visual {
+    transform: translateX(-50%) translateZ(36px) scale(1.08);
+}
+
+.category-card__footer {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    transform: translateZ(12px);
+}
+
+.category-card__label {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.category-card__prefix {
+    color: var(--neon-cyan);
+    text-shadow: 0 0 8px rgba(0, 240, 255, 0.6);
+}
+
+.category-card__arrow {
+    font-size: 18px;
+    color: var(--neon-yellow);
+    text-shadow: 0 0 8px rgba(244, 197, 66, 0.5);
+    transition: transform 0.2s ease;
+}
+
+.category-card:hover .category-card__arrow {
+    transform: translateX(6px);
+}
+
+.category-card[data-cat="Mainboard"] .category-card__visual { background-image: url('/image/ASUS%20PRIME%20B550M-A%20Mainboard.jpg'); }
+.category-card[data-cat="CPU"] .category-card__visual { background-image: url('/image/AMD%20Ryzen%205%205600X%20CPU.jpg'); }
+.category-card[data-cat="GPU"] .category-card__visual { background-image: url('/image/NVIDIA%20GeForce%20RTX%204070%20GPU.jpg'); }
+.category-card[data-cat="Memory"] .category-card__visual { background-image: url('/image/Corsair%20Vengeance%2032GB%20DDR5%20RAM.jpg'); }
+.category-card[data-cat="Storage"] .category-card__visual { background-image: url('/image/WD%20Black%20SN850X%201TB%20SSD.jpg'); }
+.category-card[data-cat="Case"] .category-card__visual { background-image: url('/image/Corsair%204000D%20Airflow%20Black%20Case.jpg'); }
+.category-card[data-cat="Power Supply"] .category-card__visual { background-image: url('/image/Corsair%20CX650M%20650W%20PSU.jpg'); }
+.category-card[data-cat="Cooling"] .category-card__visual { background-image: url('/image/Corsair%20H100i%20RGB%20PRO%20XT%20AIO.jpg'); }
+.category-card[data-cat="Other"] .category-card__visual { background-image: url('/image/Logitech%20G102%20LightSync.jpg'); }
+
+/* ========== BRANDS ========== */
+.brands-section {
+    padding: 0 0 var(--section-padding);
+}
+
+.brands-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 28px;
+    flex-wrap: wrap;
+}
+
+.brands-head__note {
+    margin: 0;
+    font-size: 13px;
+    color: var(--color-text-muted);
+    letter-spacing: 0.03em;
+}
+
+.brands-head__reset {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--color-primary);
+    text-decoration: none;
+    padding: 10px 16px;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid rgba(244, 197, 66, 0.35);
+    border-radius: var(--rounded-sm);
+    transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.brands-head__reset:hover {
+    background: rgba(244, 197, 66, 0.1);
+    border-color: var(--color-primary);
+}
+
+.brands-head__reset:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+}
+
+.brands-loop {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 8px 0 4px;
+    overflow: hidden;
+}
+
+.brands-loop__shade {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: clamp(56px, 10vw, 140px);
+    z-index: 2;
+    pointer-events: none;
+}
+
+.brands-loop__shade--left {
+    left: 0;
+    background: linear-gradient(90deg, var(--color-canvas) 30%, transparent);
+}
+
+.brands-loop__shade--right {
+    right: 0;
+    background: linear-gradient(270deg, var(--color-canvas) 30%, transparent);
+}
+
+.brands-loop__row {
+    overflow: hidden;
+    width: 100%;
+}
+
+.brands-loop__track {
+    display: flex;
+    width: max-content;
+}
+
+.brands-loop__row--left .brands-loop__track {
+    animation: brand-loop-left 70s linear infinite;
+}
+
+.brands-loop__row--right .brands-loop__track {
+    animation: brand-loop-right 80s linear infinite;
+}
+
+.brands-loop:hover .brands-loop__track,
+.brands-loop:focus-within .brands-loop__track {
+    animation-play-state: paused;
+}
+
+.brands-loop__group {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0 6px;
+}
+
+@keyframes brand-loop-left {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+}
+
+@keyframes brand-loop-right {
+    from { transform: translateX(-50%); }
+    to { transform: translateX(0); }
+}
+
+.brand-chip {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 52px;
+    padding: 0 28px;
+    border-radius: 999px;
+    border: 1px solid var(--color-border);
+    background: linear-gradient(180deg, var(--color-surface-3) 0%, var(--color-surface-2) 100%);
+    text-decoration: none;
+    transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease, color 0.2s ease;
+}
+
+.brand-chip__text {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-text-secondary);
+    white-space: nowrap;
+}
+
+.brand-chip:hover {
+    border-color: var(--color-border-strong);
+    background: var(--color-surface-3);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+.brand-chip:hover .brand-chip__text {
+    color: var(--color-text-primary);
+}
+
+.brand-chip:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 3px;
+}
+
+.brand-chip.is-active,
+.brand-chip[aria-current="true"] {
+    border-color: var(--color-primary);
+    background: var(--color-primary);
+    box-shadow: 0 0 24px rgba(244, 197, 66, 0.35);
+}
+
+.brand-chip.is-active .brand-chip__text,
+.brand-chip[aria-current="true"] .brand-chip__text {
+    color: #000;
+}
+
+.brand-chip.is-active:hover,
+.brand-chip[aria-current="true"]:hover {
+    background: var(--color-primary-hover);
+    border-color: var(--color-primary-hover);
+}
+
+@media (max-width: 600px) {
+    .brands-head {
+        margin-bottom: 20px;
+    }
+
+    .brand-chip {
+        min-height: 48px;
+        padding: 0 22px;
+    }
+
+    .brand-chip__text {
+        font-size: 12px;
+    }
+
+    .brands-loop__row--left .brands-loop__track {
+        animation-duration: 55s;
+    }
+
+    .brands-loop__row--right .brands-loop__track {
+        animation-duration: 62s;
+    }
+}
+
+.products-section {
+    padding: 0 0 var(--section-padding);
+}
+
+/* Product cards – home neon accent */
+.home-main .product-grid {
+    perspective: 1000px;
+}
+
+.home-main .product-card {
+    position: relative;
+    transform-style: preserve-3d;
+    --card-tilt-x: 0deg;
+    --card-tilt-y: 0deg;
+    transform: rotateX(var(--card-tilt-x)) rotateY(var(--card-tilt-y));
+    transition: transform 0.35s ease, box-shadow 0.35s ease, border-color 0.25s ease;
+}
+
+.home-main .product-card::before {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    background: linear-gradient(135deg, rgba(0,240,255,0.4), transparent 50%, rgba(255,0,170,0.35));
+    opacity: 0;
+    transition: opacity 0.35s ease;
+    pointer-events: none;
+    z-index: 0;
+}
+
+.home-main .product-card:hover::before {
+    opacity: 1;
+}
+
+.home-main .product-card:hover {
+    box-shadow:
+        var(--shadow-card),
+        0 0 28px rgba(0, 240, 255, 0.12),
+        0 0 56px rgba(244, 197, 66, 0.08);
+}
+
+.home-main .product-card__price {
+    text-shadow: 0 0 12px rgba(244, 197, 66, 0.35);
+}
+
+/* ========== RESPONSIVE ========== */
+@media (max-width: 1200px) {
+    .category-grid { grid-template-columns: repeat(3, 1fr); }
+    .hero__rig { width: 260px; height: 260px; }
+}
+
+@media (max-width: 900px) {
+    .category-grid { grid-template-columns: repeat(2, 1fr); }
+    .hero { min-height: 70vh; }
+    .hero__scene { opacity: 0.35; }
+}
+
+@media (max-width: 600px) {
+    .category-grid { grid-template-columns: 1fr; }
+    .category-card { min-height: 180px; }
+    .hero__rig { width: 200px; height: 200px; opacity: 0.4; }
+}
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+    .hero__rig,
+    .hero__ring,
+    .hero__core,
+    .neon-orb,
+    .hero__neon-text--title,
+    .hero__cta,
+    .section-header__neon-line,
+    .category-card::after {
+        animation: none !important;
+    }
+
+    .brands-loop__track {
+        animation: none !important;
+        flex-wrap: wrap;
+        justify-content: center;
+        width: 100%;
+        max-width: var(--max-width);
+        margin: 0 auto;
+        padding: 0 24px;
+        gap: 10px;
+    }
+
+    .brands-loop__row {
+        overflow: visible;
+    }
+
+    .brands-loop__row--right,
+    .brands-loop__group[aria-hidden="true"] {
+        display: none;
+    }
+
+    .brands-loop__shade {
+        display: none;
+    }
+
+    .hero__rig {
+        opacity: 0.35;
+    }
+
+    .category-card,
+    .home-main .product-card {
+        transform: none !important;
+    }
+}
