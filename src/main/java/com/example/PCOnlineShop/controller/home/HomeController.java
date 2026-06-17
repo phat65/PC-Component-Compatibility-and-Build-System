@@ -43,12 +43,7 @@ public class HomeController {
     private final BrandService brandService;
     private final AccountService accountService;
 
-    @GetMapping("/")
-    public String landing() {
-        return "landing";
-    }
-
-    @GetMapping("/home")
+    @GetMapping({"/", "/home"})
     public String home(@RequestParam(required = false) Integer category,
                        @RequestParam(required = false) Integer brand,
                        Authentication authentication,
