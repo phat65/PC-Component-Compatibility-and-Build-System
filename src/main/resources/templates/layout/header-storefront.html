@@ -93,13 +93,14 @@
                     <circle cx="18" cy="20" r="1.25" fill="currentColor"/>
                     <path d="M6 6L5 3H2" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/>
                 </svg>
+                <span class="cart-count" th:text="${cartItemCount ?: 0}">0</span>
             </a>
 
-            <sec:authorize access="!isAuthenticated()">
+            <th:block sec:authorize="!isAuthenticated()">
                 <a th:href="@{/auth/login}" class="site-header__login">Login</a>
-            </sec:authorize>
+            </th:block>
 
-            <sec:authorize access="hasRole('CUSTOMER')">
+            <th:block sec:authorize="hasRole('CUSTOMER')">
                 <div class="site-header__account">
                     <button type="button"
                             id="profileToggle"
@@ -121,7 +122,7 @@
                         </form>
                     </div>
                 </div>
-            </sec:authorize>
+            </th:block>
         </div>
 
         <button type="button"
@@ -152,13 +153,13 @@
                class="site-header__mobile-link">Gear</a>
             <a th:href="@{/blog}" class="site-header__mobile-link">Blog</a>
             <a th:href="@{/cart}" class="site-header__mobile-link">Cart</a>
-            <sec:authorize access="!isAuthenticated()">
+            <th:block sec:authorize="!isAuthenticated()">
                 <a th:href="@{/auth/login}" class="site-header__mobile-link site-header__mobile-link--accent">Login</a>
-            </sec:authorize>
-            <sec:authorize access="hasRole('CUSTOMER')">
+            </th:block>
+            <th:block sec:authorize="hasRole('CUSTOMER')">
                 <a th:href="@{/orders/list}" class="site-header__mobile-link">My Orders</a>
                 <a th:href="@{/profile}" class="site-header__mobile-link">My Profile</a>
-            </sec:authorize>
+            </th:block>
         </nav>
         <form class="site-header__mobile-search" th:action="@{/products}" method="get" role="search">
             <input name="keyword" type="search" placeholder="Search components..." autocomplete="off">

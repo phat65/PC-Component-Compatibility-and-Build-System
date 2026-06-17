@@ -1,4 +1,4 @@
-package com.example.PCOnlineShop.controller;
+package com.example.PCOnlineShop.controller.cart;
 
 import com.example.PCOnlineShop.model.account.Account;
 import com.example.PCOnlineShop.service.account.AccountService;
