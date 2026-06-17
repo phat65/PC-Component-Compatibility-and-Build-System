@@ -1,328 +1,169 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org"
+<html xmlns:th="http://www.thymeleaf.org"
       xmlns:sec="https://www.thymeleaf.org/extras/spring-security"
-      th:replace="~{layout/app :: page('Product Details', null, ~{::content})}">
+      th:replace="~{layout/base-storefront :: storefront(
+          ~{::title},
+          'storefront-page',
+          ~{::main},
+          ~{::page-styles},
+          ${false}
+      )}">
+<head>
+    <title th:text="${product.productName} + ' – PCOnlineShop'">Product Details</title>
+    <th:block th:fragment="page-styles">
+        <link rel="stylesheet" th:href="@{/css/pages/product-detail.css}">
+    </th:block>
+</head>
 <body>
-<th:block th:fragment="content">
-<div class="storefront-page">
-    <section class="page-section">
-        <div class="container">
-            <div class="breadcrumb-bar" aria-label="Breadcrumb">
-                <a th:href="@{/home}">Home</a>
-                <span>/</span>
-                <a th:href="@{/products}">Products</a>
-                <span>/</span>
-                <span th:text="${product.productName}">Product</span>
+<main th:fragment="main" class="page-section">
+    <div class="page-container">
+
+        <section class="product-detail">
+            <div>
+                <img id="mainImage"
+                     th:if="${product.images != null and !product.images.isEmpty()}"
+                     th:src="@{${product.images[0].imageUrl}}"
+                     alt="Main product image"
+                     class="product-detail__gallery-main">
+                <img th:if="${product.images == null or product.images.isEmpty()}"
+                     th:src="@{/images/no-image.svg}"
+                     alt="No image"
+                     class="product-detail__gallery-main">
+                <div class="product-detail__thumbs" th:if="${product.images != null and !product.images.isEmpty()}">
+                    <img th:each="img : ${product.images}"
+                         th:src="@{${img.imageUrl}}"
+                         alt="Thumbnail"
+                         class="product-detail__thumb"
+                         th:onclick="|setMainImage(this.src)|">
+                </div>
             </div>
 
-            <div class="product-detail-shell">
-                <div class="product-detail-card">
-                    <img id="mainImage"
-                         th:if="${product.images != null and !product.images.isEmpty()}"
-                         th:src="@{${product.images[0].imageUrl}}"
-                         th:attr="onerror=|this.onerror=null;this.src='@{/images/no-image.svg}';|"
-                         alt="Main product image"
-                         class="product-detail-image">
-                    <img th:if="${product.images == null or product.images.isEmpty()}"
-                         th:src="@{/images/no-image.svg}"
-                         alt="No image"
-                         class="product-detail-image">
+            <div>
+                <h1 class="product-detail__name" th:text="${product.productName}">Product Name</h1>
 
-                    <div class="thumb-row" th:if="${product.images != null and !product.images.isEmpty()}">
-                        <img th:each="img : ${product.images}"
-                             th:src="@{${img.imageUrl}}"
-                             th:attr="onerror=|this.onerror=null;this.src='@{/images/no-image.svg}';|"
-                             alt="Product thumbnail"
-                             class="product-thumb"
-                             onclick="document.getElementById('mainImage').src=this.src">
+                <div class="product-detail__rating">
+                    <div class="product-detail__stars">
+                        <span th:each="i : ${#numbers.sequence(1,5)}"
+                              th:text="${i <= avgRating} ? '★' : '☆'"></span>
+                    </div>
+                    <span class="product-detail__rating-text">
+                        <span th:text="${#numbers.formatDecimal(avgRating, 1, 1)}">0.0</span> / 5
+                        (<span th:text="${feedbackCount}">0</span> reviews)
+                    </span>
+                </div>
+
+                <p class="product-detail__price" th:text="'$' + ${product.price}">$0.00</p>
+                <div class="product-detail__description" th:utext="${product.description}">Description</div>
+
+                <div class="product-detail__meta">
+                    <div class="meta-card">
+                        <p class="meta-card__label">Category</p>
+                        <p class="meta-card__value"
+                           th:text="${!product.categories.isEmpty() ? product.categories[0].categoryName : 'N/A'}">N/A</p>
+                    </div>
+                    <div class="meta-card">
+                        <p class="meta-card__label">Brand</p>
+                        <p class="meta-card__value" th:text="${product.brand.name}">Brand</p>
                     </div>
                 </div>
 
-                <div class="product-detail-card">
-                    <div class="product-brand" th:text="${product.brand != null ? product.brand.name : 'PCOnlineShop'}">Brand</div>
-                    <h1 class="section-title app-mb-3" th:text="${product.productName}">Product Name</h1>
-
-                    <div class="app-flex app-flex-wrap app-align-center app-gap-1 app-mb-3">
-                        <div class="rating-stars">
-                            <span th:each="i : ${#numbers.sequence(1,5)}">
-                                <span th:if="${i <= avgRating}">&#9733;</span>
-                                <span th:unless="${i <= avgRating}">&#9734;</span>
-                            </span>
-                        </div>
-                        <span class="text-muted">
-                            <span th:text="${#numbers.formatDecimal(avgRating, 1, 1)}">0.0</span> / 5
-                        </span>
-                        <span class="text-muted">
-                            (<span th:text="${feedbackCount}">0</span> reviews)
-                        </span>
-                    </div>
-
-                    <p class="product-price" th:text="'$' + ${product.price}">$0.00</p>
-                    <div class="app-mb-4 text-muted" th:utext="${product.description}">Product description here.</div>
-
-                    <div class="row app-mb-4">
-                        <div class="col-sm-6">
-                            <div class="spec-tile">
-                                <p class="spec-label">Category</p>
-                                <p class="spec-value"
-                                   th:text="${product.categories != null and !product.categories.isEmpty() ? product.categories[0].categoryName : 'N/A'}">Category</p>
-                            </div>
-                        </div>
-                        <div class="col-sm-6">
-                            <div class="spec-tile">
-                                <p class="spec-label">Stock Status</p>
-                                <p class="spec-value">
-                                    <span th:class="${product.inventoryQuantity != null and product.inventoryQuantity > 0 ? (product.inventoryQuantity <= 5 ? 'stock-badge low' : 'stock-badge') : 'stock-badge out'}"
-                                          th:text="${product.inventoryQuantity != null and product.inventoryQuantity > 0 ? (product.inventoryQuantity <= 5 ? 'Limited Stock' : 'In Stock') : 'Out of Stock'}">In Stock</span>
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="store-panel app-mb-4">
-                        <h3 class="app-mt-0">Key Specifications</h3>
-                        <p class="text-muted app-mb-0" th:text="${product.specification != null and !#strings.isEmpty(product.specification) ? product.specification : 'Detailed specifications are available in the specifications tab.'}">
-                            Specification
-                        </p>
-                    </div>
-
-                    <form th:action="@{'/cart/add/' + ${product.productId}}" method="post" class="ajax-add-to-cart app-mb-3">
-                        <div class="app-flex app-flex-wrap app-align-center app-gap-3">
-                            <label for="quantity"><strong>Quantity</strong></label>
-                            <input type="number" id="quantity" name="quantity" value="1" min="1"
-                                   th:max="${product.inventoryQuantity ?: 1}"
-                                   class="form-control text-center quantity-input-compact"
-                                   required
-                                   th:disabled="${product.inventoryQuantity == null or product.inventoryQuantity <= 0}">
-                            <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
-
-                            <button type="submit"
-                                    class="btn btn-app-primary"
-                                    th:disabled="${product.inventoryQuantity == null or product.inventoryQuantity <= 0}">
-                                <i class="fa fa-shopping-cart"></i>
-                                Add to Cart
-                            </button>
-
-                            <a th:href="@{/cart}" class="btn btn-app-outline">Buy Now</a>
-                            <a th:href="@{/profile}" class="btn btn-app-outline"><i class="fa fa-heart-o"></i> Wishlist</a>
-                            <a th:href="@{/products}" class="btn btn-app-outline">Compare</a>
-                        </div>
+                <div class="product-detail__actions">
+                    <form th:action="@{'/cart/add/' + ${product.productId}}" method="post" class="cart-form">
+                        <label for="quantity">Qty</label>
+                        <input type="number" id="quantity" name="quantity" value="1" min="1"
+                               th:max="${product.inventoryQuantity ?: 1}"
+                               required
+                               th:disabled="${product.inventoryQuantity == null or product.inventoryQuantity <= 0}">
+                        <button type="submit" class="btn-success"
+                                th:disabled="${product.inventoryQuantity == null or product.inventoryQuantity <= 0}">
+                            Add to Cart
+                        </button>
+                        <span th:if="${product.inventoryQuantity == null or product.inventoryQuantity <= 0}"
+                              class="out-of-stock-msg">Out of stock</span>
                     </form>
+                    <a th:href="@{/products}" class="btn-secondary">← Back to Products</a>
+                </div>
+
+                <div class="product-detail__stock">
+                    <span th:if="${product.inventoryQuantity != null and product.inventoryQuantity > 0}"
+                          class="stock-badge stock-badge--in">In Stock</span>
+                    <span th:if="${product.inventoryQuantity == null or product.inventoryQuantity <= 0}"
+                          class="stock-badge stock-badge--out">Out of Stock</span>
                 </div>
             </div>
-        </div>
-    </section>
+        </section>
 
-    <section class="page-section-tight">
-        <div class="container">
-            <div class="product-detail-card">
-                <nav class="detail-tabs" aria-label="Product information tabs">
-                    <a href="#overview" class="active">Overview</a>
-                    <a href="#specifications">Specifications</a>
-                    <a href="#compatibility">Compatibility</a>
-                    <a href="#reviews">Reviews</a>
-                    <a href="#shipping">Shipping &amp; Warranty</a>
-                </nav>
+        <section class="feedback-section">
+            <h2 class="feedback-section__title">Customer Feedback</h2>
 
-                <section id="overview" class="app-mb-4">
-                    <h2 class="section-title h3">Overview</h2>
-                    <div class="text-muted" th:utext="${product.description}">Product overview.</div>
-                </section>
+            <div th:if="${feedback_success}" class="alert alert--success" th:text="${feedback_success}"></div>
+            <div th:if="${feedback_error}" class="alert alert--error" th:text="${feedback_error}"></div>
 
-                <section id="specifications" class="app-mb-4">
-                    <h2 class="section-title h3">Specifications</h2>
-                    <table class="spec-table">
-                        <tbody>
-                        <tr>
-                            <th>Brand</th>
-                            <td th:text="${product.brand != null ? product.brand.name : 'N/A'}">Brand</td>
-                        </tr>
-                        <tr>
-                            <th>Category</th>
-                            <td th:text="${product.categories != null and !product.categories.isEmpty() ? product.categories[0].categoryName : 'N/A'}">Category</td>
-                        </tr>
-                        <tr>
-                            <th>Specification</th>
-                            <td th:text="${product.specification != null and !#strings.isEmpty(product.specification) ? product.specification : 'N/A'}">Specification</td>
-                        </tr>
-                        <tr>
-                            <th>Inventory</th>
-                            <td th:text="${product.inventoryQuantity != null ? product.inventoryQuantity : 0}">0</td>
-                        </tr>
-                        <tr>
-                            <th>Performance Score</th>
-                            <td th:text="${product.performanceScore != null ? product.performanceScore : 'N/A'}">N/A</td>
-                        </tr>
-                        </tbody>
-                    </table>
-                </section>
-
-                <section id="compatibility" class="app-mb-4">
-                    <h2 class="section-title h3">Compatibility</h2>
-                    <div class="app-flex app-flex-wrap app-gap-2">
-                        <span class="compat-badge compatible">Compatible parts supported</span>
-                        <span class="compat-badge warning">Check socket and memory type</span>
-                        <span class="compat-badge pending">Use PC Builder for validation</span>
-                    </div>
-                </section>
-
-                <section id="shipping">
-                    <h2 class="section-title h3">Shipping &amp; Warranty</h2>
-                    <p class="text-muted app-mb-0">Fast checkout, PayOS payment, order tracking, and warranty details are handled after purchase from your account area.</p>
-                </section>
-            </div>
-        </div>
-    </section>
-
-    <section id="reviews" class="page-section-tight app-pb-5">
-        <div class="container">
-            <h2 class="section-title">Customer Reviews</h2>
-
-            <div th:if="${feedback_success}"
-                 class="alert alert-success"
-                 th:text="${feedback_success}">
-            </div>
-
-            <div th:if="${feedback_error}"
-                 class="alert alert-danger"
-                 th:text="${feedback_error}">
-            </div>
-
-            <div th:if="${feedbackPage != null and feedbackPage.totalElements > 0}" class="feedback-list">
+            <div th:if="${feedbackPage != null and feedbackPage.totalElements > 0}">
                 <article th:each="fb : ${feedbackPage.content}" class="feedback-card">
-                    <div class="feedback-header">
-                        <div class="user-summary">
-                            <span class="avatar-initial">
+                    <div class="feedback-card__header">
+                        <div class="feedback-card__user">
+                            <div class="feedback-card__avatar">
                                 <span th:if="${fb.account != null}"
                                       th:text="${#strings.substring(fb.account.fullName, 0, 1)}">U</span>
                                 <span th:unless="${fb.account != null}">U</span>
-                            </span>
-
+                            </div>
                             <div>
-                                <p class="app-mb-0">
-                                    <strong th:text="${fb.account != null ? fb.account.fullName : 'User'}">User</strong>
-                                </p>
-                                <small class="text-muted"
-                                       th:text="${#temporals.format(fb.createdAt, 'dd/MM/yyyy HH:mm:ss')}">12/11/2025</small>
+                                <p class="feedback-card__name"
+                                   th:text="${fb.account != null ? fb.account.fullName : 'User'}">User</p>
+                                <p class="feedback-card__date"
+                                   th:text="${#temporals.format(fb.createdAt, 'dd/MM/yyyy HH:mm')}">Date</p>
                             </div>
                         </div>
-                        <div class="rating-stars">
-                            <span th:each="i : ${#numbers.sequence(1,5)}">
-                                <span th:if="${i <= fb.rating}">&#9733;</span>
-                                <span th:unless="${i <= fb.rating}">&#9734;</span>
-                            </span>
+                        <div class="feedback-card__stars">
+                            <span th:each="i : ${#numbers.sequence(1,5)}"
+                                  th:text="'★'"
+                                  th:classappend="${i > fb.rating} ? ' is-empty' : ''"></span>
                         </div>
                     </div>
-
-                    <p class="app-mb-0 text-muted" th:text="${fb.comment}">Feedback content here...</p>
-
-                    <div th:if="${fb.reply != null and !#strings.isEmpty(fb.reply)}"
-                         class="staff-reply">
-                        <p class="app-mb-1"><strong>Staff reply:</strong></p>
-                        <p class="app-mb-0 text-muted" th:text="${fb.reply}">Thank you for your feedback!</p>
+                    <p class="feedback-card__comment" th:text="${fb.comment}">Comment</p>
+                    <div th:if="${fb.reply != null and !#strings.isEmpty(fb.reply)}" class="feedback-reply">
+                        <p class="feedback-reply__label">Staff reply</p>
+                        <p class="feedback-card__comment" th:text="${fb.reply}">Reply</p>
                     </div>
                 </article>
             </div>
 
-            <div th:if="${feedbackPage == null or feedbackPage.totalElements == 0}" class="empty-state-panel">
+            <div th:if="${feedbackPage == null or feedbackPage.totalElements == 0}" class="feedback-empty">
                 This product does not have any feedback yet.
             </div>
-
-            <hr class="app-my-5">
-
-            <h3 class="h4 app-mb-3"><strong>Leave Your Feedback</strong></h3>
 
             <form th:action="@{/products/{id}(id=${product.productId})}"
                   method="post"
                   onsubmit="return validateFeedbackForm()"
-                  class="feedback-card">
+                  class="feedback-form">
+                <h3 class="feedback-form__title">Leave Your Feedback</h3>
+                <p id="feedbackErrorMsg" class="feedback-form__error is-hidden"></p>
 
-                <p id="feedbackErrorMsg" class="alert alert-danger hidden"></p>
-
-                <div class="app-mb-4">
-                    <label class="form-label"><strong>Rating</strong></label>
-                    <div class="rating-input app-flex app-gap-1">
+                <div class="filter-field feedback-form__field">
+                    <label>Rating</label>
+                    <div class="rating-input">
                         <input type="hidden" name="rating" id="ratingValue" value="">
-                        <span data-value="1">&#9733;</span>
-                        <span data-value="2">&#9733;</span>
-                        <span data-value="3">&#9733;</span>
-                        <span data-value="4">&#9733;</span>
-                        <span data-value="5">&#9733;</span>
+                        <span data-value="1">★</span>
+                        <span data-value="2">★</span>
+                        <span data-value="3">★</span>
+                        <span data-value="4">★</span>
+                        <span data-value="5">★</span>
                     </div>
                 </div>
 
-                <div class="app-mb-4">
-                    <label class="form-label"><strong>Your Comment</strong></label>
-                    <textarea name="comment" rows="5"
-                              maxlength="500"
-                              required
-                              placeholder="Share your thoughts about this product..."
-                              class="form-control"></textarea>
+                <div class="filter-field feedback-form__field">
+                    <label for="comment">Your Comment</label>
+                    <textarea id="comment" name="comment" rows="5" maxlength="500" required
+                              placeholder="Share your thoughts about this product..."></textarea>
                 </div>
 
-                <div class="app-flex app-justify-end">
-                    <button type="submit" class="btn btn-app-primary">
-                        <i class="fa fa-paper-plane"></i>
-                        Send Feedback
-                    </button>
-                </div>
+                <button type="submit" class="btn-primary">Send Feedback</button>
             </form>
-        </div>
-    </section>
-</div>
+        </section>
 
-<script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const stars = document.querySelectorAll('.rating-input span');
-        const ratingInput = document.getElementById('ratingValue');
-
-        stars.forEach(star => {
-            star.addEventListener('click', () => {
-                const val = parseInt(star.getAttribute('data-value'));
-                ratingInput.value = val;
-
-                stars.forEach(s => {
-                    s.classList.toggle('active', parseInt(s.getAttribute('data-value')) <= val);
-                    s.classList.remove('hovered');
-                });
-            });
-
-            star.addEventListener('mouseover', () => {
-                const val = parseInt(star.getAttribute('data-value'));
-                stars.forEach(s => {
-                    s.classList.toggle('hovered', parseInt(s.getAttribute('data-value')) <= val);
-                });
-            });
-
-            star.addEventListener('mouseout', () => {
-                stars.forEach(s => s.classList.remove('hovered'));
-            });
-        });
-    });
-
-    function validateFeedbackForm() {
-        const rating = document.getElementById('ratingValue').value;
-        const comment = document.querySelector('textarea[name="comment"]').value.trim();
-
-        if (!rating) {
-            showInlineError('Please choose a star rating before sending feedback.');
-            return false;
-        }
-
-        if (comment.length === 0) {
-            showInlineError('Please enter your comment.');
-            return false;
-        }
-
-        return true;
-    }
-
-    function showInlineError(message) {
-        const errorMsg = document.getElementById('feedbackErrorMsg');
-        errorMsg.textContent = message;
-        errorMsg.classList.remove('hidden');
-    }
-</script>
-</th:block>
+    </div>
+    <script th:src="@{/js/pages/product-detail.js}"></script>
+</main>
 </body>
 </html>

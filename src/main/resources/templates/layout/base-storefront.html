@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="https://www.thymeleaf.org/extras/spring-security"
+      th:fragment="storefront(titleFrag, bodyClass, content, styles, showPromo)"
+      lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <th:block th:replace="${titleFrag}" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/base/variables.css}">
+    <link rel="stylesheet" th:href="@{/css/components/storefront.css}">
+    <link rel="stylesheet" th:href="@{/css/components/button.css}">
+    <link rel="stylesheet" th:href="@{/css/components/card.css}">
+    <link rel="stylesheet" th:href="@{/css/components/header.css}">
+    <link rel="stylesheet" th:href="@{/css/components/footer.css}">
+    <th:block th:replace="${styles}" />
+</head>
+<body th:class="${bodyClass}">
+    <div th:if="${showPromo}" th:replace="~{layout/fragments/promo-bar :: promo-bar}"></div>
+    <div th:replace="~{layout/fragments/storefront-header :: storefront-header}"></div>
+    <th:block th:replace="${content}" />
+    <th:block th:replace="~{layout/footer :: site-footer}" />
+</body>
+</html>

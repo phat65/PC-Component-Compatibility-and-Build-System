@@ -1,304 +1,148 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org"
+<html xmlns:th="http://www.thymeleaf.org"
       xmlns:sec="https://www.thymeleaf.org/extras/spring-security"
-      th:replace="~{layout/app :: page('PCOnlineShop - Home', null, ~{::content})}">
+      th:replace="~{layout/base-storefront :: storefront(
+          ~{::title},
+          'storefront-page',
+          ~{::main},
+          ~{::page-styles},
+          ${true}
+      )}">
+<head>
+    <title>PCOnlineShop – Home</title>
+    <th:block th:fragment="page-styles">
+        <link rel="stylesheet" th:href="@{/css/pages/home.css}">
+    </th:block>
+</head>
 <body>
-<th:block th:fragment="content">
-<div class="storefront-page">
-    <section class="store-hero layout-example-hero">
-        <div class="layout-example-hero-media" aria-hidden="true">
-            <img th:src="@{/images/layout-example/hero-black-build.png}" alt="">
+<main th:fragment="main" class="home-main">
+
+    <section class="hero">
+        <div class="hero__bg" aria-hidden="true"></div>
+
+        <div class="hero__neon" aria-hidden="true">
+            <div class="neon-orb neon-orb--1"></div>
+            <div class="neon-orb neon-orb--2"></div>
+            <div class="neon-orb neon-orb--3"></div>
         </div>
-        <div class="container layout-example-hero-content">
-            <div class="layout-example-hero-copy">
-                <span class="eyebrow">New Arrival</span>
-                <h1>PCOnlineShop</h1>
-                <p>High-performance PC components, gaming gear, and builder-ready parts for your next setup.</p>
-                <div class="hero-actions">
-                    <a th:href="@{/products}" class="btn btn-lg btn-app-primary">Shop Hardware</a>
-                    <a th:href="@{/build/start}" class="btn btn-lg btn-app-outline">Start PC Builder</a>
-                </div>
-            </div>
-            <div class="layout-example-hero-strip" aria-label="Store features">
-                <span>Compatible Parts</span>
-                <span>Fast Checkout</span>
-                <span>Trusted Brands</span>
-                <span>Gaming Performance</span>
+
+        <div class="hero__scene" aria-hidden="true">
+            <div class="hero__rig" id="heroRig">
+                <div class="hero__ring hero__ring--outer"></div>
+                <div class="hero__ring hero__ring--mid"></div>
+                <div class="hero__ring hero__ring--inner"></div>
+                <div class="hero__core"></div>
             </div>
         </div>
+
+        <div class="hero__content">
+            <p class="hero__eyebrow hero__neon-text">Premium PC Components</p>
+            <h1 class="hero__title hero__neon-text hero__neon-text--title">Build Your Dream PC</h1>
+            <p class="hero__subtitle">High-performance hardware · Guaranteed compatibility</p>
+            <a th:href="@{/products}" class="btn-primary hero__cta">Shop Now</a>
+        </div>
+        <a href="#categories" class="hero__scroll hero__scroll--neon" aria-label="Scroll to categories">↓</a>
     </section>
 
-    <section class="page-section-tight home-showcase-section layout-example-bento">
-        <div class="container">
-            <div class="layout-section-heading">
-                <div>
-                    <p class="section-kicker">// Featured Hardware</p>
-                    <h2 class="section-title app-mb-0">Build a Complete Setup</h2>
-                </div>
-                <a th:href="@{/products}" class="btn btn-app-outline">View Collections</a>
+    <section id="categories" class="categories-section">
+        <div class="page-container">
+            <div class="section-header section-header--neon">
+                <h2 class="section-header__title">Shop by Category</h2>
+                <div class="section-header__neon-line" aria-hidden="true"></div>
             </div>
-            <div class="home-showcase-grid">
-                <a th:href="@{/products(keyword='Case')}" class="home-showcase-card home-showcase-card-large">
-                    <img th:src="@{/images/layout-example/hero-white-build.png}" alt="White PC build with RGB cooling">
-                    <div class="home-showcase-content">
-                        <span class="section-kicker">Ultimate Performance</span>
-                        <h2>High-Airflow PC Builds</h2>
-                        <p>Find cases, cooling, GPU clearance, and power parts for a balanced gaming setup.</p>
-                        <span class="layout-card-action">Shop Now</span>
-                    </div>
-                </a>
-                <a th:href="@{/build/start}" class="home-showcase-card">
-                    <img th:src="@{/images/layout-example/hero-black-build.png}" alt="Black RGB PC build">
-                    <div class="home-showcase-content">
-                        <span class="section-kicker">PC Builder</span>
-                        <h3>Match Compatible Parts</h3>
-                        <span class="layout-card-action">Get Started</span>
-                    </div>
-                </a>
-                <a th:href="@{/products(keyword='Keyboard')}" class="home-showcase-card">
-                    <img th:src="@{/images/layout-example/hero-gaming-gear.png}" alt="Gaming keyboard and mouse setup">
-                    <div class="home-showcase-content">
-                        <span class="section-kicker">Gaming Gear</span>
-                        <h3>Upgrade Your Desk</h3>
-                        <span class="layout-card-action">Order Now</span>
-                    </div>
-                </a>
-            </div>
-        </div>
-    </section>
-
-    <section class="page-section">
-        <div class="container">
-            <p class="section-kicker">Shop by Category</p>
-            <h2 class="section-title">Upgrade every part of your setup</h2>
-            <p class="section-subtitle">Browse core PC components, gaming peripherals, and builder-ready parts by category.</p>
-
             <div class="category-grid">
-                <a th:href="@{/products(keyword='CPU')}" class="category-card">
-                    <div class="category-visual"><i class="fa fa-microchip"></i></div>
-                    <h3>CPU</h3>
-                    <p>Powerful processors for gaming, productivity, and workstation builds.</p>
-                    <span class="shop-link">Shop Now</span>
-                </a>
-                <a th:href="@{/products(keyword='GPU')}" class="category-card">
-                    <div class="category-visual"><i class="fa fa-gamepad"></i></div>
-                    <h3>GPU</h3>
-                    <p>Graphics cards for smooth gaming, rendering, and creative work.</p>
-                    <span class="shop-link">Shop Now</span>
-                </a>
-                <a th:href="@{/products(keyword='Mainboard')}" class="category-card">
-                    <div class="category-visual"><i class="fa fa-server"></i></div>
-                    <h3>Mainboard</h3>
-                    <p>Choose the right platform for your CPU, memory, and expansion.</p>
-                    <span class="shop-link">Shop Now</span>
-                </a>
-                <a th:href="@{/products(keyword='Memory')}" class="category-card">
-                    <div class="category-visual"><i class="fa fa-tachometer"></i></div>
-                    <h3>Memory</h3>
-                    <p>DDR4 and DDR5 RAM kits for speed and multitasking.</p>
-                    <span class="shop-link">Shop Now</span>
-                </a>
-                <a th:href="@{/products(keyword='Storage')}" class="category-card">
-                    <div class="category-visual"><i class="fa fa-hdd-o"></i></div>
-                    <h3>Storage</h3>
-                    <p>Fast SSDs and high-capacity HDDs for every build.</p>
-                    <span class="shop-link">Shop Now</span>
-                </a>
-                <a th:href="@{/products(keyword='Case')}" class="category-card">
-                    <div class="category-visual"><i class="fa fa-cube"></i></div>
-                    <h3>PC Case</h3>
-                    <p>Airflow, aesthetics, and compatibility for your PC build.</p>
-                    <span class="shop-link">Shop Now</span>
-                </a>
-                <a th:href="@{/products(keyword='Power Supply')}" class="category-card">
-                    <div class="category-visual"><i class="fa fa-bolt"></i></div>
-                    <h3>Power Supply</h3>
-                    <p>Reliable PSUs for stable and efficient power delivery.</p>
-                    <span class="shop-link">Shop Now</span>
-                </a>
-                <a th:href="@{/products(keyword='Cooling')}" class="category-card">
-                    <div class="category-visual"><i class="fa fa-snowflake-o"></i></div>
-                    <h3>Cooling</h3>
-                    <p>Air coolers, AIO coolers, and fans for better temperatures.</p>
-                    <span class="shop-link">Shop Now</span>
-                </a>
-                <a th:href="@{/products(keyword='Keyboard')}" class="category-card">
-                    <div class="category-visual"><i class="fa fa-keyboard-o"></i></div>
-                    <h3>Keyboard</h3>
-                    <p>Mechanical boards for gaming, coding, and daily work.</p>
-                    <span class="shop-link">Shop Now</span>
-                </a>
-                <a th:href="@{/products(keyword='Mouse')}" class="category-card">
-                    <div class="category-visual"><i class="fa fa-mouse-pointer"></i></div>
-                    <h3>Mouse</h3>
-                    <p>Low-latency precision for competitive and creative users.</p>
-                    <span class="shop-link">Shop Now</span>
-                </a>
-                <a th:href="@{/products(keyword='Monitor')}" class="category-card">
-                    <div class="category-visual"><i class="fa fa-desktop"></i></div>
-                    <h3>Monitor</h3>
-                    <p>High refresh displays for games, editing, and office work.</p>
-                    <span class="shop-link">Shop Now</span>
-                </a>
-                <a th:href="@{/products}" class="category-card">
-                    <div class="category-visual"><i class="fa fa-th-large"></i></div>
-                    <h3>All Products</h3>
-                    <p>Explore every component, accessory, and upgrade in the catalog.</p>
-                    <span class="shop-link">Shop Now</span>
-                </a>
-            </div>
-        </div>
-    </section>
-
-    <section class="page-section-tight">
-        <div class="container">
-            <div class="section-header">
-                <div>
-                    <p class="section-kicker">Featured Products</p>
-                    <h2 class="section-title app-mb-0">Premium picks for your next build</h2>
-                </div>
-                <a th:href="@{/products}" class="btn btn-app-outline">View All</a>
-            </div>
-
-            <div th:if="${featuredProducts == null or #lists.isEmpty(featuredProducts)}" class="empty-state-panel">
-                <h3>No featured products yet</h3>
-                <p>Check back later or browse all available components.</p>
-                <a th:href="@{/products}" class="btn btn-app-primary">Browse Products</a>
-            </div>
-
-            <div class="product-grid" th:unless="${featuredProducts == null or #lists.isEmpty(featuredProducts)}">
-                <article class="product-card" th:each="p, iter : ${featuredProducts}"
-                         th:with="imageUrl=${(p != null and p.images != null and !p.images.isEmpty() and p.images[0].imageUrl != null and !#strings.isEmpty(p.images[0].imageUrl)) ? p.images[0].imageUrl : '/images/no-image.svg'}">
-                    <span class="product-badge" th:text="${iter.index % 3 == 0 ? 'Best Seller' : (iter.index % 3 == 1 ? 'New' : 'Sale')}">Best Seller</span>
-                    <img th:src="@{${imageUrl}}"
-                         th:attr="onerror=|this.onerror=null;this.src='@{/images/no-image.svg}';|"
-                         alt="Product image"
-                         class="product-card-image">
-                    <div class="product-card-body">
-                        <div class="product-brand" th:text="${p.brand != null ? p.brand.name : 'PCOnlineShop'}">Brand</div>
-                        <h3 class="product-card-title" th:text="${p.productName}">Product Name</h3>
-                        <p class="product-spec-line" th:text="${p.specification != null and !#strings.isEmpty(p.specification) ? p.specification : 'Gaming ready component'}">DDR5 6000MHz RGB</p>
-                        <div class="product-rating" aria-label="Rating 5 out of 5">
-                            <i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star-o"></i>
-                        </div>
-                        <p class="product-price" th:text="'$' + ${p.price}">$0.00</p>
-                        <div class="app-flex app-align-center app-justify-between app-gap-2">
-                            <span th:class="${p.inventoryQuantity != null and p.inventoryQuantity > 0 ? 'stock-badge' : 'stock-badge out'}"
-                                  th:text="${p.inventoryQuantity != null and p.inventoryQuantity > 0 ? 'In Stock' : 'Out of Stock'}">In Stock</span>
-                            <a th:href="@{/products/{id}(id=${p.productId})}" class="btn btn-app-outline btn-sm">Compare</a>
-                        </div>
-                        <form th:action="@{/cart/add/{id}(id=${p.productId})}" method="post" class="ajax-add-to-cart app-mt-3">
-                            <input type="hidden" name="quantity" value="1">
-                            <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
-                            <button type="submit"
-                                    class="btn btn-app-primary btn-block"
-                                    th:disabled="${p.inventoryQuantity == null or p.inventoryQuantity <= 0}">
-                                <i class="fa fa-shopping-cart"></i> Add to Cart
-                            </button>
-                        </form>
+                <a th:each="c : ${categories}"
+                   th:href="@{'/home?category=' + ${c.categoryId}}"
+                   th:attr="data-cat=${c.categoryName}"
+                   class="category-card"
+                   th:classappend="${selectedCategory == c.categoryId} ? ' is-active' : ''">
+                    <div class="category-card__visual" aria-hidden="true"></div>
+                    <div class="category-card__footer">
+                        <span class="category-card__label">
+                            <span class="category-card__prefix">//</span>
+                            <span th:text="${c.categoryName}">Category</span>
+                        </span>
+                        <span class="category-card__arrow" aria-hidden="true">→</span>
                     </div>
-                </article>
+                </a>
             </div>
         </div>
     </section>
 
-    <section class="page-section builder-promo">
-        <div class="container">
-            <div class="section-header">
-                <div>
-                    <p class="section-kicker">PC Builder</p>
-                    <h2 class="section-title app-mb-0">Build Smarter with PC Builder</h2>
-                    <p class="section-subtitle app-mb-0">Choose your CPU, mainboard, RAM, GPU, PSU, case, and cooling with compatibility guidance.</p>
+    <section class="brands-section">
+        <div class="page-container">
+            <div class="section-header section-header--neon">
+                <h2 class="section-header__title">Shop by Brand</h2>
+                <div class="section-header__neon-line" aria-hidden="true"></div>
+            </div>
+
+            <div class="brands-head" th:if="${brands != null and !brands.isEmpty()}">
+               
+                <a th:if="${selectedBrand != null}"
+                   th:href="@{/home}"
+                   class="brands-head__reset">Clear filter</a>
+            </div>
+        </div>
+
+        <div class="brands-loop" th:if="${brands != null and !brands.isEmpty()}">
+            <div class="brands-loop__shade brands-loop__shade--left" aria-hidden="true"></div>
+            <div class="brands-loop__shade brands-loop__shade--right" aria-hidden="true"></div>
+
+            <div class="brands-loop__row brands-loop__row--left">
+                <div class="brands-loop__track">
+                    <div class="brands-loop__group" role="list">
+                        <th:block th:each="b : ${brands}">
+                            <th:block th:replace="~{layout/fragments/brand-chip :: brand-chip(brand=${b}, isActive=${selectedBrand == b.brandId}, isClone=false)}" />
+                        </th:block>
+                    </div>
+                    <div class="brands-loop__group" aria-hidden="true">
+                        <th:block th:each="b : ${brands}">
+                            <th:block th:replace="~{layout/fragments/brand-chip :: brand-chip(brand=${b}, isActive=false, isClone=true)}" />
+                        </th:block>
+                    </div>
                 </div>
-                <a th:href="@{/build/start}" class="btn btn-app-primary">Start Building</a>
             </div>
 
-            <div class="builder-steps">
-                <div class="builder-step"><div class="builder-step-icon"><i class="fa fa-microchip"></i></div><h3>Choose CPU</h3><p>Pick the processing tier for your workload.</p><span class="compat-badge pending">Not Selected</span></div>
-                <div class="builder-step"><div class="builder-step-icon"><i class="fa fa-server"></i></div><h3>Choose Mainboard</h3><p>Match socket, chipset, and form factor.</p><span class="compat-badge compatible">Compatible</span></div>
-                <div class="builder-step"><div class="builder-step-icon"><i class="fa fa-tachometer"></i></div><h3>Choose Memory</h3><p>Check DDR generation, speed, and slots.</p><span class="compat-badge warning">Check Required</span></div>
-                <div class="builder-step"><div class="builder-step-icon"><i class="fa fa-gamepad"></i></div><h3>Choose GPU</h3><p>Balance performance, length, and power draw.</p><span class="compat-badge pending">Not Selected</span></div>
-                <div class="builder-step"><div class="builder-step-icon"><i class="fa fa-hdd-o"></i></div><h3>Choose Storage</h3><p>NVMe, SATA, and capacity planning.</p><span class="compat-badge pending">Not Selected</span></div>
-                <div class="builder-step"><div class="builder-step-icon"><i class="fa fa-bolt"></i></div><h3>Power Supply</h3><p>Estimate wattage and efficiency headroom.</p><span class="compat-badge pending">Not Selected</span></div>
-                <div class="builder-step"><div class="builder-step-icon"><i class="fa fa-cube"></i></div><h3>Choose Case</h3><p>Validate ATX, airflow, and clearance.</p><span class="compat-badge pending">Not Selected</span></div>
-                <div class="builder-step"><div class="builder-step-icon"><i class="fa fa-snowflake-o"></i></div><h3>Choose Cooling</h3><p>Keep thermals under control.</p><span class="compat-badge pending">Not Selected</span></div>
-            </div>
-        </div>
-    </section>
-
-    <section class="page-section">
-        <div class="container">
-            <p class="section-kicker">Hot Deals</p>
-            <h2 class="section-title">Today's Deals</h2>
-            <div class="deals-grid">
-                <article class="deal-card"><span class="deal-discount">-18%</span><h3>DDR5 RGB Memory Kit</h3><p><span class="old-price">$199.99</span> <strong class="product-price">$164.99</strong></p><p>Ends tonight</p><a th:href="@{/products(keyword='DDR5')}" class="btn btn-app-primary btn-block">Add to Cart</a></article>
-                <article class="deal-card"><span class="deal-discount">-12%</span><h3>1TB M.2 NVMe SSD</h3><p><span class="old-price">$109.99</span> <strong class="product-price">$96.99</strong></p><p>Limited stock</p><a th:href="@{/products(keyword='NVMe')}" class="btn btn-app-primary btn-block">Add to Cart</a></article>
-                <article class="deal-card"><span class="deal-discount">-15%</span><h3>750W Gold Power Supply</h3><p><span class="old-price">$139.99</span> <strong class="product-price">$118.99</strong></p><p>Weekend deal</p><a th:href="@{/products(keyword='Power Supply')}" class="btn btn-app-primary btn-block">Add to Cart</a></article>
-                <article class="deal-card"><span class="deal-discount">-10%</span><h3>Airflow ATX Gaming Case</h3><p><span class="old-price">$129.99</span> <strong class="product-price">$116.99</strong></p><p>New build promo</p><a th:href="@{/products(keyword='Case')}" class="btn btn-app-primary btn-block">Add to Cart</a></article>
-            </div>
-        </div>
-    </section>
-
-    <section class="page-section-tight">
-        <div class="container">
-            <p class="section-kicker">Shop by Brand</p>
-            <h2 class="section-title">Trusted hardware names</h2>
-            <div class="brand-grid">
-                <a th:each="b : ${brands}" th:href="@{/products(brand=${b.brandId})}" class="brand-card" th:text="${b.name}">Brand</a>
-                <a th:if="${brands == null or #lists.isEmpty(brands)}" th:href="@{/products}" class="brand-card">ASUS</a>
-                <a th:if="${brands == null or #lists.isEmpty(brands)}" th:href="@{/products}" class="brand-card">MSI</a>
-                <a th:if="${brands == null or #lists.isEmpty(brands)}" th:href="@{/products}" class="brand-card">Gigabyte</a>
-                <a th:if="${brands == null or #lists.isEmpty(brands)}" th:href="@{/products}" class="brand-card">Intel</a>
-                <a th:if="${brands == null or #lists.isEmpty(brands)}" th:href="@{/products}" class="brand-card">AMD</a>
-                <a th:if="${brands == null or #lists.isEmpty(brands)}" th:href="@{/products}" class="brand-card">NVIDIA</a>
-            </div>
-        </div>
-    </section>
-
-    <section class="page-section">
-        <div class="container">
-            <p class="section-kicker">Recommendations</p>
-            <h2 class="section-title">Find the Right Parts for Your Build</h2>
-            <div class="recommendation-grid">
-                <article class="recommendation-card">
-                    <h3>Budget Gaming PC</h3>
-                    <p>Best for: 1080p gaming and school work</p>
-                    <p>CPU: Ryzen 5 / Core i5<br>GPU: RTX 3060 / RX 6600 XT<br>RAM: 16GB DDR4<br>Storage: 1TB NVMe SSD</p>
-                    <a th:href="@{/build/start}" class="btn btn-app-outline">View Build</a>
-                </article>
-                <article class="recommendation-card">
-                    <h3>High-End Gaming PC</h3>
-                    <p>Best for: 1440p and 4K gaming</p>
-                    <p>CPU: Ryzen 7 / Core i7<br>GPU: RTX 4070 Ti / RX 7900<br>RAM: 32GB DDR5<br>Storage: 2TB NVMe SSD</p>
-                    <a th:href="@{/build/start}" class="btn btn-app-outline">View Build</a>
-                </article>
-                <article class="recommendation-card">
-                    <h3>Creator Workstation</h3>
-                    <p>Best for: editing, rendering, and multitasking</p>
-                    <p>CPU: Ryzen 9 / Core i9<br>GPU: RTX 4080 tier<br>RAM: 64GB DDR5<br>Storage: 2TB NVMe + archive HDD</p>
-                    <a th:href="@{/build/start}" class="btn btn-app-outline">View Build</a>
-                </article>
-            </div>
-        </div>
-    </section>
-
-    <section class="page-section-tight app-pb-5">
-        <div class="container">
-            <div class="newsletter-panel">
-                <div>
-                    <p class="section-kicker">Newsletter</p>
-                    <h2 class="section-title app-mb-2">Get PC Deals and Build Tips</h2>
-                    <p class="app-mb-0 text-muted">Subscribe to receive new product updates, discounts, and PC building guides.</p>
+            <div class="brands-loop__row brands-loop__row--right">
+                <div class="brands-loop__track">
+                    <div class="brands-loop__group" role="list" aria-label="Brands row 2">
+                        <th:block th:each="b : ${brands}">
+                            <th:block th:replace="~{layout/fragments/brand-chip :: brand-chip(brand=${b}, isActive=${selectedBrand == b.brandId}, isClone=false)}" />
+                        </th:block>
+                    </div>
+                    <div class="brands-loop__group" aria-hidden="true">
+                        <th:block th:each="b : ${brands}">
+                            <th:block th:replace="~{layout/fragments/brand-chip :: brand-chip(brand=${b}, isActive=false, isClone=true)}" />
+                        </th:block>
+                    </div>
                 </div>
-                <form class="newsletter-form" action="#" method="get">
-                    <label class="sr-only" for="newsletter-email">Email address</label>
-                    <input id="newsletter-email" type="email" class="form-control" placeholder="Email address" required>
-                    <button class="btn btn-app-primary" type="submit">Subscribe</button>
-                </form>
             </div>
         </div>
     </section>
-</div>
-</th:block>
+
+    <section class="products-section">
+        <div class="page-container">
+            <div class="section-header section-header--neon">
+                <h2 class="section-header__title"
+                    th:text="${selectedCategory != null or selectedBrand != null} ? 'Products' : 'Featured Products'">
+                    Featured Products
+                </h2>
+                <div class="section-header__neon-line" aria-hidden="true"></div>
+            </div>
+
+            <div th:if="${#lists.isEmpty(featuredProducts)}" class="products-empty">
+                No products found for this filter.
+            </div>
+
+            <div th:unless="${#lists.isEmpty(featuredProducts)}" class="product-grid">
+                <th:block th:each="p : ${featuredProducts}">
+                    <th:block th:replace="~{layout/fragments/product-card :: product-card(item=${p})}" />
+                </th:block>
+            </div>
+        </div>
+    </section>
+
+    <script th:src="@{/js/pages/home.js}" defer></script>
+</main>
 </body>
 </html>

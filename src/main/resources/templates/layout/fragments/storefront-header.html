@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="https://www.thymeleaf.org/extras/spring-security">
+<body>
+<th:block th:fragment="storefront-header">
+    <div sec:authorize="!isAuthenticated() or hasRole('CUSTOMER')"
+         th:replace="~{layout/header-storefront :: header-storefront}"></div>
+    <div sec:authorize="hasRole('ADMIN')"
+         th:replace="~{layout/header-admin :: header-admin}"></div>
+    <div sec:authorize="hasRole('STAFF')"
+         th:replace="~{layout/header-staff :: header-staff}"></div>
+</th:block>
+</body>
+</html>

@@ -1,10 +1,10 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="640" height="480" viewBox="0 0 640 480" role="img" aria-labelledby="title desc">
-  <title id="title">No image available</title>
-  <desc id="desc">Placeholder image for products without an uploaded image.</desc>
-  <rect width="640" height="480" fill="#f3f4f6"/>
-  <rect x="56" y="56" width="528" height="368" rx="18" fill="#ffffff" stroke="#d1d5db" stroke-width="4"/>
-  <path d="M132 344l112-124 82 86 54-62 128 100H132z" fill="#dbeafe"/>
-  <circle cx="430" cy="156" r="38" fill="#bfdbfe"/>
-  <path d="M132 344h376" stroke="#93c5fd" stroke-width="10" stroke-linecap="round"/>
-  <text x="320" y="404" text-anchor="middle" font-family="Arial, sans-serif" font-size="28" font-weight="700" fill="#64748b">No image</text>
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300" role="img" aria-label="No image available">
+  <rect width="400" height="300" fill="#121212"/>
+  <rect x="1" y="1" width="398" height="298" fill="none" stroke="#2A2A2A" stroke-width="2"/>
+  <g fill="none" stroke="#808080" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="130" y="90" width="140" height="100" rx="8"/>
+    <circle cx="155" cy="115" r="10"/>
+    <path d="M130 170l35-30 28 24 22-18 55 44"/>
+  </g>
+  <text x="200" y="230" text-anchor="middle" fill="#808080" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="600">NO IMAGE</text>
 </svg>

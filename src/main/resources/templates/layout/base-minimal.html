@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:fragment="minimal(titleFrag, bodyClass, content, styles)"
+      lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <th:block th:replace="${titleFrag}" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/base/variables.css}">
+    <link rel="stylesheet" th:href="@{/css/components/button.css}">
+    <th:block th:replace="${styles}" />
+</head>
+<body th:class="${bodyClass}">
+    <th:block th:replace="${content}" />
+</body>
+</html>
