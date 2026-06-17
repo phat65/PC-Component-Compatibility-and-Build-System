@@ -140,8 +140,9 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     const originalTotalPrice = readDisplayedTotal();
-    const initiallySelectedCard = document.querySelector(".product-card.selected");
-    const initialPageSelectionPrice = initiallySelectedCard ? parsePriceFromCard(initiallySelectedCard) : 0;
+    const initiallySelectedCards = Array.from(document.querySelectorAll(".product-card.selected"));
+    const initialPageSelectionPrice = initiallySelectedCards
+        .reduce((sum, card) => sum + parsePriceFromCard(card), 0);
 
     function value(card, name) {
         return card.getAttribute("data-" + name) || "";
@@ -278,7 +279,64 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
+    function isMultiSelectForm(form) {
+        return form && form.dataset.multiSelect === "true";
+    }
+
+    function selectedCardsForForm(form) {
+        if (!form) {
+            return [];
+        }
+
+        return Array.from(form.querySelectorAll(".product-card.selected"));
+    }
+
+    function syncMultiSelectHiddenInputs(form) {
+        const container = form.querySelector("[data-selected-items]");
+        if (!container) {
+            return;
+        }
+
+        const inputName = container.dataset.selectedItems || "selectedIds";
+        container.innerHTML = "";
+
+        selectedCardsForForm(form).forEach(selectedCard => {
+            const id = selectedCard.getAttribute("data-id");
+            if (!id) {
+                return;
+            }
+
+            const input = document.createElement("input");
+            input.type = "hidden";
+            input.name = inputName;
+            input.value = id;
+            container.appendChild(input);
+        });
+    }
+
+    function updateTotalForSelection(selectedPrice) {
+        if (!priceTotal) {
+            return;
+        }
+
+        const tempTotal = originalTotalPrice - initialPageSelectionPrice + selectedPrice;
+        priceTotal.innerText = formatMoney(Math.max(tempTotal, 0));
+    }
+
     function selectCard(card) {
+        const form = card.closest("form");
+
+        if (isMultiSelectForm(form)) {
+            card.classList.toggle("selected");
+            syncMultiSelectHiddenInputs(form);
+            updateDetailPanel(card);
+
+            const selectedPrice = selectedCardsForForm(form)
+                .reduce((sum, selectedCard) => sum + parsePriceFromCard(selectedCard), 0);
+            updateTotalForSelection(selectedPrice);
+            return;
+        }
+
         document.querySelectorAll(".product-card.selected").forEach(selected => {
             selected.classList.remove("selected");
         });
@@ -291,11 +349,7 @@ document.addEventListener("DOMContentLoaded", function () {
         }
 
         updateDetailPanel(card);
-
-        if (priceTotal) {
-            const tempTotal = originalTotalPrice - initialPageSelectionPrice + parsePriceFromCard(card);
-            priceTotal.innerText = formatMoney(Math.max(tempTotal, 0));
-        }
+        updateTotalForSelection(parsePriceFromCard(card));
     }
 
     function ensureSearchEmptyState() {
@@ -472,8 +526,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
     ensureSearchEmptyState();
     enhanceFilterBar();
-    if (initiallySelectedCard) {
-        updateDetailPanel(initiallySelectedCard);
+    if (initiallySelectedCards.length > 0) {
+        updateDetailPanel(initiallySelectedCards[0]);
     } else {
         const firstCard = document.querySelector(".product-card");
         if (firstCard) {

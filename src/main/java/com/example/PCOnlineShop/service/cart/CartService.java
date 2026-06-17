@@ -258,7 +258,7 @@ public class CartService {
         if (buildItems.getPowerSupply() != null) products.add(buildItems.getPowerSupply().getProduct());
         if (buildItems.getPcCase() != null) products.add(buildItems.getPcCase().getProduct());
         if (buildItems.getCooling() != null) products.add(buildItems.getCooling().getProduct());
-        if (buildItems.getOther() != null) products.add(buildItems.getOther());
+        if (buildItems.hasOtherProducts()) products.addAll(buildItems.getOther());
         return products.stream()
                 .filter(Objects::nonNull)
                 .toList();

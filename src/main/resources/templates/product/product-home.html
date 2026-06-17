@@ -16,7 +16,7 @@
             <div class="listing-toolbar">
                 <div>
                     <p class="section-kicker">Hardware Catalog</p>
-                    <h1 class="section-title app-mb-1">PC Components and Gaming Gear</h1>
+                    <h1 class="section-title app-mb-1">PC Components and Gear</h1>
                     <p class="section-subtitle app-mb-0">Filter by category, brand, price, and performance needs.</p>
                 </div>
             </div>
@@ -34,11 +34,20 @@
                             <h3>Category</h3>
                             <select name="category" class="form-control">
                                 <option value="">All Categories</option>
-                                <option th:each="c : ${categories}"
-                                        th:value="${c.categoryId}"
-                                        th:text="${c.categoryName}"
-                                        th:selected="${selectedCategory == c.categoryId}">
-                                </option>
+                                <optgroup label="Components">
+                                    <option th:each="c : ${categories}"
+                                            th:value="${c.categoryId}"
+                                            th:text="${c.categoryName == 'Other' ? 'Gear' : c.categoryName}"
+                                            th:selected="${selectedCategory == c.categoryId}">
+                                    </option>
+                                </optgroup>
+                                <optgroup label="Gear" th:if="${gearCategories != null and !#lists.isEmpty(gearCategories)}">
+                                    <option th:each="gearCategory : ${gearCategories}"
+                                            th:value="${gearCategory.categoryId}"
+                                            th:text="${gearCategory.categoryName}"
+                                            th:selected="${selectedCategory == gearCategory.categoryId}">
+                                    </option>
+                                </optgroup>
                             </select>
                         </div>
 
@@ -87,6 +96,18 @@
                 </aside>
 
                 <div>
+                    <div class="gear-category-strip"
+                         th:if="${gearParentCategory != null and gearCategories != null and !#lists.isEmpty(gearCategories) and gearCategorySelected}">
+                        <a th:href="@{/products(category=${gearParentCategory.categoryId})}"
+                           th:classappend="${selectedCategory == gearParentCategory.categoryId} ? ' active' : ''"
+                           class="gear-category-chip">All Gear</a>
+                        <a th:each="gearCategory : ${gearCategories}"
+                           th:href="@{/products(category=${gearCategory.categoryId})}"
+                           th:text="${gearCategory.categoryName}"
+                           th:classappend="${selectedCategory == gearCategory.categoryId} ? ' active' : ''"
+                           class="gear-category-chip">Gear</a>
+                    </div>
+
                     <div class="listing-toolbar">
                         <p class="app-mb-0 text-muted">
                             <span th:text="${products != null ? #lists.size(products) : 0}">0</span>

@@ -19,6 +19,12 @@ public class Category {
     @Column (name = "category_id")
     private int categoryId;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "parent_id")
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    private Category parent;
+
     @Column (name = "category_name")
     private String categoryName;
 
@@ -32,5 +38,12 @@ public class Category {
     private Date createdAt;
 
     @ManyToMany(mappedBy = "categories", fetch = FetchType.LAZY)
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     private List<Product> products;
+
+    @OneToMany(mappedBy = "parent", fetch = FetchType.LAZY)
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    private List<Category> children;
 }

@@ -18,9 +18,9 @@ spring:
     log-level: ${PAYOS_LOG_LEVEL:INFO}
     base-url: ${PAYOS_BASE_URL:https://api.payos.vn}
   datasource:
-    url: ${DB_URL}
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD:${db.password}}
+    url: ${SPRING_DATASOURCE_URL:${DB_URL}}
+    username: ${SPRING_DATASOURCE_USERNAME:${DB_USERNAME}}
+    password: ${SPRING_DATASOURCE_PASSWORD:${DB_PASSWORD:${db.password}}}
   jpa:
     show-sql: ${JPA_SHOW_SQL:false}
     properties:

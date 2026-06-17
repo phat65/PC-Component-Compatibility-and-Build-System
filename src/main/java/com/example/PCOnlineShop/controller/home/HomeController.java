@@ -110,6 +110,9 @@ public class HomeController {
                 normalizedKeyword,
                 pageable
         );
+        List<Category> gearCategories = categoryService.getGearCategories();
+        Category gearParentCategory = categoryService.getGearParentCategory().orElse(null);
+        boolean gearCategorySelected = isGearCategorySelected(category, gearParentCategory, gearCategories);
 
         model.addAttribute("products", productPage.getContent());
         model.addAttribute("currentPage", resolvedPage);
@@ -117,6 +120,9 @@ public class HomeController {
         model.addAttribute("pageNumbers",
                 IntStream.range(0, productPage.getTotalPages()).boxed().toList());
         model.addAttribute("categories", categoryService.getMainCategories());
+        model.addAttribute("gearCategories", gearCategories);
+        model.addAttribute("gearParentCategory", gearParentCategory);
+        model.addAttribute("gearCategorySelected", gearCategorySelected);
         model.addAttribute("selectedCategory", category);
         model.addAttribute("selectedBrand", brand);
         model.addAttribute("brands", brandService.getAllBrands());
@@ -156,5 +162,16 @@ public class HomeController {
         }
         String normalized = keyword.trim().replaceAll("\\s+", " ");
         return normalized.isEmpty() ? null : normalized;
+    }
+
+    private boolean isGearCategorySelected(Integer categoryId, Category gearParentCategory, List<Category> gearCategories) {
+        if (categoryId == null) {
+            return false;
+        }
+        if (gearParentCategory != null && gearParentCategory.getCategoryId() == categoryId) {
+            return true;
+        }
+        return gearCategories.stream()
+                .anyMatch(category -> category.getCategoryId() == categoryId);
     }
 }

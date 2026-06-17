@@ -29,13 +29,16 @@
                             <a th:href="@{/products(keyword='Case')}">PC Case <span>ATX, Micro-ATX, Mini-ITX</span></a>
                         </section>
                         <section>
-                            <h3>Gaming Gear</h3>
-                            <a th:href="@{/products(keyword='Keyboard')}">Keyboard <span>Mechanical and RGB layouts</span></a>
-                            <a th:href="@{/products(keyword='Mouse')}">Mouse <span>Precision sensors and low latency</span></a>
-                            <a th:href="@{/products(keyword='Monitor')}">Monitor <span>High refresh gaming displays</span></a>
-                            <a th:href="@{/products(keyword='Headset')}">Headset <span>Clear comms and spatial audio</span></a>
-                            <a th:href="@{/products(keyword='Mousepad')}">Mousepad <span>Control and speed surfaces</span></a>
-                            <a th:href="@{/products(keyword='Accessories')}">Accessories <span>Cables, hubs, and upgrades</span></a>
+                            <h3>Gear</h3>
+                            <a th:if="${gearParentCategory != null}" th:href="@{/products(category=${gearParentCategory.categoryId})}">All Gear <span>Peripherals and setup accessories</span></a>
+                            <a th:each="gearCategory : ${gearCategories}"
+                               th:href="@{/products(category=${gearCategory.categoryId})}">
+                                <strong th:text="${gearCategory.categoryName}">Gear</strong>
+                                <span th:text="${gearCategory.description != null ? gearCategory.description : 'Setup gear'}">Setup gear</span>
+                            </a>
+                            <a th:if="${gearCategories == null or #lists.isEmpty(gearCategories)}" th:href="@{/products(keyword='Keyboard')}">Keyboard <span>Mechanical and RGB layouts</span></a>
+                            <a th:if="${gearCategories == null or #lists.isEmpty(gearCategories)}" th:href="@{/products(keyword='Mouse')}">Mouse <span>Precision sensors and low latency</span></a>
+                            <a th:if="${gearCategories == null or #lists.isEmpty(gearCategories)}" th:href="@{/products(keyword='Monitor')}">Monitor <span>High refresh gaming displays</span></a>
                         </section>
                         <section>
                             <h3>Shop by Compatibility</h3>
@@ -60,7 +63,8 @@
                 </div>
             </div>
             <a th:href="@{/build/start}" class="site-nav-link">PC Builder</a>
-            <a th:href="@{/products(keyword='Gaming')}" class="site-nav-link">Gaming Gear</a>
+            <a th:if="${gearParentCategory != null}" th:href="@{/products(category=${gearParentCategory.categoryId})}" class="site-nav-link">Gear</a>
+            <a th:unless="${gearParentCategory != null}" th:href="@{/products}" class="site-nav-link">Gear</a>
             <a th:href="@{/products(sortDir='asc')}" class="site-nav-link">Deals</a>
             <a th:href="@{/products}" class="site-nav-link">Brands</a>
             <a th:href="@{/blog}" class="site-nav-link">Support</a>

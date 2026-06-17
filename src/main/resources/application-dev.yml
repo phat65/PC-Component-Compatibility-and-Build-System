@@ -18,9 +18,9 @@ spring:
     log-level: ${PAYOS_LOG_LEVEL:INFO}
     base-url: ${PAYOS_BASE_URL:https://api.payos.vn}
   datasource:
-    url: ${DEV_DB_URL:jdbc:mysql://localhost:3307/pconlineshop?useSSL=false&serverTimezone=Asia/Ho_Chi_Minh&allowPublicKeyRetrieval=true}
-    username: ${DEV_DB_USERNAME:pconlineshop}
-    password: ${DEV_DB_PASSWORD:123456}
+    url: ${SPRING_DATASOURCE_URL:${DEV_DB_URL:jdbc:mysql://localhost:3307/pconlineshop?useSSL=false&serverTimezone=Asia/Ho_Chi_Minh&allowPublicKeyRetrieval=true}}
+    username: ${SPRING_DATASOURCE_USERNAME:${DEV_DB_USERNAME:pconlineshop}}
+    password: ${SPRING_DATASOURCE_PASSWORD:${DEV_DB_PASSWORD:123456}}
   jpa:
     show-sql: ${JPA_SHOW_SQL:false}
     properties:

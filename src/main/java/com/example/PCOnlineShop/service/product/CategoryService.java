@@ -9,6 +9,8 @@ import java.util.Optional;
 
 @Service
 public class CategoryService {
+    private static final String GEAR_PARENT_CATEGORY = "Other";
+
     private final CategoryRepository categoryRepository;
 
     public CategoryService(CategoryRepository categoryRepository) {
@@ -25,6 +27,14 @@ public class CategoryService {
 
     public List<Category> getMainCategories() {
         return categoryRepository.findMainCategories();
+    }
+
+    public List<Category> getGearCategories() {
+        return categoryRepository.findByParentCategoryName(GEAR_PARENT_CATEGORY);
+    }
+
+    public Optional<Category> getGearParentCategory() {
+        return findByNameIgnoreCase(GEAR_PARENT_CATEGORY);
     }
 
     public Optional<Category> findById(Integer id) {

@@ -2684,6 +2684,11 @@ a:focus {
     color: var(--app-brand);
 }
 
+.mega-grid a strong {
+    display: block;
+    color: inherit;
+}
+
 .mega-feature {
     padding: 18px;
     border: 1px solid rgba(255, 176, 32, 0.25);
@@ -3651,6 +3656,34 @@ select {
     justify-content: flex-start;
     color: var(--app-muted);
     font-size: 13px;
+}
+
+.gear-category-strip {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 22px;
+}
+
+.gear-category-chip {
+    display: inline-flex;
+    align-items: center;
+    min-height: 38px;
+    padding: 8px 14px;
+    border: 1px solid var(--app-border);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--app-text);
+    font-size: 14px;
+    font-weight: 800;
+    text-decoration: none;
+}
+
+.gear-category-chip:hover,
+.gear-category-chip.active {
+    border-color: var(--app-brand);
+    background: rgba(32, 211, 255, 0.12);
+    color: var(--app-brand);
 }
 
 .view-toggle {

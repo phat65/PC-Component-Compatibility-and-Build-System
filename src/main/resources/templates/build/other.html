@@ -33,21 +33,12 @@
                             <input type="radio" name="categoryFilter" value="all" id="cat-all" checked onclick="filterByCategory('all')">
                             <label for="cat-all">All</label>
                         </div>
-                        <div>
-                            <input type="radio" name="categoryFilter" value="keyboard" id="cat-keyboard" onclick="filterByCategory('keyboard')">
-                            <label for="cat-keyboard">Keyboard</label>
-                        </div>
-                        <div>
-                            <input type="radio" name="categoryFilter" value="mouse" id="cat-mouse" onclick="filterByCategory('mouse')">
-                            <label for="cat-mouse">Mouse</label>
-                        </div>
-                        <div>
-                            <input type="radio" name="categoryFilter" value="monitor" id="cat-monitor" onclick="filterByCategory('monitor')">
-                            <label for="cat-monitor">Monitor</label>
-                        </div>
-                        <div>
-                            <input type="radio" name="categoryFilter" value="addon" id="cat-addon" onclick="filterByCategory('addon')">
-                            <label for="cat-addon">Add-on</label>
+                        <div th:each="categoryOption : ${otherCategoryOptions}">
+                            <input type="radio" name="categoryFilter"
+                                   th:value="${categoryOption.slug}"
+                                   th:id="${'cat-' + categoryOption.slug}"
+                                   th:onclick="|filterByCategory('${categoryOption.slug}')|">
+                            <label th:for="${'cat-' + categoryOption.slug}" th:text="${categoryOption.label}">Category</label>
                         </div>
 
                         <h4 class="build-popup-subtitle">Sort By:</h4>
@@ -65,20 +56,24 @@
             </div>
 
             <!-- Product Grid -->
-            <form th:action="@{/build/selectOther}" method="post" id="otherForm">
-                <input type="hidden" name="otherId" id="selectedOtherId"
-                       th:value="${buildItems.other?.productId ?: ''}"/>
+            <form th:action="@{/build/selectOther}" method="post" id="otherForm" data-multi-select="true">
+                <div id="selectedOtherIds" data-selected-items="otherIds">
+                    <input th:each="selectedOther : ${buildItems.other}"
+                           type="hidden"
+                           name="otherIds"
+                           th:value="${selectedOther.productId}"/>
+                </div>
                 <div class="product-grid">
                     <div th:if="${#lists.isEmpty(others)}" class="build-grid-empty">
                         No optional components found.
                     </div>
                     <div th:each="other : ${others}"
                          class="product-card"
-                         th:classappend="${buildItems.other?.productId == other.productId} ? 'selected' : ''"
+                         th:classappend="${buildItems.hasOtherProduct(other.productId)} ? 'selected' : ''"
                          th:attr="data-id=${other.productId},data-price=${other.price}"
                          th:data-name="${other.productName}"
                          th:data-brand="${other.brand != null ? other.brand.name : ''}"
-                         th:data-category="other"
+                         th:data-category="${otherCategoryMap[other.productId]}"
                          th:data-description="${other.description}">
                         <!-- Product Image -->
                         <div class="product-image">

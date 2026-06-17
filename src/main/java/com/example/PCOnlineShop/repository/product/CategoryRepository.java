@@ -21,4 +21,11 @@ public interface CategoryRepository extends JpaRepository<Category, Integer> {
     List<Category> findMainCategories();
 
     Optional<Category> findByCategoryNameIgnoreCase(String categoryName);
+
+    @Query("""
+        SELECT c FROM Category c
+        WHERE c.parent.categoryName = :parentName
+        ORDER BY c.displayOrder, c.categoryName
+    """)
+    List<Category> findByParentCategoryName(String parentName);
 }
