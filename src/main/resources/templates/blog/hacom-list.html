@@ -1,44 +1,66 @@
 <!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org"
       xmlns:sec="https://www.thymeleaf.org/extras/spring-security"
-      th:replace="~{layout/app :: page('Blog - HACOM', null, ~{::content})}">
+      th:replace="~{layout/base-storefront :: storefront(
+          ~{::title},
+          'storefront-page page-blog',
+          ~{::main},
+          ~{::page-styles},
+          ${false}
+      )}">
+<head>
+    <title>Blog – PCOnlineShop</title>
+    <th:block th:fragment="page-styles">
+        <link rel="stylesheet" th:href="@{/css/pages/blog.css}">
+    </th:block>
+</head>
 <body>
-<th:block th:fragment="content">
-<style>
-        .page-body { font-family: 'Segoe UI', Tahoma, Arial; padding: 30px; background: #f5f6f8; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
-        .card { background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
-        .card img { width: 100%; height: 170px; object-fit: cover; display:block; }
-        .card .body { padding: 12px; }
-        .card h3 { margin: 0 0 8px; font-size: 1.05rem; }
-        .meta { color: #666; font-size: .9rem; margin-bottom: 6px; }
-        .source { margin-top: 20px; font-size: .9rem; color: #333; }
-    </style>
+<main th:fragment="main" class="blog-main">
+    <div class="blog-container">
 
-<h1>Blog from <span th:text="${sourceName}">HACOM</span></h1>
-<p class="source">Source: <a th:href="${sourceUrl}" target="_blank" th:text="${sourceUrl}"></a></p>
-<p>
-    <a href="/home" style="display:inline-block; padding:8px 16px; background:#007bff; color:white; text-decoration:none; border-radius:5px;">
-        ← Back to home
-    </a>
-</p>
-<div th:if="${#lists.isEmpty(links)}">
-    <p>Can not find the page. Please try later</p>
-</div>
+        <a th:href="@{/}" class="blog-back-link">← Home</a>
 
-<div class="grid" th:if="${!#lists.isEmpty(links)}">
-    <div th:each="link : ${links}" class="card">
-        <a th:href="${link.link}" target="_blank" rel="noopener">
-            <img th:if="${link.imageUrl != null}" th:src="${link.imageUrl}" alt="thumbnail" />
-        </a>
-        <div class="body">
-            <div class="meta">Source: <a th:href="${sourceUrl}" target="_blank" rel="noopener">HACOM</a></div>
-            <h3><a th:href="${link.link}" target="_blank" th:text="${link.title}"></a></h3>
-            <p th:if="${link.summary != null}" th:text="${link.summary}"></p>
-            <p><a th:href="${link.link}" target="_blank">Read →</a></p>
+        <div class="blog-page-header">
+            <p class="blog-page-header__eyebrow">News &amp; Updates</p>
+            <h1 class="blog-page-header__title">
+                Blog from <span th:text="${sourceName}">HACOM</span>
+            </h1>
+            <p class="blog-source-info">
+                Source:
+                <a th:href="${sourceUrl}" target="_blank" rel="noopener" th:text="${sourceUrl}"></a>
+            </p>
         </div>
+
+        <div th:if="${#lists.isEmpty(links)}" class="blog-empty">
+            <p>Could not load articles. Please try again later.</p>
+        </div>
+
+        <div class="blog-grid" th:if="${!#lists.isEmpty(links)}">
+            <article th:each="link : ${links}" class="blog-card">
+                <a class="blog-card__image-wrap"
+                   th:href="${link.link}" target="_blank" rel="noopener">
+                    <img th:if="${link.imageUrl != null}"
+                         th:src="${link.imageUrl}"
+                         alt="Article thumbnail"
+                         class="blog-card__image">
+                </a>
+                <div class="blog-card__body">
+                    <p class="blog-card__meta">
+                        Source: <a th:href="${sourceUrl}" target="_blank" rel="noopener">HACOM</a>
+                    </p>
+                    <h2 class="blog-card__title">
+                        <a th:href="${link.link}" target="_blank" rel="noopener"
+                           th:text="${link.title}">Article title</a>
+                    </h2>
+                    <p th:if="${link.summary != null}" class="blog-card__summary"
+                       th:text="${link.summary}"></p>
+                    <a th:href="${link.link}" target="_blank" rel="noopener"
+                       class="blog-card__read-more">Read more →</a>
+                </div>
+            </article>
+        </div>
+
     </div>
-</div>
-</th:block>
+</main>
 </body>
 </html>

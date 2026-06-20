@@ -1,147 +1,109 @@
 <!DOCTYPE html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org"
-      xmlns:sec="https://www.thymeleaf.org/extras/spring-security"
-      th:replace="~{layout/app :: page('Register', null, ~{::content})}">
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base-minimal :: minimal(~{::title}, 'auth-page', ~{::main}, ~{::page-styles})}">
+<head>
+    <title>Register – PCOnlineShop</title>
+    <th:block th:fragment="page-styles">
+        <link rel="stylesheet" th:href="@{/css/pages/auth.css}">
+    </th:block>
+</head>
 <body>
-<th:block th:fragment="content">
-<style>
+<main th:fragment="main" class="auth-main">
 
-        * {
-            box-sizing: border-box;
-        }
-        .page-body {
-            font-family: 'Segoe UI', sans-serif;
-            background: linear-gradient(135deg, #eef2f3, #ffffff);
-            margin: 0;
-            padding: 0;
-            height: 100%;
-        }
+    <div class="auth-bg" aria-hidden="true">
+        <div class="auth-orb auth-orb--1"></div>
+        <div class="auth-orb auth-orb--2"></div>
+    </div>
 
-        .register-container {
-            background: #fff;
-            padding: 40px 45px;
-            border-radius: 14px;
-            box-shadow: 0 4px 18px rgba(0,0,0,0.1);
-            width: 430px;
-            max-width: 90%;
-            margin: 50px auto; /* căn giữa ngang, cách header 50px */
-        }
-        h2 {
-            text-align: center;
-            color: #333;
-            margin-bottom: 25px;
-        }
-        label {
-            display: block;
-            margin-top: 12px;
-            color: #333;
-            font-weight: 500;
-        }
-        input, select {
-            width: 100%;
-            padding: 10px;
-            margin-top: 6px;
-            border: 1px solid #ccc;
-            border-radius: 6px;
-            font-size: 14px;
-        }
-        button {
-            width: 100%;
-            padding: 12px;
-            background-color: #4a90e2;
-            color: white;
-            border: none;
-            margin-top: 20px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 16px;
-            transition: background-color 0.3s;
-        }
-        button:hover {
-            background-color: #357ab8;
-        }
-        .login-link {
-            text-align: center;
-            margin-top: 15px;
-        }
-        .login-link a {
-            color: #007bff;
-            text-decoration: none;
-        }
-        .login-link a:hover {
-            text-decoration: underline;
-        }
-        .error-message {
-            color: red;
-            font-size: 13px;
-            text-align: center;
-            margin-top: 10px;
-        }
-    </style>
+    <div class="auth-card" style="max-width:520px;">
 
-<div class="register-container">
-    <h2>Register</h2>
-    <form th:action="@{/auth/register}" th:object="${account}" method="post" onsubmit="return validatePassword()">
-
-        <label for="firstname">First Name</label>
-        <input type="text" id="firstname" th:field="*{firstname}" placeholder="First Name" required>
-
-        <label for="lastname">Last Name</label>
-        <input type="text" id="lastname" th:field="*{lastname}" placeholder="Last Name" required>
-
-        <label for="gender">Gender</label>
-        <select id="gender" th:field="*{gender}">
-            <option value="">-- Gender --</option>
-            <option value="true">Male</option>
-            <option value="false">Female</option>
-        </select>
-
-        <label>Address</label>
-
-        <div class="address-group">
-            <select id="province" class="form-control">
-                <option value="">-- Province --</option>
-            </select>
-
-            <select id="district" class="form-control">
-                <option value="">-- District --</option>
-            </select>
-
-            <select id="ward" class="form-control">
-                <option value="">-- Ward --</option>
-            </select>
+        <div class="auth-card__brand">
+            <a th:href="@{/}" class="auth-card__logo">PC<span>Shop</span></a>
         </div>
 
-        <input type="hidden" id="address" th:field="*{address}">
+        <h1 class="auth-card__title">Create account</h1>
+        <p class="auth-card__subtitle">Join us and build your dream PC</p>
 
+        <div th:if="${error}" class="auth-alert auth-alert--error" th:text="${error}"></div>
 
-        <label for="email">Email</label>
-        <input type="email" id="email" th:field="*{email}" placeholder="example@gmail.com" required>
+        <form th:action="@{/auth/register}" th:object="${account}" method="post"
+              onsubmit="return validatePassword()">
 
-        <label for="phoneNumber">Phone Number</label>
-        <input type="text" id="phoneNumber" th:field="*{phoneNumber}" placeholder="Ex: 0912345678" required>
+            <div class="auth-form__group">
+                <label class="auth-form__label" for="firstname">First Name</label>
+                <input class="auth-form__input" type="text" id="firstname"
+                       th:field="*{firstname}" placeholder="First name" required>
+            </div>
 
-        <label for="password">Password</label>
-        <input type="password" id="password" th:field="*{password}" placeholder="Enter password" required>
+            <div class="auth-form__group">
+                <label class="auth-form__label" for="lastname">Last Name</label>
+                <input class="auth-form__input" type="text" id="lastname"
+                       th:field="*{lastname}" placeholder="Last name" required>
+            </div>
 
-        <label for="confirmPassword">Confirm Password</label>
-        <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Confirm password" required>
+            <div class="auth-form__group">
+                <label class="auth-form__label" for="gender">Gender</label>
+                <select class="auth-form__select" id="gender" th:field="*{gender}">
+                    <option value="">-- Select --</option>
+                    <option value="true">Male</option>
+                    <option value="false">Female</option>
+                </select>
+            </div>
 
-        <p id="errorText" class="error-message" th:text="${error}"></p>
+            <div class="auth-form__group">
+                <label class="auth-form__label">Address</label>
+                <div class="auth-form__address-row">
+                    <select id="province" class="auth-form__select">
+                        <option value="">-- Province --</option>
+                    </select>
+                    <select id="district" class="auth-form__select">
+                        <option value="">-- District --</option>
+                    </select>
+                    <select id="ward" class="auth-form__select">
+                        <option value="">-- Ward --</option>
+                    </select>
+                </div>
+                <input type="hidden" id="address" th:field="*{address}">
+            </div>
 
-        <button type="submit">Register</button>
+            <div class="auth-form__group">
+                <label class="auth-form__label" for="email">Email</label>
+                <input class="auth-form__input" type="email" id="email"
+                       th:field="*{email}" placeholder="example@gmail.com" required>
+            </div>
 
-        <div class="login-link">
-            <p>Have account? <a th:href="@{/auth/login}">Login</a></p>
+            <div class="auth-form__group">
+                <label class="auth-form__label" for="phoneNumber">Phone Number</label>
+                <input class="auth-form__input" type="text" id="phoneNumber"
+                       th:field="*{phoneNumber}" placeholder="0912 345 678" required>
+            </div>
+
+            <div class="auth-form__group">
+                <label class="auth-form__label" for="password">Password</label>
+                <input class="auth-form__input" type="password" id="password"
+                       th:field="*{password}" placeholder="Create a password" required>
+            </div>
+
+            <div class="auth-form__group">
+                <label class="auth-form__label" for="confirmPassword">Confirm Password</label>
+                <input class="auth-form__input" type="password" id="confirmPassword"
+                       name="confirmPassword" placeholder="Repeat password" required>
+            </div>
+
+            <p id="errorText" class="auth-alert auth-alert--error"
+               style="display:none;" th:style="${error != null} ? 'display:flex;' : 'display:none;'"
+               th:text="${error}"></p>
+
+            <button type="submit" class="auth-form__submit">Create Account</button>
+        </form>
+
+        <div class="auth-card__footer">
+            Already have an account? <a th:href="@{/auth/login}" class="auth-link">Sign in</a>
         </div>
-    </form>
-</div>
 
-<script src="/js/register.js">
+    </div>
 
-
-
-</script>
-</th:block>
+    <script src="/js/register.js"></script>
+</main>
 </body>
 </html>
