@@ -1,0 +1,191 @@
+/* Profile page — base-storefront dark gaming */
+
+.profile-main {
+    padding: var(--section-padding) 0;
+    min-height: calc(100vh - 64px);
+    background: var(--color-bg);
+}
+
+.profile-wrapper {
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: 0 var(--spacing-md);
+}
+
+/* Page header */
+.profile-page-header {
+    margin-bottom: 36px;
+}
+
+.profile-page-header__eyebrow {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-primary);
+    margin: 0 0 8px;
+}
+
+.profile-page-header__title {
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--color-text-primary);
+    margin: 0;
+    letter-spacing: -0.02em;
+}
+
+/* Grid layout */
+.profile-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+}
+
+/* Cards */
+.profile-card {
+    background: var(--color-surface-2);
+    border: 1px solid var(--color-border);
+    border-radius: var(--rounded-lg);
+    padding: 28px 28px 24px;
+    transition: border-color 0.2s;
+}
+
+.profile-card:hover {
+    border-color: var(--color-border-strong);
+}
+
+.profile-card__title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    margin: 0 0 22px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--color-border);
+    letter-spacing: 0.01em;
+}
+
+/* Form elements */
+.profile-form__group {
+    margin-bottom: 16px;
+}
+
+.profile-form__label {
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 7px;
+}
+
+.profile-form__input,
+.profile-form__select {
+    width: 100%;
+    padding: 11px 14px;
+    background: var(--color-surface-3);
+    border: 1px solid var(--color-border);
+    border-radius: var(--rounded-sm);
+    font-size: 14px;
+    font-family: var(--font-family);
+    color: var(--color-text-primary);
+    outline: none;
+    appearance: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.profile-form__input::placeholder { color: var(--color-text-muted); }
+
+.profile-form__input:focus,
+.profile-form__select:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(244, 197, 66, 0.12);
+}
+
+.profile-form__input[readonly],
+.profile-form__input:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.profile-form__select option {
+    background: var(--color-surface-2);
+    color: var(--color-text-primary);
+}
+
+/* Address list */
+.profile-address-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.profile-address-list li {
+    font-size: 13px;
+    color: var(--color-text-secondary);
+    padding: 10px 14px;
+    background: var(--color-surface-3);
+    border-radius: var(--rounded-sm);
+    border: 1px solid var(--color-border);
+}
+
+/* Submit */
+.profile-form__submit {
+    width: 100%;
+    padding: 13px;
+    background: var(--color-primary);
+    color: #000;
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    border: none;
+    border-radius: var(--rounded-sm);
+    cursor: pointer;
+    margin-top: 8px;
+    transition: background 0.2s, box-shadow 0.2s, transform 0.15s;
+}
+
+.profile-form__submit:hover {
+    background: var(--color-primary-hover);
+    box-shadow: var(--glow-primary);
+    transform: translateY(-1px);
+}
+
+.profile-form__submit:active { transform: translateY(0); }
+
+/* Alerts */
+.profile-alert {
+    padding: 11px 14px;
+    border-radius: var(--rounded-sm);
+    font-size: 13px;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.profile-alert--success {
+    background: rgba(0, 230, 118, 0.08);
+    border: 1px solid rgba(0, 230, 118, 0.25);
+    color: var(--color-success);
+}
+
+.profile-alert--error {
+    background: rgba(255, 82, 82, 0.08);
+    border: 1px solid rgba(255, 82, 82, 0.25);
+    color: #ff8080;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .profile-grid {
+        grid-template-columns: 1fr;
+    }
+    .profile-main {
+        padding: 40px 0;
+    }
+}

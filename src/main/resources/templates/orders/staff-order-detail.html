@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/app :: page(${pageTitle ?: 'Order Detail'}, null, ~{::content})}">
+<body>
+<th:block th:fragment="content">
+    <link rel="stylesheet" th:href="@{/css/pages/order-management.css}">
+
+    <section class="commerce-page management-orders-page">
+        <div class="management-orders-container">
+            <a th:href="@{/staff/orders}" class="orders-back-link">← Back to Orders</a>
+
+            <div class="orders-page-header">
+                <div class="orders-page-header__left">
+                    <p class="orders-page-header__eyebrow">Staff Console</p>
+                    <h1 class="orders-page-header__title" th:text="${pageTitle ?: 'Order Detail'}">Order Detail</h1>
+                </div>
+            </div>
+
+            <div th:if="${error}" class="orders-alert orders-alert--danger" th:text="${error}"></div>
+            <div th:if="${success}" class="orders-alert orders-alert--success" th:text="${success}"></div>
+
+            <div class="order-detail-grid">
+                <div class="orders-detail-card">
+                    <h3 class="orders-detail-card__title">Products</h3>
+                    <div class="orders-table-wrap">
+                        <table class="orders-table">
+                            <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Price</th>
+                                <th>Qty</th>
+                                <th>Subtotal</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="d : ${details}">
+                                <td>
+                                    <a th:if="${d.product != null}"
+                                       th:href="@{/products/{id}(id=${d.product.productId})}"
+                                       th:text="${d.product.productName}">Product</a>
+                                </td>
+                                <td th:text="${@money.format(d.price)}"></td>
+                                <td th:text="${d.quantity}"></td>
+                                <td th:text="${@money.format(d.quantity * d.price)}"></td>
+                            </tr>
+                            <tr th:if="${details == null or #lists.isEmpty(details)}" class="empty-row">
+                                <td colspan="4">No product details found.</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="order-detail-sidebar">
+                    <div class="orders-detail-card">
+                        <h3 class="orders-detail-card__title">Order Summary</h3>
+                        <div class="detail-row"><strong>Order ID</strong><span th:text="${order.orderId}"></span></div>
+                        <div class="detail-row"><strong>Date</strong><span th:text="${#dates.format(order.createdDate, 'dd/MM/yyyy')}"></span></div>
+                        <div class="detail-row">
+                            <strong>Status</strong>
+                            <span class="status-badge"
+                                  th:classappend="${
+                                    order.status == 'Pending Payment' ? ' status-pending' :
+                                    order.status == 'Processing' ? ' status-processing' :
+                                    order.status == 'Ready to Ship' ? ' status-ready' :
+                                    order.status == 'Ready for Pickup' ? ' status-pickup' :
+                                    order.status == 'Delivering' ? ' status-delivering' :
+                                    order.status == 'Completed' ? ' status-completed' :
+                                    order.status == 'Cancelled' ? ' status-cancelled' : ''
+                                  }"
+                                  th:text="${order.status}">Status</span>
+                        </div>
+                        <div class="summary-line">
+                            <span>Total Amount</span>
+                            <span class="summary-value" th:text="${@money.format(order.finalAmount)}"></span>
+                        </div>
+                        <form th:if="${order.status == 'Ready for Pickup'}"
+                              th:action="@{/staff/orders/{id}/complete-pickup(id=${order.orderId})}"
+                              method="post"
+                              class="pickup-complete-form"
+                              onsubmit="return confirm('Mark this pickup order as completed?');">
+                            <button type="submit" class="btn-order-view pickup-complete-btn">Mark Pickup Completed</button>
+                        </form>
+                    </div>
+
+                    <div class="orders-detail-card">
+                        <h3 class="orders-detail-card__title">Shipping &amp; Customer</h3>
+                        <div class="detail-row"><strong>Customer</strong><span th:text="${order.account?.fullName}"></span></div>
+                        <div class="detail-row"><strong>Recipient</strong><span th:text="${order.shippingFullName}"></span></div>
+                        <div class="detail-row"><strong>Phone</strong><span th:text="${order.shippingPhone}"></span></div>
+                        <div class="detail-row"><strong>Address</strong><span th:text="${order.shippingAddress}"></span></div>
+                        <div class="detail-row"><strong>Method</strong><span th:text="${order.shippingMethod}"></span></div>
+                        <div class="detail-row" th:if="${order.note != null and !order.note.isEmpty()}"><strong>Note</strong><span th:text="${order.note}"></span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</th:block>
+</body>
+</html>

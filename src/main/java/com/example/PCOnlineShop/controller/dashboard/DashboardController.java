@@ -24,6 +24,19 @@ public class DashboardController {
         model.addAttribute("totalOrders", stats.totalOrders());
         model.addAttribute("totalProducts", stats.totalProducts());
         model.addAttribute("revenue", stats.revenue());
+        model.addAttribute("todayRevenue", stats.todayRevenue());
+        model.addAttribute("monthRevenue", stats.monthRevenue());
+        model.addAttribute("yearRevenue", stats.yearRevenue());
+        model.addAttribute("todayOrders", stats.todayOrders());
+        model.addAttribute("monthOrders", stats.monthOrders());
+        model.addAttribute("yearOrders", stats.yearOrders());
+        model.addAttribute("todayUnitsSold", stats.todayUnitsSold());
+        model.addAttribute("monthUnitsSold", stats.monthUnitsSold());
+        model.addAttribute("yearUnitsSold", stats.yearUnitsSold());
+        model.addAttribute("dailyRevenue", stats.dailyRevenue());
+        model.addAttribute("monthlyRevenue", stats.monthlyRevenue());
+        model.addAttribute("topProducts", stats.topProducts());
+        model.addAttribute("orderStatusBreakdown", stats.orderStatusBreakdown());
 
         return ADMIN_DASHBOARD_VIEW;
     }
@@ -35,6 +48,13 @@ public class DashboardController {
         model.addAttribute("shippedOrders", stats.shippedOrders());
         model.addAttribute("productsInStock", stats.productsInStock());
         model.addAttribute("feedbackCount", stats.feedbackCount());
+        model.addAttribute("todayOrders", stats.todayOrders());
+        model.addAttribute("todayUnitsSold", stats.todayUnitsSold());
+        model.addAttribute("lowStockProducts", stats.lowStockProducts());
+        model.addAttribute("deliveringOrders", stats.deliveringOrders());
+        model.addAttribute("dailyOrderLoad", stats.dailyOrderLoad());
+        model.addAttribute("topProducts", stats.topProducts());
+        model.addAttribute("workload", stats.workload());
 
         return STAFF_DASHBOARD_VIEW;
     }

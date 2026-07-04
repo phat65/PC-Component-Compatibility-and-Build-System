@@ -33,11 +33,15 @@
         </div>
 
         <nav class="pagination" th:if="${pageNumbers != null and !#lists.isEmpty(pageNumbers)}">
-            <a th:each="i : ${pageNumbers}"
-               th:text="${i + 1}"
-               th:href="@{'/category/' + ${category.categoryId} + '?page=' + ${i}}"
-               class="pagination__link"
-               th:classappend="${i == currentPage} ? ' is-active' : ''"></a>
+            <th:block th:each="i : ${pageNumbers}">
+                <span th:if="${i < 0}" class="pagination__ellipsis" aria-hidden="true">...</span>
+                <a th:if="${i >= 0}"
+                   th:text="${i + 1}"
+                   th:href="@{/category/{id}(id=${category.categoryId}, page=${i}, size=${size}, sortDir=${sortDir}, sortField=${sortField})}"
+                   class="pagination__link"
+                   th:classappend="${i == currentPage} ? ' is-active' : ''"
+                   th:attr="aria-current=${i == currentPage} ? 'page' : null"></a>
+            </th:block>
         </nav>
     </div>
 </main>

@@ -1,130 +1,140 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org"
       xmlns:sec="https://www.thymeleaf.org/extras/spring-security"
-      th:replace="~{layout/app :: page('Feedback List', null, ~{::content})}">
+      th:replace="~{layout/app :: page('Feedback Management', null, ~{::content})}">
 <body>
 <th:block th:fragment="content">
-<link rel="stylesheet" th:href="@{/css/Feedback.css}">
+    <link rel="stylesheet" th:href="@{/css/pages/management-tools.css}">
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css">
+
+    <section class="commerce-page management-tool-page">
+        <div class="management-tool-container">
+            <div class="management-page-header">
+                <div>
+                    <p class="management-page-header__eyebrow">Staff Console</p>
+                    <h1 class="management-page-header__title">Feedback Management</h1>
+                    <p class="management-page-header__subtitle">Review customer feedback, approve public comments, and manage staff replies.</p>
+                </div>
+            </div>
+
+            <div th:if="${msg}" class="management-alert management-alert--success" th:text="${msg}"></div>
+            <div th:if="${error}" class="management-alert management-alert--danger" th:text="${error}"></div>
+
+            <div class="management-card">
+                <div class="management-filter-bar">
+                    <div>
+                        <label for="dateSort">Date</label>
+                        <select id="dateSort" class="form-select">
+                            <option value="">Sort by Date</option>
+                            <option value="dateDesc">Newest first</option>
+                            <option value="dateAsc">Oldest first</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="ratingSort">Rating</label>
+                        <select id="ratingSort" class="form-select">
+                            <option value="">Sort by Rating</option>
+                            <option value="ratingDesc">Highest first</option>
+                            <option value="ratingAsc">Lowest first</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="management-table-wrap">
+                    <table id="feedbackTable" class="management-table" style="width:100%">
+                        <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>User</th>
+                            <th>Product</th>
+                            <th>Comment</th>
+                            <th style="display:none;">RatingValue</th>
+                            <th>Rating</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                            <th>Reply</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="fb : ${data}">
+                            <td th:text="${fb.feedbackId}"></td>
+                            <td>
+                                <div th:text="${fb.account?.fullName}">Full Name</div>
+                                <small th:text="${fb.account?.email}"></small>
+                            </td>
+                            <td th:text="${fb.product?.productName}"></td>
+                            <td th:text="${fb.comment}"></td>
+                            <td style="display:none;" th:text="${fb.rating}"></td>
+                            <td>
+                                <span th:each="i : ${#numbers.sequence(1,5)}"
+                                      th:text="${i <= fb.rating ? '&#9733;' : '&#9734;'}"
+                                      class="star"></span>
+                            </td>
+                            <td th:text="${#temporals.format(fb.createdAt, 'dd/MM/yyyy')}"></td>
+                            <td>
+                                <span class="management-status"
+                                      th:classappend="${fb.commentStatus == 'Allow' ? ' status-feedback-allowed' : (fb.commentStatus == 'Denied' ? ' status-feedback-denied' : ' status-feedback-pending')}"
+                                      th:text="${fb.commentStatus == 'Allow' ? 'Approved' : (fb.commentStatus == 'Denied' ? 'Denied' : 'Pending')}"></span>
+                            </td>
+                            <td>
+                                <div class="management-actions">
+                                    <a class="management-btn"
+                                       th:href="@{|/staff/feedback/${fb.feedbackId}|}">
+                                        <span th:text="${fb.reply == null ? 'Reply' : 'Edit Reply'}"></span>
+                                    </a>
+                                    <form th:if="${fb.commentStatus != 'Allow'}"
+                                          th:action="@{|/staff/feedback/${fb.feedbackId}/approve|}"
+                                          method="post"
+                                          class="admin-inline-form"
+                                          onsubmit="return confirm('Approve this feedback and show it on the product page?');">
+                                        <button type="submit" class="management-btn management-btn-primary">Approve</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
 
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+    <script>
+        let table;
 
-<div class="page-body bg-light">
-<div class="container py-4">
-    <h3 class="mb-3">Feedback List</h3>
+        $(document).ready(function () {
+            table = $('#feedbackTable').DataTable({
+                ordering: true,
+                responsive: false,
+                pageLength: 10,
+                lengthMenu: [10, 25, 50],
+                order: [],
+                autoWidth: false,
+                language: {
+                    search: 'Search:',
+                    lengthMenu: 'Show _MENU_ feedbacks',
+                    info: 'Showing _START_ to _END_ of _TOTAL_ feedbacks',
+                    paginate: { previous: 'Prev', next: 'Next' },
+                    zeroRecords: 'No matching feedbacks found',
+                    infoEmpty: 'No feedbacks available'
+                }
+            });
 
-    <div th:if="${msg}" class="alert alert-success" th:text="${msg}"></div>
+            $('#dateSort').change(function () {
+                const value = $(this).val();
+                if (value === 'dateDesc') table.order([6, 'desc']).draw();
+                if (value === 'dateAsc') table.order([6, 'asc']).draw();
+            });
 
-    <!-- BỘ LỌC SORT -->
-    <div class="mb-3 d-flex flex-wrap" style="gap:14px;">
-
-        <!-- Sort by Date -->
-        <select id="dateSort" class="form-select" style="min-width:150px;">
-            <option value="">Sort by Date</option>
-            <option value="dateDesc">Date ↓ (Newest)</option>
-            <option value="dateAsc">Date ↑ (Oldest)</option>
-        </select>
-
-        <!-- Sort by Rating -->
-        <select id="ratingSort" class="form-select" style="min-width:150px;">
-            <option value="">Sort by Rating</option>
-            <option value="ratingDesc">Rating (Descending)</option>
-            <option value="ratingAsc">Rating (Ascending)</option>
-        </select>
-    </div>
-
-    <!-- TABLE -->
-    <table id="feedbackTable" class="table table-hover bg-white">
-        <thead>
-        <tr>
-            <th>ID</th>
-            <th>User</th>
-            <th>Product</th>
-            <th>Comment</th>
-
-            <!-- CỘT RATING VALUE ẨN -->
-            <th style="display:none;">RatingValue</th>
-
-            <th>Rating</th>
-            <th>Date</th>
-            <th>Reply</th>
-        </tr>
-        </thead>
-
-        <tbody>
-        <tr th:each="fb : ${data}">
-            <td th:text="${fb.feedbackId}"></td>
-
-            <td>
-                <div th:text="${fb.account?.fullName}">Full Name</div>
-                <small class="text-muted" th:text="${fb.account?.email}"></small>
-            </td>
-
-            <td th:text="${fb.product?.productName}"></td>
-            <td th:text="${fb.comment}"></td>
-
-            <!-- rating số (ẩn) -->
-            <td style="display:none;" th:text="${fb.rating}"></td>
-
-            <!-- rating sao -->
-            <td>
-                <span th:each="i : ${#numbers.sequence(1,5)}"
-                      th:text="${i <= fb.rating ? '★' : '☆'}"
-                      class="star"></span>
-            </td>
-
-            <td th:text="${#temporals.format(fb.createdAt, 'dd/MM/yyyy')}"></td>
-
-            <td>
-                <a class="btn btn-sm btn-outline-primary"
-                   th:href="@{|/staff/feedback/${fb.feedbackId}|}">
-                    <span th:text="${fb.reply == null ? 'Add' : 'Edit'}"></span>
-                </a>
-            </td>
-        </tr>
-        </tbody>
-    </table>
-</div>
-
-<script>
-    let table;
-
-    $(document).ready(function () {
-
-        table = $('#feedbackTable').DataTable({
-            ordering: true,
-            responsive: true,
-            pageLength: 5,
-            order: [],
-            language: {
-                search: "Search:",
-                lengthMenu: "Show _MENU_ rows",
-                info: "Showing _START_–_END_ of _TOTAL_ feedbacks",
-                paginate: { previous: "Prev", next: "Next" },
-                zeroRecords: "No matching feedbacks found",
-                infoEmpty: "No feedbacks available"
-            }
+            $('#ratingSort').change(function () {
+                const value = $(this).val();
+                if (value === 'ratingDesc') table.order([4, 'desc']).draw();
+                if (value === 'ratingAsc') table.order([4, 'asc']).draw();
+            });
         });
-
-        // SORT BY DATE
-        $('#dateSort').change(function () {
-            let value = $(this).val();
-
-            if (value === "dateDesc") table.order([6, 'desc']).draw();
-            if (value === "dateAsc")  table.order([6, 'asc']).draw();
-        });
-
-        // SORT BY RATING (THEO CỘT SỐ → INDEX = 4)
-        $('#ratingSort').change(function () {
-            let value = $(this).val();
-
-            if (value === "ratingDesc") table.order([4, 'desc']).draw();
-            if (value === "ratingAsc")  table.order([4, 'asc']).draw();
-        });
-    });
-</script>
-</div>
+    </script>
 </th:block>
 </body>
 </html>

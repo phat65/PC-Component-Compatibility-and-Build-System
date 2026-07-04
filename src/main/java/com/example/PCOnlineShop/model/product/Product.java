@@ -31,8 +31,8 @@ public class Product {
 
     @Column (name = "price")
     @NotNull(message = "Price is required")
-    @DecimalMin(value = "0.01", message = "Price must be at least 0.01")
-    @DecimalMax(value = "100000.00", message = "Price must be at most 100000.00")
+    @DecimalMin(value = "1", message = "Price must be at least 1 VND")
+    @DecimalMax(value = "500000000", message = "Price must be at most 500,000,000 VND")
     private double price;
 
 
@@ -66,6 +66,7 @@ public class Product {
         joinColumns = @JoinColumn(name = "product_id"),
         inverseJoinColumns = @JoinColumn(name = "category_id")
     )
+    @OrderBy("displayOrder ASC")
     private List<Category> categories = new ArrayList<>();
 
     @ManyToOne(fetch = FetchType.EAGER)

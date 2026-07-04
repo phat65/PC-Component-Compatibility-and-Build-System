@@ -4,20 +4,25 @@
       th:replace="~{layout/app :: page('Product Management', null, ~{::content})}">
 <body>
 <th:block th:fragment="content">
+    <link rel="stylesheet" th:href="@{/css/pages/management-tools.css}">
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
 
-    <section class="commerce-page admin-page">
-        <div class="container">
-            <div class="section-header">
-                <h1 class="commerce-title app-mb-0">Product Management</h1>
-                <a th:href="@{/staff/products/add}" class="btn btn-app-primary">Add Product</a>
+    <section class="commerce-page management-tool-page product-management-page">
+        <div class="management-tool-container management-tool-container--wide">
+            <div class="management-page-header">
+                <div>
+                    <p class="management-page-header__eyebrow">Staff Console</p>
+                    <h1 class="management-page-header__title">Product Management</h1>
+                    <p class="management-page-header__subtitle">Manage catalog status, inventory, category, brand, and product pricing.</p>
+                </div>
+                <a th:href="@{/staff/products/add}" class="management-btn management-btn-primary">Add Product</a>
             </div>
 
-            <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
-            <div th:if="${message}" class="alert alert-success" th:text="${message}"></div>
+            <div th:if="${error}" class="management-alert management-alert--danger" th:text="${error}"></div>
+            <div th:if="${message}" class="management-alert management-alert--success" th:text="${message}"></div>
 
-            <div class="commerce-card admin-table-card">
-                <div class="admin-filter-bar product-filter-bar">
+            <div class="management-card">
+                <div class="management-filter-bar product-filter-bar">
                     <div>
                         <label for="categoryFilter">Category</label>
                         <select id="categoryFilter" class="form-control">
@@ -49,8 +54,8 @@
                     </div>
                 </div>
 
-                <div class="table-responsive">
-                    <table id="productTable" class="table table-hover order-table admin-table product-admin-table" style="width:100%">
+                <div class="management-table-wrap">
+                    <table id="productTable" class="management-table product-admin-table" style="width:100%">
                         <thead>
                         <tr>
                             <th>ID</th>
@@ -58,7 +63,7 @@
                             <th>Category</th>
                             <th>Brand</th>
                             <th>Product Name</th>
-                            <th>Price ($)</th>
+                            <th>Price (VND)</th>
                             <th>Inventory</th>
                             <th>Description</th>
                             <th>Catalog State</th>
@@ -67,9 +72,8 @@
                         </thead>
                         <tbody>
                         <tr th:if="${products == null or #lists.isEmpty(products)}">
-                            <td colspan="10" class="text-center text-muted">No results found</td>
+                            <td colspan="10">No results found</td>
                         </tr>
-
                         <tr th:each="product : ${products}">
                             <td th:text="${product.productId}"></td>
                             <td>
@@ -87,7 +91,7 @@
                                    th:href="@{/staff/products/edit/{id}(id=${product.productId})}"
                                    th:text="${product.productName}"></a>
                             </td>
-                            <td th:text="${#numbers.formatDecimal(product.price, 0, 'COMMA', 2, 'POINT')}"></td>
+                            <td th:text="${@money.format(product.price)}"></td>
                             <td th:text="${product.inventoryQuantity}"></td>
                             <td class="product-description-cell" th:text="${product.description}"></td>
                             <td>
@@ -117,21 +121,29 @@
         </div>
     </section>
 
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-    <script>
-        $(document).ready(function() {
+    <script th:inline="none">
+        $(document).ready(function () {
             var table = $('#productTable').DataTable({
-                pageLength: 10,
+                paging: true,
+                info: true,
                 searching: true,
                 ordering: true,
-                lengthMenu: [5, 10, 25, 50],
-                language: {
-                    lengthMenu: 'Show _MENU_ products',
-                    info: 'Showing _START_ to _END_ of _TOTAL_ products',
-                    zeroRecords: 'No matching products found'
-                }
+                pageLength: 10,
+                displayLength: 10,
+                lengthChange: true,
+                lengthMenu: [[10, 25, 50, -1], [10, 25, 50, 'All']],
+                order: [[0, 'asc']],
+                columnDefs: [{ orderable: false, targets: [1, 9] }],
+                scrollX: true,
+                autoWidth: false,
+                deferRender: true,
+                stateSave: false,
+                dom: 'lfrtip'
             });
+
+            table.page.len(10).draw();
 
             $('#categoryFilter').on('change', function () {
                 table.column(2).search(this.value).draw();

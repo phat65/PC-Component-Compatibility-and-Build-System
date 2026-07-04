@@ -22,7 +22,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
-@RequestMapping("/orders")
 @RequiredArgsConstructor
 @Slf4j
 public class OrderController {
@@ -36,57 +35,164 @@ public class OrderController {
         return accountService.getByPhoneNumber(userDetails.getUsername());
     }
 
-    private boolean isStaffOrAdmin() {
+    private boolean hasRole(String role) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        return authentication.getAuthorities().stream()
-                .anyMatch(r -> r.getAuthority().equals("ROLE_STAFF") || r.getAuthority().equals("ROLE_ADMIN"));
+        return authentication != null && authentication.getAuthorities().stream()
+                .anyMatch(r -> r.getAuthority().equals(role));
     }
 
-    @GetMapping("/list")
-    public String viewOrderList(Model model, @AuthenticationPrincipal UserDetails currentUserDetails) {
+    private boolean isAdmin() {
+        return hasRole("ROLE_ADMIN");
+    }
+
+    private boolean isStaff() {
+        return hasRole("ROLE_STAFF");
+    }
+
+    private boolean isStaffOrAdmin() {
+        return isStaff() || isAdmin();
+    }
+
+    private String roleOrderListPath() {
+        if (isAdmin()) return "/admin/orders";
+        if (isStaff()) return "/staff/orders";
+        return "/account/orders";
+    }
+
+    private String roleOrderDetailPath(long orderId) {
+        return roleOrderListPath() + "/" + orderId;
+    }
+
+    private void populateOrderDetailModel(long id, Model model, Account currentAccount, boolean managementView) {
+        Order order = orderService.getOrderDetailForView(id, currentAccount, managementView);
+        model.addAttribute("isStaffOrAdmin", managementView);
+        model.addAttribute("order", order);
+        model.addAttribute("details", orderService.getOrderDetails(id));
+        model.addAttribute("pageTitle", "Order Detail #" + order.getOrderId());
+        model.addAttribute("paymentInfo", paymentService.getPaymentInfoSafe(id));
+    }
+
+    @GetMapping("/orders/list")
+    public String redirectLegacyOrderList(@AuthenticationPrincipal UserDetails currentUserDetails) {
         Account currentAccount = getCurrentAccount(currentUserDetails);
         if (currentAccount == null) return "redirect:/auth/login";
 
-        boolean isAdmin = isStaffOrAdmin();
-        model.addAttribute("isStaffOrAdmin", isAdmin);
-        model.addAttribute("pageTitle", isAdmin ? "Order Management" : "My Orders");
+        return "redirect:" + roleOrderListPath();
+    }
 
-        if (isAdmin) {
-            model.addAttribute("adminOrderList", orderService.findAllOrdersForAdmin());
-        } else {
-            model.addAttribute("customerOrders", orderService.getOrdersByAccount(currentAccount));
-        }
+    @GetMapping("/orders/detail/{id}")
+    public String redirectLegacyOrderDetail(@PathVariable long id,
+                                            @AuthenticationPrincipal UserDetails currentUserDetails) {
+        Account currentAccount = getCurrentAccount(currentUserDetails);
+        if (currentAccount == null) return "redirect:/auth/login";
+
+        return "redirect:" + roleOrderDetailPath(id);
+    }
+
+    @GetMapping("/account/orders")
+    public String viewCustomerOrderList(Model model, @AuthenticationPrincipal UserDetails currentUserDetails) {
+        Account currentAccount = getCurrentAccount(currentUserDetails);
+        if (currentAccount == null) return "redirect:/auth/login";
+
+        model.addAttribute("isStaffOrAdmin", false);
+        model.addAttribute("pageTitle", "My Orders");
+        model.addAttribute("customerOrders", orderService.getOrdersByAccount(currentAccount));
         return "orders/order-list";
     }
 
-    @GetMapping("/detail/{id}")
-    public String viewOrderDetail(@PathVariable long id, Model model,
-                                  @AuthenticationPrincipal UserDetails currentUserDetails,
-                                  RedirectAttributes redirectAttributes) {
+    @GetMapping("/account/orders/{id}")
+    public String viewCustomerOrderDetail(@PathVariable long id, Model model,
+                                          @AuthenticationPrincipal UserDetails currentUserDetails,
+                                          RedirectAttributes redirectAttributes) {
         Account currentAccount = getCurrentAccount(currentUserDetails);
         if (currentAccount == null) return "redirect:/auth/login";
 
-        boolean isAdmin = isStaffOrAdmin();
-        model.addAttribute("isStaffOrAdmin", isAdmin);
-
         try {
-            Order order = orderService.getOrderDetailForView(id, currentAccount, isAdmin);
-            model.addAttribute("order", order);
-            model.addAttribute("details", orderService.getOrderDetails(id));
-            model.addAttribute("pageTitle", "Order Detail #" + order.getOrderId());
-            model.addAttribute("paymentInfo", paymentService.getPaymentInfoSafe(id));
+            populateOrderDetailModel(id, model, currentAccount, false);
             return "orders/order-detail";
         } catch (SecurityException | EntityNotFoundException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
-            return "redirect:/orders/list";
+            return "redirect:/account/orders";
         } catch (RuntimeException e) {
             log.error("Unexpected error loading order detail {}", id, e);
             redirectAttributes.addFlashAttribute("error", "Unable to load order detail.");
-            return "redirect:/orders/list";
+            return "redirect:/account/orders";
         }
     }
 
-    @GetMapping("/checkout")
+    @GetMapping("/admin/orders")
+    public String viewAdminOrderList(Model model, @AuthenticationPrincipal UserDetails currentUserDetails) {
+        Account currentAccount = getCurrentAccount(currentUserDetails);
+        if (currentAccount == null) return "redirect:/auth/login";
+
+        model.addAttribute("isStaffOrAdmin", true);
+        model.addAttribute("pageTitle", "Order Management");
+        model.addAttribute("adminOrderList", orderService.findAllOrdersForAdmin());
+        return "orders/admin-order-list";
+    }
+
+    @GetMapping("/admin/orders/{id}")
+    public String viewAdminOrderDetail(@PathVariable long id, Model model,
+                                       @AuthenticationPrincipal UserDetails currentUserDetails,
+                                       RedirectAttributes redirectAttributes) {
+        Account currentAccount = getCurrentAccount(currentUserDetails);
+        if (currentAccount == null) return "redirect:/auth/login";
+
+        try {
+            populateOrderDetailModel(id, model, currentAccount, true);
+            return "orders/admin-order-detail";
+        } catch (EntityNotFoundException e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+            return "redirect:/admin/orders";
+        } catch (RuntimeException e) {
+            log.error("Unexpected error loading admin order detail {}", id, e);
+            redirectAttributes.addFlashAttribute("error", "Unable to load order detail.");
+            return "redirect:/admin/orders";
+        }
+    }
+
+    @GetMapping("/staff/orders")
+    public String viewStaffOrderList(Model model, @AuthenticationPrincipal UserDetails currentUserDetails) {
+        Account currentAccount = getCurrentAccount(currentUserDetails);
+        if (currentAccount == null) return "redirect:/auth/login";
+
+        model.addAttribute("isStaffOrAdmin", true);
+        model.addAttribute("pageTitle", "Order Management");
+        model.addAttribute("adminOrderList", orderService.findAllOrdersForAdmin());
+        return "orders/staff-order-list";
+    }
+
+    @GetMapping("/staff/orders/{id}")
+    public String viewStaffOrderDetail(@PathVariable long id, Model model,
+                                       @AuthenticationPrincipal UserDetails currentUserDetails,
+                                       RedirectAttributes redirectAttributes) {
+        Account currentAccount = getCurrentAccount(currentUserDetails);
+        if (currentAccount == null) return "redirect:/auth/login";
+
+        try {
+            populateOrderDetailModel(id, model, currentAccount, true);
+            return "orders/staff-order-detail";
+        } catch (EntityNotFoundException e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+            return "redirect:/staff/orders";
+        } catch (RuntimeException e) {
+            log.error("Unexpected error loading staff order detail {}", id, e);
+            redirectAttributes.addFlashAttribute("error", "Unable to load order detail.");
+            return "redirect:/staff/orders";
+        }
+    }
+
+    @PostMapping("/admin/orders/{id}/complete-pickup")
+    public String completeAdminPickupOrder(@PathVariable long id, RedirectAttributes redirectAttributes) {
+        return completePickupOrder(id, "/admin/orders/" + id, redirectAttributes);
+    }
+
+    @PostMapping("/staff/orders/{id}/complete-pickup")
+    public String completeStaffPickupOrder(@PathVariable long id, RedirectAttributes redirectAttributes) {
+        return completePickupOrder(id, "/staff/orders/" + id, redirectAttributes);
+    }
+
+    @GetMapping("/orders/checkout")
     public String showCheckoutPage(Model model,
                                    @AuthenticationPrincipal UserDetails currentUserDetails,
                                    RedirectAttributes redirectAttributes) {
@@ -112,7 +218,7 @@ public class OrderController {
         }
     }
 
-    @PostMapping("/checkout")
+    @PostMapping("/orders/checkout")
     public String processCheckout(@Valid @ModelAttribute("checkoutDTO") CheckoutDTO checkoutDTO,
                                   BindingResult bindingResult,
                                   @AuthenticationPrincipal UserDetails currentUserDetails,
@@ -157,5 +263,18 @@ public class OrderController {
             redirectAttributes.addFlashAttribute("error", "Unable to create payment. Please try again.");
             return "redirect:/orders/checkout";
         }
+    }
+
+    private String completePickupOrder(long id, String redirectPath, RedirectAttributes redirectAttributes) {
+        try {
+            orderService.completePickupOrder(id);
+            redirectAttributes.addFlashAttribute("success", "Pickup order marked as completed.");
+        } catch (IllegalArgumentException | EntityNotFoundException e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+        } catch (RuntimeException e) {
+            log.error("Unexpected error completing pickup order {}", id, e);
+            redirectAttributes.addFlashAttribute("error", "Unable to complete pickup order.");
+        }
+        return "redirect:" + redirectPath;
     }
 }

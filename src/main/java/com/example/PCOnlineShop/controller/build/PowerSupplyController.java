@@ -19,7 +19,7 @@ import java.util.List;
 public class PowerSupplyController {
     private static final String PSU_VIEW = "build/psu";
     private static final String REDIRECT_PSU = "redirect:/build/psu";
-    private static final String REDIRECT_OTHER = "redirect:/build/other";
+    private static final String REDIRECT_GEAR = "redirect:/build/gear";
 
     private final PowerSupplyService powerSupplyService;
     private final BuildService buildService;
@@ -55,7 +55,7 @@ public class PowerSupplyController {
                             RedirectAttributes redirectAttributes) {
         // Only update if user selected new PSU
         if (psuId == null) {
-            return REDIRECT_OTHER;
+            return REDIRECT_GEAR;
         }
 
         return buildService.findSelectableCompatiblePowerSupplyByProductId(psuId, buildItem)
@@ -76,7 +76,7 @@ public class PowerSupplyController {
 
     private String selectAndContinue(BuildItemDto buildItem, PowerSupply powerSupply) {
         buildItem.setPowerSupply(powerSupply);
-        return REDIRECT_OTHER;
+        return REDIRECT_GEAR;
     }
 
     private String rejectSelection(RedirectAttributes redirectAttributes) {

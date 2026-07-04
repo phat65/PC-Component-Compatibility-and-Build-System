@@ -15,14 +15,14 @@ public class Brand {
     @Id
     @Getter
     @Setter
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column (name = "brand_id")
     private Integer brandId;
 
     @Column (name = "name")
     @NotBlank(message = "Brand's name must not be null")
     @Size(min = 1, max = 100, message = "Brand's name should be around 1 to 100 characters")
-    @Pattern(regexp = "^[a-zA-Z\\s]+$", message = "Must not contain special characters")
+    @Pattern(regexp = "^[\\p{L}\\p{N}\\s.&'\\-+]+$", message = "Brand name contains invalid characters")
     private String name;
 
     @Column (name = "description")

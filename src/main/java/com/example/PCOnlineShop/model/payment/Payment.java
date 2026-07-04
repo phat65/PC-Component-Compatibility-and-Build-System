@@ -27,6 +27,9 @@ public class Payment {
     @Column(name = "amount")
     private BigDecimal amount;
 
+    @Column(name = "currency")
+    private String currency = "VND";
+
     @Column(name = "status")
     private String status;
 

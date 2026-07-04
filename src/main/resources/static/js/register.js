@@ -1,12 +1,26 @@
 function validatePassword() {
-    const password = document.getElementById("password").value;
-    const confirm = document.getElementById("confirmPassword").value;
+    const password = document.getElementById("password")?.value || "";
+    const confirm = document.getElementById("confirmPassword")?.value || "";
     const errorText = document.getElementById("errorText");
 
-    if (password !== confirm) {
-        errorText.textContent = "⚠️ Confirm password not true!";
+    if (!errorText) {
+        return password === confirm;
+    }
+
+    if (password.length < 6) {
+        errorText.textContent = "Password must be at least 6 characters.";
+        errorText.classList.remove("auth-alert--hidden");
         return false;
     }
+
+    if (password !== confirm) {
+        errorText.textContent = "Confirm password does not match.";
+        errorText.classList.remove("auth-alert--hidden");
+        return false;
+    }
+
+    errorText.textContent = "";
+    errorText.classList.add("auth-alert--hidden");
     return true;
 }
 
@@ -15,78 +29,154 @@ document.addEventListener("DOMContentLoaded", async function () {
     const districtSelect = document.getElementById("district");
     const wardSelect = document.getElementById("ward");
     const addressInput = document.getElementById("address");
+    const manualAddressInput = document.getElementById("manualAddress");
+    const addressHelp = document.getElementById("addressHelp");
+    const addressGroup = document.querySelector(".auth-address");
 
-    if (!provinceSelect || !districtSelect || !wardSelect || !addressInput) return;
-
-    // 1. Load Tỉnh
-    const provinces = await fetch("https://provinces.open-api.vn/api/p/").then(r => r.json());
-    provinces.forEach(p => provinceSelect.add(new Option(p.name, p.code)));
-
-    // Nếu có địa chỉ cũ → tách ra để prefill
-    const oldAddress = addressInput.value;  // Ví dụ: "Phường X, Quận Y, TP Z, Việt Nam"
-    let provinceName = "", districtName = "", wardName = "";
-
-    if (oldAddress) {
-        const parts = oldAddress.split(",").map(p => p.trim());
-        wardName = parts[0] || "";
-        districtName = parts[1] || "";
-        provinceName = parts[2] || "";
+    if (!provinceSelect || !districtSelect || !wardSelect || !addressInput || !manualAddressInput) {
+        return;
     }
 
-    // 2. Nếu đang Edit → chọn Tỉnh cũ
-    if (provinceName) {
-        const foundProvince = provinces.find(p => p.name === provinceName);
-        if (foundProvince) {
-            provinceSelect.value = foundProvince.code;
+    manualAddressInput.addEventListener("input", updateAddress);
 
-            // Load Huyện tương ứng
-            const provinceDetail = await fetch(`https://provinces.open-api.vn/api/p/${foundProvince.code}?depth=2`).then(r => r.json());
-            provinceDetail.districts.forEach(d => districtSelect.add(new Option(d.name, d.code)));
+    let provinces = [];
+    try {
+        provinces = await fetchJson("https://provinces.open-api.vn/api/p/");
+        provinces.forEach(province => provinceSelect.add(new Option(province.name, province.code)));
+    } catch (error) {
+        enableManualAddressOnly();
+        return;
+    }
 
-            const foundDistrict = provinceDetail.districts.find(d => d.name === districtName);
-            if (foundDistrict) {
-                districtSelect.value = foundDistrict.code;
+    const oldAddress = addressInput.value;
+    let provinceName = "";
+    let districtName = "";
+    let wardName = "";
+    let streetAddress = "";
 
-                // Load Xã tương ứng
-                const districtDetail = await fetch(`https://provinces.open-api.vn/api/d/${foundDistrict.code}?depth=2`).then(r => r.json());
-                districtDetail.wards.forEach(w => wardSelect.add(new Option(w.name, w.name)));
-
-                wardSelect.value = wardName;
-            }
+    if (oldAddress) {
+        const parts = oldAddress.split(",").map(part => part.trim()).filter(Boolean);
+        if (parts.length >= 4) {
+            streetAddress = parts.slice(0, parts.length - 4).join(", ");
+            wardName = parts[parts.length - 4] || "";
+            districtName = parts[parts.length - 3] || "";
+            provinceName = parts[parts.length - 2] || "";
+        } else {
+            manualAddressInput.value = oldAddress;
         }
     }
 
-    // 3. Lắng nghe thay đổi realtime
+    if (streetAddress) {
+        manualAddressInput.value = streetAddress;
+    }
+
+    if (provinceName) {
+        await prefillAddress(provinceName, districtName, wardName);
+    }
+
     provinceSelect.addEventListener("change", handleProvinceChange);
     districtSelect.addEventListener("change", handleDistrictChange);
     wardSelect.addEventListener("change", updateAddress);
+    updateAddress();
+
+    async function prefillAddress(provinceNameValue, districtNameValue, wardNameValue) {
+        const foundProvince = provinces.find(province => province.name === provinceNameValue);
+        if (!foundProvince) {
+            return;
+        }
+
+        provinceSelect.value = foundProvince.code;
+        const provinceDetail = await fetchJson(`https://provinces.open-api.vn/api/p/${foundProvince.code}?depth=2`);
+        provinceDetail.districts.forEach(district => districtSelect.add(new Option(district.name, district.code)));
+
+        const foundDistrict = provinceDetail.districts.find(district => district.name === districtNameValue);
+        if (!foundDistrict) {
+            updateAddress();
+            return;
+        }
+
+        districtSelect.value = foundDistrict.code;
+        const districtDetail = await fetchJson(`https://provinces.open-api.vn/api/d/${foundDistrict.code}?depth=2`);
+        districtDetail.wards.forEach(ward => wardSelect.add(new Option(ward.name, ward.name)));
+        wardSelect.value = wardNameValue;
+        updateAddress();
+    }
 
     async function handleProvinceChange() {
-        districtSelect.innerHTML = "<option value=''>-- District --</option>";
-        wardSelect.innerHTML = "<option value=''>-- Ward --</option>";
-        if (!provinceSelect.value) { updateAddress(); return; }
+        districtSelect.innerHTML = "<option value=''>District</option>";
+        wardSelect.innerHTML = "<option value=''>Ward</option>";
 
-        const data = await fetch(`https://provinces.open-api.vn/api/p/${provinceSelect.value}?depth=2`).then(r => r.json());
-        data.districts.forEach(d => districtSelect.add(new Option(d.name, d.code)));
+        if (!provinceSelect.value) {
+            updateAddress();
+            return;
+        }
+
+        try {
+            const data = await fetchJson(`https://provinces.open-api.vn/api/p/${provinceSelect.value}?depth=2`);
+            data.districts.forEach(district => districtSelect.add(new Option(district.name, district.code)));
+        } catch (error) {
+            enableManualAddressOnly();
+            return;
+        }
 
         updateAddress();
     }
 
     async function handleDistrictChange() {
-        wardSelect.innerHTML = "<option value=''>-- Ward --</option>";
-        if (!districtSelect.value) { updateAddress(); return; }
+        wardSelect.innerHTML = "<option value=''>Ward</option>";
 
-        const data = await fetch(`https://provinces.open-api.vn/api/d/${districtSelect.value}?depth=2`).then(r => r.json());
-        data.wards.forEach(w => wardSelect.add(new Option(w.name, w.name)));
+        if (!districtSelect.value) {
+            updateAddress();
+            return;
+        }
+
+        try {
+            const data = await fetchJson(`https://provinces.open-api.vn/api/d/${districtSelect.value}?depth=2`);
+            data.wards.forEach(ward => wardSelect.add(new Option(ward.name, ward.name)));
+        } catch (error) {
+            enableManualAddressOnly();
+            return;
+        }
 
         updateAddress();
     }
 
     function updateAddress() {
-        const p = provinceSelect.options[provinceSelect.selectedIndex]?.text || "";
-        const d = districtSelect.options[districtSelect.selectedIndex]?.text || "";
-        const w = wardSelect.options[wardSelect.selectedIndex]?.text || "";
+        const manualAddress = manualAddressInput.value.trim();
+        const ward = selectedText(wardSelect);
+        const district = selectedText(districtSelect);
+        const province = selectedText(provinceSelect);
 
-        addressInput.value = [w, d, p, "Việt Nam"].filter(Boolean).join(", ");
+        addressInput.value = [manualAddress, ward, district, province, "Viet Nam"]
+            .filter(Boolean)
+            .join(", ");
+    }
+
+    function selectedText(select) {
+        if (!select.value) {
+            return "";
+        }
+        return select.options[select.selectedIndex]?.text || "";
+    }
+
+    function enableManualAddressOnly() {
+        provinceSelect.disabled = true;
+        districtSelect.disabled = true;
+        wardSelect.disabled = true;
+        addressGroup?.classList.add("auth-address--disabled");
+        manualAddressInput.required = true;
+        manualAddressInput.focus();
+
+        if (addressHelp) {
+            addressHelp.textContent = "Address lookup is unavailable. Type your full address manually.";
+        }
     }
 });
+
+async function fetchJson(url) {
+    const response = await fetch(url);
+    if (!response.ok) {
+        throw new Error(`Request failed with status ${response.status}`);
+    }
+    return response.json();
+}

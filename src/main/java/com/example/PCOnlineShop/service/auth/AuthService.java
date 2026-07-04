@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import com.example.PCOnlineShop.dto.account.RegisterRequest;
 import com.example.PCOnlineShop.model.account.Account;
 import com.example.PCOnlineShop.model.account.Address;
 import com.example.PCOnlineShop.service.account.AccountService;
@@ -25,13 +26,9 @@ public class AuthService {
     private final VerificationService verificationService;
     private final PasswordResetService passwordResetService;
 
-    public void register(Account account, String addressStr) {
-        registrationService.register(account, addressStr);
-    }
-
-    public void register(Account account, String addressStr, String confirmPassword) {
-        validatePasswordConfirmation(account.getPassword(), confirmPassword, "⚠️ Mật khẩu xác nhận không khớp!");
-        registrationService.register(account, addressStr);
+    public void register(RegisterRequest request) {
+        validatePasswordConfirmation(request.getPassword(), request.getConfirmPassword(), "Confirm password does not match.");
+        registrationService.register(request);
     }
 
     public Account getByPhoneNumber(String phoneNumber) {
@@ -59,7 +56,7 @@ public class AuthService {
     }
 
     public void resetPassword(String identifier, String newPassword, String confirmPassword) {
-        validatePasswordConfirmation(newPassword, confirmPassword, "⚠️ Mật khẩu xác nhận không khớp!");
+        validatePasswordConfirmation(newPassword, confirmPassword, "Confirm password does not match.");
         passwordResetService.resetPassword(identifier, newPassword);
     }
 
@@ -68,10 +65,10 @@ public class AuthService {
     }
 
     public void changePassword(String phoneNumber, String currentPassword, String newPassword, String confirmPassword) {
-        validatePasswordConfirmation(newPassword, confirmPassword, "⚠️ Mật khẩu mới không khớp!");
+        validatePasswordConfirmation(newPassword, confirmPassword, "New password does not match.");
 
         if (!accountService.changePassword(phoneNumber, currentPassword, newPassword)) {
-            throw new IllegalArgumentException("⚠️ Mật khẩu hiện tại không đúng!");
+            throw new IllegalArgumentException("Current password is incorrect.");
         }
     }
 
@@ -89,6 +86,14 @@ public class AuthService {
 
     public void sendVerifyCode(String email) {
         verificationService.sendVerifyCode(email);
+    }
+
+    public long getVerifyResendCooldownSeconds() {
+        return verificationService.getResendCooldownSeconds();
+    }
+
+    public long getVerifyResendRemainingSeconds(String email) {
+        return verificationService.getResendRemainingSeconds(email);
     }
 
     public void verifyAccount(String email, String code) {

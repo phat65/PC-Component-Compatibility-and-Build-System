@@ -38,4 +38,5 @@ build/
 !.env.example
 !.env.dev.example
 !.env.prod.example
+!.env.deploy.example
 .docker-secrets/

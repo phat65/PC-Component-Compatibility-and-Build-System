@@ -14,13 +14,17 @@
     <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" th:href="@{/css/bootstrap.min.css}">
     <link rel="stylesheet" th:href="@{/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/css/base/variables.css}">
     <link rel="stylesheet" th:href="@{/css/app.css}">
+    <link rel="stylesheet" th:href="@{/css/components/footer.css}">
 </head>
 <body>
 <div sec:authorize="!isAuthenticated()" th:replace="~{layout/header-default :: header-default}"></div>
 <div sec:authorize="hasRole('ADMIN')" th:replace="~{layout/header-admin :: header-admin}"></div>
 <div sec:authorize="hasRole('STAFF')" th:replace="~{layout/header-staff :: header-staff}"></div>
 <div sec:authorize="hasRole('CUSTOMER')" th:replace="~{layout/header-customer :: header-customer}"></div>
+
+<script th:src="@{/js/money.js}"></script>
 
 <main class="app-main page-body">
     <section class="app-heading" th:if="${pageHeading != null and !#strings.isEmpty(pageHeading)}">
@@ -29,7 +33,7 @@
     <th:block th:replace="${content}"></th:block>
 </main>
 
-<div th:replace="~{layout/footer :: footer}"></div>
+<th:block sec:authorize="!hasAnyRole('ADMIN','STAFF')" th:replace="~{layout/footer :: site-footer}" />
 <script th:src="@{/js/bootstrap.bundle.min.js}"></script>
 <script th:src="@{/js/cart-actions.js}"></script>
 </body>

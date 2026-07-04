@@ -13,8 +13,10 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -31,6 +33,8 @@ public class ProductCommandService {
                               Integer brandId,
                               Map<String, String> params,
                               List<MultipartFile> imageFiles) throws IOException {
+        productImageService.validateNewProductImages(imageFiles);
+
         List<Category> categories = categoryIds.stream()
                 .map(categoryService::getRequiredCategory)
                 .toList();
@@ -59,6 +63,10 @@ public class ProductCommandService {
                               List<MultipartFile> imageFiles,
                               String deleteImageIds) throws IOException {
         Product current = productService.getRequiredProduct(incoming.getProductId());
+        Set<Integer> deletedImageIds = parseDeleteImageIds(deleteImageIds);
+        int remainingImageCount = countRemainingImages(current, deletedImageIds);
+        productImageService.validateProductImageUpload(imageFiles, remainingImageCount);
+
         Integer currentPrimaryCategoryId = getPrimaryCategoryId(current);
         Integer incomingPrimaryCategoryId = categoryIds != null && !categoryIds.isEmpty()
                 ? categoryIds.get(0)
@@ -95,7 +103,7 @@ public class ProductCommandService {
         List<Image> storedImages = List.of();
         try {
             storedImages = productImageService.storeProductImages(updated, imageFiles);
-            deleteProductImages(deleteImageIds);
+            deleteProductImages(deletedImageIds);
         } catch (IOException | RuntimeException ex) {
             productImageService.deleteStoredImageFiles(storedImages);
             throw ex;
@@ -111,15 +119,36 @@ public class ProductCommandService {
         productService.discontinueProduct(product);
     }
 
-    private void deleteProductImages(String deleteImageIds) {
+    private Set<Integer> parseDeleteImageIds(String deleteImageIds) {
         if (deleteImageIds == null || deleteImageIds.isBlank()) {
+            return Set.of();
+        }
+
+        Set<Integer> imageIds = new LinkedHashSet<>();
+        Arrays.stream(deleteImageIds.split(","))
+                .filter(value -> !value.isBlank())
+                .map(String::trim)
+                .map(Integer::parseInt)
+                .forEach(imageIds::add);
+        return imageIds;
+    }
+
+    private int countRemainingImages(Product product, Set<Integer> deletedImageIds) {
+        if (product.getImages() == null || product.getImages().isEmpty()) {
+            return 0;
+        }
+
+        return (int) product.getImages().stream()
+                .filter(image -> image != null && !deletedImageIds.contains(image.getImageId()))
+                .count();
+    }
+
+    private void deleteProductImages(Set<Integer> deleteImageIds) {
+        if (deleteImageIds == null || deleteImageIds.isEmpty()) {
             return;
         }
 
-        Arrays.stream(deleteImageIds.split(","))
-                .filter(value -> !value.isBlank())
-                .map(Integer::parseInt)
-                .forEach(productImageService::deleteProductImageById);
+        deleteImageIds.forEach(productImageService::deleteProductImageById);
     }
 
     private void applyCatalogVisibility(Product product) {

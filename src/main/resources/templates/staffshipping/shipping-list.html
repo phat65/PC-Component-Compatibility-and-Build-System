@@ -4,70 +4,112 @@
       th:replace="~{layout/app :: page('Shipping Management', null, ~{::content})}">
 <body>
 <th:block th:fragment="content">
-<link rel="stylesheet" th:href="@{/css/OrderStyle.css}">
+    <link rel="stylesheet" th:href="@{/css/pages/management-tools.css}">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
 
-<div class="container">
-    <h2>Shipping Management (Ready & Delivering Orders)</h2>
+    <section class="commerce-page management-tool-page shipping-management-page">
+        <div class="management-tool-container management-tool-container--wide">
+            <div class="management-page-header">
+                <div>
+                    <p class="management-page-header__eyebrow">Staff Console</p>
+                    <h1 class="management-page-header__title">Shipping Management</h1>
+                    <p class="management-page-header__subtitle">Track ready and delivering orders, then update fulfillment status.</p>
+                </div>
+                <a th:href="@{/staff/orders}" class="back-btn">Back to All Orders</a>
+            </div>
 
-    <div th:if="${error}" class="alert alert-danger"> <p th:text="${error}"></p> </div>
-    <div th:if="${success}" class="alert alert-success"> <p th:text="${success}"></p> </div>
-    <div th:if="${info}" class="alert alert-info"> <p th:text="${info}"></p> </div>
+            <div th:if="${error}" class="management-alert management-alert--danger"><p th:text="${error}"></p></div>
+            <div th:if="${success}" class="management-alert management-alert--success"><p th:text="${success}"></p></div>
+            <div th:if="${info}" class="management-alert management-alert--info"><p th:text="${info}"></p></div>
 
-    <table>
-        <thead>
-        <tr>
-            <th>Order ID</th>
-            <th>Recipient Name</th>
-            <th>Phone</th>
-            <th>Shipping Address</th>
-            <th>Ready Since / Delivering Since</th>
-            <th>Current Status</th>
-            <th>Update Status</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr th:each="order : ${shippingOrders}">
-            <td th:text="${order.orderId}"></td>
-            <td th:text="${order.shippingFullName}"></td>
-            <td th:text="${order.shippingPhone}"></td>
-            <td th:text="${order.shippingAddress}"></td>
-            <td th:text="${order.status == 'Delivering' and order.shipmentReceivedDate != null} ?
-                         ${#dates.format(order.shipmentReceivedDate, 'dd/MM/yyyy HH:mm')} :
-                         (${order.readyToShipDate != null} ? ${#dates.format(order.readyToShipDate, 'dd/MM/yyyy HH:mm')} : '-')">
-            </td>
-            <td>
-                 <span class="status-badge"
-                       th:classappend="${order.status == 'Ready to Ship' ? 'status-ready' : 'status-delivering'}"
-                       th:text="${order.status}"></span>
-            </td>
-            <td>
-                <form th:action="@{'/staff/shipping/update-status/' + ${order.orderId}}" method="post" class="status-form" style="display:inline-flex; align-items: center;">
-                    <select name="newStatus">
-                        <option th:value="${order.status}" th:text="${order.status}" selected disabled>Current Status</option>
+            <div class="management-card">
+                <div class="management-table-wrap">
+                    <table id="shippingTable" class="management-table" style="width:100%">
+                        <thead>
+                        <tr>
+                            <th>Order ID</th>
+                            <th>Recipient Name</th>
+                            <th>Phone</th>
+                            <th>Shipping Address</th>
+                            <th>Ready / Delivering Since</th>
+                            <th>Current Status</th>
+                            <th>Update Status</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="order : ${shippingOrders}">
+                            <td th:text="${order.orderId}"></td>
+                            <td th:text="${order.shippingFullName}"></td>
+                            <td th:text="${order.shippingPhone}"></td>
+                            <td th:text="${order.shippingAddress}"></td>
+                            <td th:text="${((order.status == 'Delivering' or order.status == 'Delivery Failed' or order.status == 'Completed') and order.shipmentReceivedDate != null)
+                                         ? #dates.format(order.shipmentReceivedDate, 'dd/MM/yyyy HH:mm')
+                                         : (order.readyToShipDate != null ? #dates.format(order.readyToShipDate, 'dd/MM/yyyy HH:mm') : '-')}">
+                            </td>
+                            <td>
+                                <span class="status-badge"
+                                      th:classappend="${order.status == 'Ready to Ship' ? ' status-ready' :
+                                                       (order.status == 'Delivering' ? ' status-delivering' :
+                                                       (order.status == 'Completed' ? ' status-completed' :
+                                                       (order.status == 'Delivery Failed' ? ' status-delivery-failed' : ' status-cancelled')))}"
+                                      th:text="${order.status}"></span>
+                            </td>
+                            <td>
+                                <form th:if="${order.status != 'Completed' and order.status != 'Cancelled'}"
+                                      th:action="@{'/staff/shipping/update-status/' + ${order.orderId}}"
+                                      method="post"
+                                      class="status-form">
+                                    <select name="newStatus">
+                                        <option th:value="${order.status}" th:text="${order.status}" selected disabled>Current Status</option>
+                                        <option th:if="${order.status == 'Ready to Ship'}" value="Delivering">Mark as Delivering</option>
+                                        <option th:if="${order.status == 'Delivering'}" value="Completed">Mark as Completed</option>
+                                        <option th:if="${order.status == 'Delivering'}" value="Delivery Failed">Mark as Delivery Failed</option>
+                                        <option th:if="${order.status == 'Delivery Failed'}" value="Delivering">Retry Delivery</option>
+                                        <option th:if="${order.status == 'Delivery Failed'}" value="Ready to Ship">Move Back to Ready</option>
+                                        <option th:if="${order.status == 'Ready to Ship' or order.status == 'Delivering' or order.status == 'Delivery Failed'}" value="Cancelled">Mark as Cancelled</option>
+                                    </select>
+                                    <button type="submit" class="save-btn">Update</button>
+                                </form>
+                                <span th:if="${order.status == 'Completed' or order.status == 'Cancelled'}"
+                                      class="management-status"
+                                      th:classappend="${order.status == 'Completed' ? ' status-completed' : ' status-cancelled'}">
+                                    Final status
+                                </span>
+                            </td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(shippingOrders)}">
+                            <td colspan="7">No orders currently in the shipping queue.</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
 
-                        <option th:if="${order.status == 'Ready to Ship'}" value="Delivering">Mark as Delivering</option>
-
-                        <option th:if="${order.status == 'Delivering'}" value="Completed">Mark as Completed</option>
-
-                        <option th:if="${order.status == 'Delivering'}" value="Delivery Failed">Mark as Delivery Failed</option>
-
-                        <option th:if="${order.status == 'Ready to Ship' or order.status == 'Delivering'}" value="Cancelled">Mark as Cancelled</option>
-                    </select>
-                    <button type="submit" class="save-btn">Update</button>
-                </form>
-            </td>
-        </tr>
-        <tr th:if="${#lists.isEmpty(shippingOrders)}">
-            <td colspan="7" style="text-align: center;">No orders currently in the shipping queue.</td>
-        </tr>
-        </tbody>
-    </table>
-
-    <div style="margin-top: 20px;">
-        <a th:href="@{/orders/list}" class="back-btn">← Back to All Orders</a>
-    </div>
-
-</div>
+    <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script th:inline="none">
+        $(document).ready(function () {
+            $('#shippingTable').DataTable({
+                paging: true,
+                pageLength: 10,
+                searching: true,
+                ordering: true,
+                lengthMenu: [10, 25, 50],
+                scrollX: true,
+                autoWidth: false,
+                columnDefs: [{ orderable: false, targets: [6] }],
+                language: {
+                    search: 'Search:',
+                    lengthMenu: 'Show _MENU_ orders',
+                    info: 'Showing _START_ to _END_ of _TOTAL_ orders',
+                    paginate: { previous: 'Prev', next: 'Next' },
+                    zeroRecords: 'No shipping orders found'
+                }
+            });
+        });
+    </script>
 </th:block>
 </body>
 </html>

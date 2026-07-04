@@ -1,28 +1,48 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org"
       xmlns:sec="https://www.thymeleaf.org/extras/spring-security"
-      th:replace="~{layout/app :: page('Orders', null, ~{::content})}">
+      th:replace="~{layout/base-storefront :: storefront(
+          ~{::title},
+          'storefront-page page-orders',
+          ~{::main},
+          ~{::page-styles},
+          ${false}
+      )}">
+<head>
+    <title th:text="${pageTitle ?: 'Orders'} + ' – PCOnlineShop'">Orders – PCOnlineShop</title>
+    <th:block th:fragment="page-styles">
+        <link rel="stylesheet" th:href="@{/css/pages/orders.css}">
+        <link rel="stylesheet"
+              href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css"
+              th:if="${isStaffOrAdmin}">
+    </th:block>
+</head>
 <body>
-<th:block th:fragment="content">
-<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css" th:if="${isStaffOrAdmin}">
+<main th:fragment="main" class="orders-main">
+    <div class="orders-container">
 
-<section class="commerce-page">
-    <div class="container">
-        <h1 class="commerce-title" th:text="${pageTitle ?: 'Orders'}">Orders</h1>
+        <div class="orders-page-header">
+            <div class="orders-page-header__left">
+                <p class="orders-page-header__eyebrow">Account</p>
+                <h1 class="orders-page-header__title" th:text="${pageTitle ?: 'Orders'}">Orders</h1>
+            </div>
+        </div>
 
-        <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
-        <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
-        <div th:if="${info}" class="alert alert-info" th:text="${info}"></div>
+        <div th:if="${error}"   class="orders-alert orders-alert--danger"  th:text="${error}"></div>
+        <div th:if="${success}" class="orders-alert orders-alert--success" th:text="${success}"></div>
+        <div th:if="${info}"    class="orders-alert orders-alert--info"    th:text="${info}"></div>
 
-        <div class="commerce-card">
-            <div class="table-responsive">
-                <table id="orderTable" class="table table-hover order-table" th:if="${isStaffOrAdmin}">
+        <div class="orders-card">
+            <div class="orders-table-wrap">
+
+                <!-- Staff / Admin table with DataTables -->
+                <table id="orderTable" class="orders-table" th:if="${isStaffOrAdmin}">
                     <thead>
                     <tr>
                         <th>Order ID</th>
-                        <th>Customer Name</th>
-                        <th>Created Date</th>
-                        <th>Final Amount</th>
+                        <th>Customer</th>
+                        <th>Date</th>
+                        <th>Total</th>
                         <th>Status</th>
                         <th>Action</th>
                     </tr>
@@ -34,13 +54,14 @@
                         <td th:data-order="${#dates.format(order.createdDate, 'yyyyMMdd')}"
                             th:text="${#dates.format(order.createdDate, 'dd/MM/yyyy')}"></td>
                         <td th:data-order="${order.finalAmount}"
-                            th:text="'$' + ${#numbers.formatInteger(order.finalAmount, 1, 'COMMA')}"></td>
+                            th:text="${@money.format(order.finalAmount)}"></td>
                         <td>
                             <span class="status-badge"
                                   th:classappend="${
                                     (order.status == 'Pending Payment' or order.status == 'Pending') ? ' status-pending' :
                                     order.status == 'Processing' ? ' status-processing' :
                                     order.status == 'Ready to Ship' ? ' status-ready' :
+                                    order.status == 'Ready for Pickup' ? ' status-pickup' :
                                     order.status == 'Delivering' ? ' status-delivering' :
                                     order.status == 'Completed' ? ' status-completed' :
                                     order.status == 'Cancelled' ? ' status-cancelled' : ''
@@ -50,21 +71,24 @@
                                   class="status-refund-pending">(Refund Pending)</span>
                         </td>
                         <td>
-                            <a th:href="@{/orders/detail/{id}(id=${order.orderId})}" class="btn btn-app-outline btn-sm">View</a>
+                            <a th:href="@{/orders/detail/{id}(id=${order.orderId})}"
+                               class="btn-order-view">View</a>
                         </td>
                     </tr>
-                    <tr th:if="${isStaffOrAdmin and (adminOrderList == null or #lists.isEmpty(adminOrderList))}">
-                        <td colspan="6" class="text-center text-muted">No orders found.</td>
+                    <tr th:if="${adminOrderList == null or #lists.isEmpty(adminOrderList)}"
+                        class="empty-row">
+                        <td colspan="6">No orders found.</td>
                     </tr>
                     </tbody>
                 </table>
 
-                <table class="table table-hover order-table" th:unless="${isStaffOrAdmin}">
+                <!-- Customer table -->
+                <table class="orders-table" th:unless="${isStaffOrAdmin}">
                     <thead>
                     <tr>
                         <th>Order ID</th>
-                        <th>Created Date</th>
-                        <th>Final Amount</th>
+                        <th>Date</th>
+                        <th>Total</th>
                         <th>Status</th>
                         <th>Action</th>
                     </tr>
@@ -73,13 +97,14 @@
                     <tr th:each="order : ${customerOrders}">
                         <td th:text="${order.orderId}"></td>
                         <td th:text="${#dates.format(order.createdDate, 'dd/MM/yyyy')}"></td>
-                        <td th:text="'$' + ${#numbers.formatInteger(order.finalAmount, 1, 'COMMA')}"></td>
+                        <td th:text="${@money.format(order.finalAmount)}"></td>
                         <td>
                             <span class="status-badge"
                                   th:classappend="${
                                     (order.status == 'Pending Payment' or order.status == 'Pending') ? ' status-pending' :
                                     order.status == 'Processing' ? ' status-processing' :
                                     order.status == 'Ready to Ship' ? ' status-ready' :
+                                    order.status == 'Ready for Pickup' ? ' status-pickup' :
                                     order.status == 'Delivering' ? ' status-delivering' :
                                     order.status == 'Completed' ? ' status-completed' :
                                     order.status == 'Cancelled' ? ' status-cancelled' : ''
@@ -87,37 +112,36 @@
                                   th:text="${order.status ?: 'N/A'}">Status</span>
                         </td>
                         <td>
-                            <a th:href="@{/orders/detail/{id}(id=${order.orderId})}" class="btn btn-app-outline btn-sm">View</a>
+                            <a th:href="@{/orders/detail/{id}(id=${order.orderId})}"
+                               class="btn-order-view">View</a>
                         </td>
                     </tr>
-                    <tr th:if="${!isStaffOrAdmin and (customerOrders == null or #lists.isEmpty(customerOrders))}">
-                        <td colspan="5" class="text-center text-muted">You have no orders.</td>
+                    <tr th:if="${customerOrders == null or #lists.isEmpty(customerOrders)}"
+                        class="empty-row">
+                        <td colspan="5">You have no orders yet.</td>
                     </tr>
                     </tbody>
                 </table>
-            </div>
-        </div>
-    </div>
-</section>
 
-<script src="https://code.jquery.com/jquery-3.7.0.js" th:if="${isStaffOrAdmin}"></script>
-<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js" th:if="${isStaffOrAdmin}"></script>
+            </div><!-- /orders-table-wrap -->
+        </div><!-- /orders-card -->
 
-<script th:inline="none" th:if="${isStaffOrAdmin}">
-    $(document).ready(function() {
-        if (typeof $ !== 'undefined' && typeof $.fn.DataTable !== 'undefined' && $('#orderTable').length > 0) {
-            $('#orderTable').DataTable({
-                paging: true,
-                info: true,
-                lengthMenu: [[10, 25, 50, -1], [10, 25, 50, 'All']],
-                order: [[2, 'desc']],
-                columnDefs: [
-                    { orderable: false, targets: [4, 5] }
-                ]
-            });
-        }
-    });
-</script>
-</th:block>
+    </div><!-- /orders-container -->
+
+    <script src="https://code.jquery.com/jquery-3.7.0.js" th:if="${isStaffOrAdmin}"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js" th:if="${isStaffOrAdmin}"></script>
+    <script th:inline="none" th:if="${isStaffOrAdmin}">
+        $(document).ready(function () {
+            if (typeof $ !== 'undefined' && typeof $.fn.DataTable !== 'undefined' && $('#orderTable').length > 0) {
+                $('#orderTable').DataTable({
+                    paging: true, info: true,
+                    lengthMenu: [[10, 25, 50, -1], [10, 25, 50, 'All']],
+                    order: [[2, 'desc']],
+                    columnDefs: [{ orderable: false, targets: [4, 5] }]
+                });
+            }
+        });
+    </script>
+</main>
 </body>
 </html>

@@ -21,6 +21,7 @@
 <body th:class="${bodyClass}">
     <div th:if="${showPromo}" th:replace="~{layout/fragments/promo-bar :: promo-bar}"></div>
     <div th:replace="~{layout/fragments/storefront-header :: storefront-header}"></div>
+    <script th:src="@{/js/money.js}"></script>
     <th:block th:replace="${content}" />
     <th:block th:replace="~{layout/footer :: site-footer}" />
 </body>

@@ -46,6 +46,17 @@ That keeps local startup quick and avoids accidental overrides from generic mach
 
 The included `compose.prod.example.yaml` shows one way to wire those secrets into containers.
 
+## Self-hosted Docker deploy
+
+For a single-machine deployment with app + MySQL managed by Docker Compose:
+
+```powershell
+Copy-Item .env.deploy.example .env.deploy
+docker compose --env-file .env.deploy -f compose.deploy.yaml up -d --build
+```
+
+See `docs/DOCKER_DEPLOY.md` for the full command set and volume notes.
+
 ## Important note
 
 `PaymentService` now builds PayOS callback URLs from `app.base-url`, so each environment must set the public base URL correctly:

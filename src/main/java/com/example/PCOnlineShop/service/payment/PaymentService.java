@@ -11,6 +11,7 @@ import com.example.PCOnlineShop.model.order.OrderDetail;
 import com.example.PCOnlineShop.model.payment.Payment;
 import com.example.PCOnlineShop.repository.payment.PaymentRepository;
 import com.example.PCOnlineShop.service.cart.CartService;
+import com.example.PCOnlineShop.service.common.MoneyFormatService;
 import com.example.PCOnlineShop.service.order.OrderService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
@@ -27,9 +28,11 @@ import vn.payos.model.v2.paymentRequests.PaymentLinkStatus;
 import vn.payos.model.webhooks.WebhookData;
 
 import java.math.BigDecimal;
+import java.text.Normalizer;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.ThreadLocalRandom;
 
 @Service
@@ -46,16 +49,19 @@ public class PaymentService {
     private final PaymentRepository paymentRepository;
     private final OrderService orderService;
     private final CartService cartService;
+    private final MoneyFormatService moneyFormatService;
 
     public PaymentService(PayOS payOS,
                           PaymentRepository paymentRepository,
                           @Lazy OrderService orderService,
                           CartService cartService,
+                          MoneyFormatService moneyFormatService,
                           @Value("${app.base-url}") String appBaseUrl) {
         this.payOS = payOS;
         this.paymentRepository = paymentRepository;
         this.orderService = orderService;
         this.cartService = cartService;
+        this.moneyFormatService = moneyFormatService;
         this.appBaseUrl = appBaseUrl;
     }
 
@@ -87,6 +93,7 @@ public class PaymentService {
         Payment payment = new Payment();
         payment.setOrder(order);
         payment.setAmount(BigDecimal.valueOf(order.getFinalAmount()));
+        payment.setCurrency(MoneyFormatService.VND);
         payment.setStatus(PaymentStatus.PENDING);
         payment.setOrderCode(generateUniqueOrderCode());
         return paymentRepository.save(payment);
@@ -107,13 +114,13 @@ public class PaymentService {
             items.add(PaymentLinkItem.builder()
                     .name(detail.getProduct().getProductName())
                     .quantity(detail.getQuantity())
-                    .price((long) detail.getPrice())
+                    .price(moneyFormatService.toWholeVnd(detail.getPrice()))
                     .build());
         }
 
         CreatePaymentLinkRequest paymentData = CreatePaymentLinkRequest.builder()
                 .orderCode(payment.getOrderCode())
-                .amount(payment.getAmount().longValue())
+                .amount(moneyFormatService.toWholeVnd(payment.getAmount()))
                 .description(description)
                 .items(items)
                 .cancelUrl(cancelUrl)
@@ -299,8 +306,24 @@ public class PaymentService {
             payment.setGatewayPaymentId(gatewayPaymentId);
         }
         order.setPaymentStatus(OrderPaymentStatus.PAID);
-        order.setStatus(OrderStatus.READY_TO_SHIP);
+        order.setStatus(resolvePaidOrderStatus(order));
         order.setPaidAt(LocalDateTime.now());
         paymentRepository.save(payment);
+    }
+
+    private String resolvePaidOrderStatus(Order order) {
+        return isPickupAtStore(order.getShippingMethod())
+                ? OrderStatus.READY_FOR_PICKUP
+                : OrderStatus.READY_TO_SHIP;
+    }
+
+    private boolean isPickupAtStore(String shippingMethod) {
+        if (shippingMethod == null) {
+            return false;
+        }
+        String normalized = Normalizer.normalize(shippingMethod, Normalizer.Form.NFD)
+                .replaceAll("\\p{M}", "")
+                .toLowerCase(Locale.ROOT);
+        return normalized.contains("nhan tai cua hang") || normalized.contains("pick up");
     }
 }

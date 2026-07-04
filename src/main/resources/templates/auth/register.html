@@ -1,147 +1,144 @@
 <!DOCTYPE html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org"
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
       xmlns:sec="https://www.thymeleaf.org/extras/spring-security"
       th:replace="~{layout/app :: page('Register', null, ~{::content})}">
 <body>
 <th:block th:fragment="content">
-<style>
+    <link rel="stylesheet" th:href="@{/css/pages/auth.css}">
 
-        * {
-            box-sizing: border-box;
-        }
-        .page-body {
-            font-family: 'Segoe UI', sans-serif;
-            background: linear-gradient(135deg, #eef2f3, #ffffff);
-            margin: 0;
-            padding: 0;
-            height: 100%;
-        }
+    <section class="auth-page auth-page--register">
+        <div class="auth-shell auth-shell--single auth-shell--register">
+            <div class="auth-card auth-card--register">
+                <div class="auth-card__header">
+                    <h2>Register</h2>
+                    <p>Create an account and verify your email before login.</p>
+                </div>
 
-        .register-container {
-            background: #fff;
-            padding: 40px 45px;
-            border-radius: 14px;
-            box-shadow: 0 4px 18px rgba(0,0,0,0.1);
-            width: 430px;
-            max-width: 90%;
-            margin: 50px auto; /* căn giữa ngang, cách header 50px */
-        }
-        h2 {
-            text-align: center;
-            color: #333;
-            margin-bottom: 25px;
-        }
-        label {
-            display: block;
-            margin-top: 12px;
-            color: #333;
-            font-weight: 500;
-        }
-        input, select {
-            width: 100%;
-            padding: 10px;
-            margin-top: 6px;
-            border: 1px solid #ccc;
-            border-radius: 6px;
-            font-size: 14px;
-        }
-        button {
-            width: 100%;
-            padding: 12px;
-            background-color: #4a90e2;
-            color: white;
-            border: none;
-            margin-top: 20px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 16px;
-            transition: background-color 0.3s;
-        }
-        button:hover {
-            background-color: #357ab8;
-        }
-        .login-link {
-            text-align: center;
-            margin-top: 15px;
-        }
-        .login-link a {
-            color: #007bff;
-            text-decoration: none;
-        }
-        .login-link a:hover {
-            text-decoration: underline;
-        }
-        .error-message {
-            color: red;
-            font-size: 13px;
-            text-align: center;
-            margin-top: 10px;
-        }
-    </style>
+                <form class="auth-form" th:action="@{/auth/register}" th:object="${account}" method="post" onsubmit="return validatePassword()">
+                    <div class="auth-grid auth-grid--two">
+                        <div class="auth-field">
+                            <label for="firstname">First name</label>
+                            <input class="auth-input"
+                                   type="text"
+                                   id="firstname"
+                                   th:field="*{firstname}"
+                                   autocomplete="given-name"
+                                   placeholder="First name"
+                                   required>
+                        </div>
 
-<div class="register-container">
-    <h2>Register</h2>
-    <form th:action="@{/auth/register}" th:object="${account}" method="post" onsubmit="return validatePassword()">
+                        <div class="auth-field">
+                            <label for="lastname">Last name</label>
+                            <input class="auth-input"
+                                   type="text"
+                                   id="lastname"
+                                   th:field="*{lastname}"
+                                   autocomplete="family-name"
+                                   placeholder="Last name"
+                                   required>
+                        </div>
+                    </div>
 
-        <label for="firstname">First Name</label>
-        <input type="text" id="firstname" th:field="*{firstname}" placeholder="First Name" required>
+                    <div class="auth-grid auth-grid--two">
+                        <div class="auth-field">
+                            <label for="gender">Gender</label>
+                            <select class="auth-input" id="gender" th:field="*{gender}">
+                                <option value="">Select gender</option>
+                                <option value="true">Male</option>
+                                <option value="false">Female</option>
+                            </select>
+                        </div>
 
-        <label for="lastname">Last Name</label>
-        <input type="text" id="lastname" th:field="*{lastname}" placeholder="Last Name" required>
+                        <div class="auth-field">
+                            <label for="phoneNumber">Phone number</label>
+                            <input class="auth-input"
+                                   type="text"
+                                   id="phoneNumber"
+                                   th:field="*{phoneNumber}"
+                                   inputmode="tel"
+                                   autocomplete="tel"
+                                   placeholder="0912345678"
+                                   required>
+                        </div>
+                    </div>
 
-        <label for="gender">Gender</label>
-        <select id="gender" th:field="*{gender}">
-            <option value="">-- Gender --</option>
-            <option value="true">Male</option>
-            <option value="false">Female</option>
-        </select>
+                    <div class="auth-field">
+                        <label for="email">Email</label>
+                        <input class="auth-input"
+                               type="email"
+                               id="email"
+                               th:field="*{email}"
+                               autocomplete="email"
+                               placeholder="example@gmail.com"
+                               required>
+                    </div>
 
-        <label>Address</label>
+                    <div class="auth-field">
+                        <label>Address</label>
+                        <div class="auth-address">
+                            <select id="province" class="auth-input">
+                                <option value="">Province</option>
+                            </select>
 
-        <div class="address-group">
-            <select id="province" class="form-control">
-                <option value="">-- Province --</option>
-            </select>
+                            <select id="district" class="auth-input">
+                                <option value="">District</option>
+                            </select>
 
-            <select id="district" class="form-control">
-                <option value="">-- District --</option>
-            </select>
+                            <select id="ward" class="auth-input">
+                                <option value="">Ward</option>
+                            </select>
+                        </div>
+                        <input class="auth-input auth-input--manual"
+                               type="text"
+                               id="manualAddress"
+                               placeholder="Type your full address"
+                               autocomplete="street-address"
+                               aria-label="Manual address">
+                        <input type="hidden" id="address" th:field="*{address}">
+                        <p id="addressHelp" class="auth-help">Choose province, district, and ward. Manual address is available if lookup fails.</p>
+                    </div>
 
-            <select id="ward" class="form-control">
-                <option value="">-- Ward --</option>
-            </select>
+                    <div class="auth-grid auth-grid--two">
+                        <div class="auth-field">
+                            <label for="password">Password</label>
+                            <input class="auth-input"
+                                   type="password"
+                                   id="password"
+                                   th:field="*{password}"
+                                   autocomplete="new-password"
+                                   placeholder="At least 6 characters"
+                                   required>
+                        </div>
+
+                        <div class="auth-field">
+                            <label for="confirmPassword">Confirm password</label>
+                            <input class="auth-input"
+                                   type="password"
+                                   id="confirmPassword"
+                                   th:field="*{confirmPassword}"
+                                   autocomplete="new-password"
+                                   placeholder="Repeat password"
+                                   required>
+                        </div>
+                    </div>
+
+                    <p id="errorText"
+                       class="auth-alert auth-alert--error auth-alert--compact"
+                       th:classappend="${error == null} ? ' auth-alert--hidden' : ''"
+                       th:text="${error}"></p>
+
+                    <button type="submit" class="auth-button">Create account</button>
+                </form>
+
+                <p class="auth-switch">
+                    Already have an account?
+                    <a th:href="@{/auth/login}">Login</a>
+                </p>
+            </div>
         </div>
+    </section>
 
-        <input type="hidden" id="address" th:field="*{address}">
-
-
-        <label for="email">Email</label>
-        <input type="email" id="email" th:field="*{email}" placeholder="example@gmail.com" required>
-
-        <label for="phoneNumber">Phone Number</label>
-        <input type="text" id="phoneNumber" th:field="*{phoneNumber}" placeholder="Ex: 0912345678" required>
-
-        <label for="password">Password</label>
-        <input type="password" id="password" th:field="*{password}" placeholder="Enter password" required>
-
-        <label for="confirmPassword">Confirm Password</label>
-        <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Confirm password" required>
-
-        <p id="errorText" class="error-message" th:text="${error}"></p>
-
-        <button type="submit">Register</button>
-
-        <div class="login-link">
-            <p>Have account? <a th:href="@{/auth/login}">Login</a></p>
-        </div>
-    </form>
-</div>
-
-<script src="/js/register.js">
-
-
-
-</script>
+    <script th:src="@{/js/register.js}"></script>
 </th:block>
 </body>
 </html>

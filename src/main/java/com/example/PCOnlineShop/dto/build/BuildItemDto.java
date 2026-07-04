@@ -1,31 +1,18 @@
 package com.example.PCOnlineShop.dto.build;
 
 import com.example.PCOnlineShop.model.build.*;
+import com.example.PCOnlineShop.model.product.Category;
 import com.example.PCOnlineShop.model.product.Product;
 import lombok.*;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.Set;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 public class BuildItemDto {
-    private static final Set<String> OTHER_CHILD_CATEGORIES = Set.of(
-            "keyboard",
-            "mouse",
-            "monitor",
-            "chair",
-            "headset",
-            "mousepad",
-            "speaker",
-            "desk",
-            "webcam",
-            "add-on"
-    );
-
     private Mainboard mainboard;
     private CPU cpu;
     private Memory memory;
@@ -119,10 +106,15 @@ public class BuildItemDto {
 
         return product.getCategories().stream()
                 .filter(Objects::nonNull)
-                .map(category -> category.getCategoryName() == null ? "" : category.getCategoryName().trim().toLowerCase())
-                .filter(OTHER_CHILD_CATEGORIES::contains)
+                .map(this::resolveCategoryName)
+                .filter(categoryName -> categoryName != null && !categoryName.isBlank())
+                .filter(categoryName -> !"other".equals(categoryName))
                 .findFirst()
                 .orElse(null);
+    }
+
+    private String resolveCategoryName(Category category) {
+        return category.getCategoryName() == null ? "" : category.getCategoryName().trim().toLowerCase();
     }
 
     /**

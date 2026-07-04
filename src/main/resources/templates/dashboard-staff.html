@@ -4,69 +4,140 @@
       th:replace="~{layout/app :: page('Staff Dashboard | PC Online Shop', null, ~{::content})}">
 <body>
 <th:block th:fragment="content">
-<section class="dashboard-page">
+<section class="dashboard-page ops-dashboard">
     <div class="container">
-        <div class="section-header">
+        <div class="ops-dashboard-hero">
             <div>
-                <p class="section-kicker">Staff Dashboard</p>
-                <h1 class="commerce-title app-mb-1">Operations Overview</h1>
-                <p class="section-subtitle app-mb-0">Monitor pending orders, shipping work, product stock, and customer feedback.</p>
+                <p class="ops-kicker">Staff Console</p>
+                <h1>Staff Dashboard</h1>
+                <p>Daily order load, shipping queue, inventory attention, and product movement.</p>
             </div>
-            <div class="hero-actions">
-                <a th:href="@{/orders/list}" class="btn btn-app-primary">Orders</a>
-                <a th:href="@{/staff/products/list}" class="btn btn-app-outline">Products</a>
+            <div class="ops-hero-actions">
+                <a th:href="@{/staff/orders}" class="btn btn-app-primary">Orders</a>
+                <a th:href="@{/staff/shipping/list}" class="btn btn-app-outline">Shipping</a>
             </div>
         </div>
 
-        <div class="dashboard-grid app-mb-4">
-            <article class="dashboard-card">
-                <span>Pending Orders</span>
-                <strong th:text="${pendingOrders}">0</strong>
+        <div class="ops-kpi-grid">
+            <article class="ops-kpi-card ops-kpi-card--wide">
+                <span>Active Workload</span>
+                <strong th:text="${pendingOrders + deliveringOrders}">0</strong>
+                <small>Processing and delivering orders</small>
             </article>
-            <article class="dashboard-card">
-                <span>Shipped Orders</span>
-                <strong th:text="${shippedOrders}">0</strong>
+            <article class="ops-kpi-card">
+                <span>Orders Today</span>
+                <strong th:text="${todayOrders}">0</strong>
+                <small th:text="${todayUnitsSold + ' paid units'}">0 paid units</small>
             </article>
-            <article class="dashboard-card">
-                <span>Products in Stock</span>
+            <article class="ops-kpi-card">
+                <span>In Stock</span>
                 <strong th:text="${productsInStock}">0</strong>
+                <small>Products with quantity</small>
             </article>
-            <article class="dashboard-card">
-                <span>Feedback</span>
-                <strong th:text="${feedbackCount}">0</strong>
-            </article>
-            <article class="dashboard-card">
-                <span>Low Stock Watch</span>
-                <strong>Live</strong>
+            <article class="ops-kpi-card">
+                <span>Low Stock</span>
+                <strong th:text="${lowStockProducts}">0</strong>
+                <small>At or below 5 units</small>
             </article>
         </div>
 
-        <div class="row">
-            <div class="col-md-8">
-                <section class="dashboard-panel">
-                    <h2 class="h4 app-mb-3">Weekly Order Load</h2>
-                    <div class="store-panel">
-                        <div class="app-flex app-align-end app-gap-2" style="height: 220px;">
-                            <div class="dashboard-bar" style="height: 36%;"></div>
-                            <div class="dashboard-bar" style="height: 52%;"></div>
-                            <div class="dashboard-bar" style="height: 70%;"></div>
-                            <div class="dashboard-bar" style="height: 58%;"></div>
+        <div class="ops-dashboard-layout">
+            <section class="ops-panel ops-panel--large">
+                <div class="ops-panel-header">
+                    <div>
+                        <span>Orders</span>
+                        <h2>Last 7 days</h2>
+                    </div>
+                    <small>Created orders by day</small>
+                </div>
+                <div class="ops-bar-chart">
+                    <article th:each="point : ${dailyOrderLoad}" class="ops-bar-item">
+                        <div class="ops-bar-track">
+                            <div class="ops-bar-fill"
+                                 th:style="${'--bar-height:' + point.heightPercent + '%'}"></div>
                         </div>
+                        <strong th:text="${point.label}">Mon</strong>
+                        <span th:text="${point.orderCount + ' orders'}">0 orders</span>
+                        <small th:text="${point.unitsSold + ' paid units'}">0 paid units</small>
+                    </article>
+                </div>
+            </section>
+
+            <section class="ops-panel">
+                <div class="ops-panel-header">
+                    <div>
+                        <span>Orders</span>
+                        <h2>Workload</h2>
                     </div>
-                </section>
-            </div>
-            <div class="col-md-4">
-                <section class="dashboard-panel">
-                    <h2 class="h4 app-mb-3">Quick Actions</h2>
-                    <div class="profile-nav">
-                        <a th:href="@{/staff/products/list}">Product Management</a>
-                        <a th:href="@{/staff/warranty/check}">Check Warranty</a>
-                        <a th:href="@{/staff/feedback}">Feedback Management</a>
-                        <a th:href="@{/orders/list}">Order Management</a>
-                        <a th:href="@{/staff/shipping/list}">Shipping Management</a>
+                </div>
+                <div class="ops-workload-list">
+                    <article th:each="item : ${workload}"
+                             class="ops-workload"
+                             th:classappend="${' ops-workload--' + item.tone}">
+                        <span th:text="${item.label}">Status</span>
+                        <strong th:text="${item.count}">0</strong>
+                    </article>
+                </div>
+            </section>
+        </div>
+
+        <div class="ops-dashboard-layout ops-dashboard-layout--bottom">
+            <section class="ops-panel">
+                <div class="ops-panel-header">
+                    <div>
+                        <span>Products</span>
+                        <h2>Top products this year</h2>
                     </div>
-                </section>
-            </div>
+                </div>
+                <div class="ops-table ops-table--two">
+                    <div class="ops-table-row ops-table-head">
+                        <span>Product</span>
+                        <span>Units</span>
+                    </div>
+                    <div th:if="${#lists.isEmpty(topProducts)}" class="ops-empty-row">No paid product data yet.</div>
+                    <div th:each="product : ${topProducts}" class="ops-table-row">
+                        <span th:text="${product.productName}">Product</span>
+                        <span th:text="${product.unitsSold}">0</span>
+                    </div>
+                </div>
+            </section>
+
+            <section class="ops-panel">
+                <div class="ops-panel-header">
+                    <div>
+                        <span>Support</span>
+                        <h2>Service signals</h2>
+                    </div>
+                </div>
+                <div class="ops-period-grid ops-period-grid--stack">
+                    <article class="ops-period-card">
+                        <span>Completed</span>
+                        <strong th:text="${shippedOrders}">0</strong>
+                        <small>Total completed orders</small>
+                    </article>
+                    <article class="ops-period-card">
+                        <span>Feedback</span>
+                        <strong th:text="${feedbackCount}">0</strong>
+                        <small>Customer feedback records</small>
+                    </article>
+                </div>
+            </section>
+
+            <section class="ops-panel">
+                <div class="ops-panel-header">
+                    <div>
+                        <span>ACTIONS</span>
+                        <h2>Quick actions</h2>
+                    </div>
+                </div>
+                <div class="ops-action-list">
+                    <a th:href="@{/staff/products/list}">Product Management</a>
+                    <a th:href="@{/staff/warranty/check}">Check Warranty</a>
+                    <a th:href="@{/staff/feedback}">Feedback Management</a>
+                    <a th:href="@{/staff/orders}">Order Management</a>
+                    <a th:href="@{/staff/shipping/list}">Shipping Management</a>
+                </div>
+            </section>
         </div>
     </div>
 </section>

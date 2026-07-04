@@ -65,6 +65,19 @@ public class FeedbackController {
         return "redirect:/staff/feedback";
     }
 
+    @PostMapping("/{id}/approve")
+    public String approve(@PathVariable Integer id,
+                          RedirectAttributes redirectAttributes) {
+        try {
+            feedbackService.approveFeedback(id);
+            redirectAttributes.addFlashAttribute("msg", "Feedback approved and visible on the product page.");
+        } catch (IllegalArgumentException e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+        }
+
+        return "redirect:/staff/feedback";
+    }
+
     private String resolveSortKey(String dateSort, String ratingSort) {
         if (ratingSort != null && !ratingSort.isBlank()) {
             return ratingSort;

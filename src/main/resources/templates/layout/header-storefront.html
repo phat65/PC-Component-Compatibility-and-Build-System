@@ -39,8 +39,6 @@
                        th:text="${gearCategory.categoryName}">Gear</a>
                 </div>
             </div>
-            <a th:href="@{/blog}" class="site-header__nav-link">Blog</a>
-
             <div class="site-header__categories" th:if="${categories != null and !categories.isEmpty()}">
                 <button type="button"
                         class="site-header__nav-link site-header__categories-toggle"
@@ -61,6 +59,7 @@
                        th:text="${c.categoryName == 'Other' ? 'Gear' : c.categoryName}">Category</a>
                 </div>
             </div>
+            <a th:href="@{/blog}" class="site-header__nav-link">Blog</a>
         </nav>
 
         <form class="site-header__search" th:action="@{/products}" method="get" role="search">
@@ -115,7 +114,7 @@
                         </svg>
                     </button>
                     <div id="profileDropdown" class="site-header__dropdown site-header__dropdown--account" role="menu" aria-hidden="true">
-                        <a th:href="@{/orders/list}" class="site-header__dropdown-item" role="menuitem">My Orders</a>
+                        <a th:href="@{/account/orders}" class="site-header__dropdown-item" role="menuitem">My Orders</a>
                         <a th:href="@{/profile}" class="site-header__dropdown-item" role="menuitem">My Profile</a>
                         <form th:action="@{/auth/logout}" method="post" class="site-header__logout-form">
                             <button type="submit" class="site-header__dropdown-item site-header__dropdown-item--btn" role="menuitem">Logout</button>
@@ -157,7 +156,7 @@
                 <a th:href="@{/auth/login}" class="site-header__mobile-link site-header__mobile-link--accent">Login</a>
             </th:block>
             <th:block sec:authorize="hasRole('CUSTOMER')">
-                <a th:href="@{/orders/list}" class="site-header__mobile-link">My Orders</a>
+                <a th:href="@{/account/orders}" class="site-header__mobile-link">My Orders</a>
                 <a th:href="@{/profile}" class="site-header__mobile-link">My Profile</a>
             </th:block>
         </nav>

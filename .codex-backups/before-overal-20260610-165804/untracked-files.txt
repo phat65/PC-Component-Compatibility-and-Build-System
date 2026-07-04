@@ -1,9 +1,0 @@
-﻿.codex-backups/before-overal-20260610-165804/status.txt
-.codex-backups/before-overal-20260610-165804/tracked.diff
-overal.md
-src/main/java/com/example/PCOnlineShop/constant/OrderPaymentStatus.java
-src/main/java/com/example/PCOnlineShop/constant/OrderStatus.java
-src/main/java/com/example/PCOnlineShop/constant/PaymentStatus.java
-src/main/resources/db/migration/V15__normalize_order_status_values.sql
-src/test/java/com/example/PCOnlineShop/service/order/OrderServiceTest.java
-src/test/java/com/example/PCOnlineShop/service/payment/PaymentServiceTest.java

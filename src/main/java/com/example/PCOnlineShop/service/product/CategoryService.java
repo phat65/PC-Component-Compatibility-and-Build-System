@@ -10,6 +10,7 @@ import java.util.Optional;
 @Service
 public class CategoryService {
     private static final String GEAR_PARENT_CATEGORY = "Other";
+    private static final List<String> GEAR_PARENT_CATEGORIES = List.of("Other", "Gear");
 
     private final CategoryRepository categoryRepository;
 
@@ -30,11 +31,19 @@ public class CategoryService {
     }
 
     public List<Category> getGearCategories() {
-        return categoryRepository.findByParentCategoryName(GEAR_PARENT_CATEGORY);
+        return categoryRepository.findByParentCategoryNameIn(GEAR_PARENT_CATEGORIES);
     }
 
     public Optional<Category> getGearParentCategory() {
         return findByNameIgnoreCase(GEAR_PARENT_CATEGORY);
+    }
+
+    public boolean isGearParentCategory(Integer categoryId) {
+        return categoryId != null && categoryRepository.existsGearParentCategoryId(categoryId);
+    }
+
+    public boolean isGearChildCategory(Integer categoryId) {
+        return categoryId != null && categoryRepository.existsGearChildCategoryId(categoryId);
     }
 
     public Optional<Category> findById(Integer id) {

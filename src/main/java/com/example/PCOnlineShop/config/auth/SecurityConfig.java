@@ -29,6 +29,8 @@ import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 
 @Configuration
 @RequiredArgsConstructor
@@ -66,7 +68,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/products/**", "/product/detail/**", "/category/**").permitAll()
                         .requestMatchers("/home").not().hasAnyRole("ADMIN", "STAFF")
-                        .requestMatchers("/", "/auth/**").permitAll()
+                        .requestMatchers("/", "/about-us", "/auth/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/payment/callback/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/payment/webhook").permitAll()
                         .requestMatchers("/build/**", "/api/build/**").not().hasAnyRole("ADMIN", "STAFF")
@@ -80,8 +82,10 @@ public class SecurityConfig {
                         .requestMatchers("/admin/brand/**").hasAnyRole("ADMIN", "STAFF")
                         .requestMatchers("/staff/products/**", "/staff/warranty/**", "/staff/shipping/**")
                                 .hasAnyRole("STAFF", "ADMIN")
-                        .requestMatchers("/orders/checkout").hasRole("CUSTOMER")
-                        .requestMatchers("/orders/list", "/orders/detail/**", "/payment/info/**", "/payment/continue/**")
+                        .requestMatchers("/orders/checkout", "/account/orders/**", "/payment/continue/**").hasRole("CUSTOMER")
+                        .requestMatchers("/admin/orders/**").hasRole("ADMIN")
+                        .requestMatchers("/staff/orders/**").hasRole("STAFF")
+                        .requestMatchers("/orders/list", "/orders/detail/**", "/payment/info/**")
                                 .hasAnyRole("CUSTOMER", "STAFF", "ADMIN")
                         .requestMatchers(HttpMethod.GET, "/cart").permitAll()
                         .requestMatchers(HttpMethod.POST, "/cart/add/**").permitAll()
@@ -108,7 +112,7 @@ public class SecurityConfig {
                                 if (account == null) {
                                     response.sendRedirect("/auth/login?error=true");
                                 } else {
-                                    response.sendRedirect("/auth/verify?email=" + account.getEmail());
+                                    response.sendRedirect("/auth/verify?email=" + encodeQueryParam(account.getEmail()));
                                 }
                             } else {
                                 response.sendRedirect("/auth/login?error=true");
@@ -165,5 +169,9 @@ public class SecurityConfig {
                 && !redirectUrl.isBlank()
                 && redirectUrl.startsWith("/")
                 && !redirectUrl.startsWith("//");
+    }
+
+    private String encodeQueryParam(String value) {
+        return URLEncoder.encode(value, StandardCharsets.UTF_8);
     }
 }

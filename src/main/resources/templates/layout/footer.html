@@ -2,32 +2,57 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <body>
 <footer th:fragment="site-footer" class="site-footer">
-    <div class="footer-container">
-        <div class="footer-column">
-            <h3>About Us</h3>
-            <ul>
-                <li><a href="#">Address</a></li>
-                <li><a href="#">Phone Number</a></li>
-                <li><a href="#">Email</a></li>
-            </ul>
+    <div class="container footer-container footer-top">
+        <div class="footer-brand">
+            <a th:href="@{/home}" class="footer-brand__name">PCOnlineShop</a>
+            <p>
+                Performance PC parts, guided compatibility, and a build flow made for gamers,
+                students, and creators who want the right hardware without guesswork.
+            </p>
+            <div class="footer-social" aria-label="Social links">
+                <a href="https://www.facebook.com" target="_blank" rel="noopener" aria-label="Facebook">
+                    <img th:src="@{/images/facebook-network-communication-internet-interaction-svgrepo-com.svg}" alt="">
+                </a>
+                <a href="https://www.youtube.com" target="_blank" rel="noopener" aria-label="YouTube">
+                    <img th:src="@{/images/youtube-svgrepo-com.svg}" alt="">
+                </a>
+                <a href="https://www.instagram.com" target="_blank" rel="noopener" aria-label="Instagram">
+                    <img th:src="@{/images/instagram-1-svgrepo-com.svg}" alt="">
+                </a>
+            </div>
         </div>
+
         <div class="footer-column">
-            <h3>Information</h3>
+            <h3>Shop</h3>
             <ul>
-                <li><a href="#">About us</a></li>
-                <li><a href="#">Contact</a></li>
-            </ul>
-        </div>
-        <div class="footer-column">
-            <h3>Service</h3>
-            <ul>
-                <li><a th:href="@{/profile}">My account</a></li>
+                <li><a th:href="@{/products}">Products</a></li>
+                <li><a th:href="@{/build}">Build PC</a></li>
                 <li><a th:href="@{/cart}">My cart</a></li>
             </ul>
         </div>
+
+        <div class="footer-column">
+            <h3>Company</h3>
+            <ul>
+                <li><a th:href="@{/about-us}">About us</a></li>
+                <li><a th:href="@{/blog}">Blog</a></li>
+                <li><a href="mailto:support@pconlineshop.local">Contact</a></li>
+            </ul>
+        </div>
+
+        <div class="footer-column">
+            <h3>Account</h3>
+            <ul>
+                <li><a th:href="@{/profile}">My account</a></li>
+                <li><a th:href="@{/account/orders}">Orders</a></li>
+                <li><a th:href="@{/auth/login}">Login</a></li>
+            </ul>
+        </div>
     </div>
+
     <div class="footer-bottom">
-        © 2025 PCOnlineShop. All rights reserved.
+        <span>&copy; 2026 PCOnlineShop. All rights reserved.</span>
+        <span>Built for clean PC shopping and compatible builds.</span>
     </div>
 </footer>
 </body>

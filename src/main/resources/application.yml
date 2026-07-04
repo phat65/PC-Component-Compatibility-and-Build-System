@@ -19,6 +19,10 @@ spring:
     cache: false
   messages:
     encoding: UTF-8
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 45MB
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:

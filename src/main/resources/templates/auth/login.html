@@ -1,205 +1,76 @@
 <!DOCTYPE html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org"
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
       xmlns:sec="https://www.thymeleaf.org/extras/spring-security"
       th:replace="~{layout/app :: page('Login', null, ~{::content})}">
 <body>
 <th:block th:fragment="content">
-<style>
-        /* 🌈 Reset & Layout */
-        * {
-            box-sizing: border-box;
-        }
+    <link rel="stylesheet" th:href="@{/css/pages/auth.css}">
 
-        .page-body {
-            font-family: "Poppins", "Segoe UI", Arial, sans-serif;
-            background: linear-gradient(135deg, #e0f7fa, #f8faff);
-            display: flex;
-            flex-direction: column; /* ⬅️ sắp xếp theo chiều dọc thay vì ngang */
-            align-items: center;     /* canh giữa theo chiều ngang */
-            min-height: 100vh;
-            margin: 0;
-        }
+    <section class="auth-page auth-page--login">
+        <div class="auth-shell auth-shell--single">
+            <div class="auth-card">
+                <div class="auth-card__header">
+                    <h2>Login</h2>
+                    <p>Use the phone number registered with your account.</p>
+                </div>
 
+                <div th:if="${param.error}" class="auth-alert auth-alert--error" role="alert">
+                    Phone number or password is incorrect.
+                </div>
+                <div th:if="${param.success}" class="auth-alert auth-alert--success" role="status">
+                    Account verified. You can login now.
+                </div>
+                <div th:if="${param.resetSuccess}" class="auth-alert auth-alert--success" role="status">
+                    Password updated. Please login with your new password.
+                </div>
+                <div th:if="${param.logout}" class="auth-alert auth-alert--success" role="status">
+                    You have been logged out.
+                </div>
+                <div th:if="${param.required}" class="auth-alert auth-alert--warning" role="alert">
+                    Please login before continuing.
+                </div>
 
-        .container {
-            background: #fff;
-            border-radius: 16px;
-            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
-            padding: 40px 45px;
-            width: 380px;
-            text-align: center;
-            transition: all 0.3s ease;
-            margin-top: 50px;
-        }
+                <form class="auth-form" th:action="@{/auth/login}" method="post">
+                    <input type="hidden" name="redirect" th:if="${param.redirect}" th:value="${param.redirect}">
 
-        .container:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.15);
-        }
+                    <div class="auth-field">
+                        <label for="phoneNumber">Phone number</label>
+                        <input class="auth-input"
+                               type="text"
+                               id="phoneNumber"
+                               name="phoneNumber"
+                               inputmode="tel"
+                               autocomplete="tel"
+                               placeholder="0912345678"
+                               required
+                               th:value="${phoneNumber != null} ? ${phoneNumber} : ''">
+                    </div>
 
-        h2 {
-            color: #2c3e50;
-            font-size: 26px;
-            margin-bottom: 25px;
-            letter-spacing: 0.5px;
-        }
+                    <div class="auth-field">
+                        <label for="password">Password</label>
+                        <input class="auth-input"
+                               type="password"
+                               id="password"
+                               name="password"
+                               autocomplete="current-password"
+                               placeholder="Enter your password"
+                               required>
+                    </div>
 
-        /* 📋 Form Input */
-        .form-group {
-            text-align: left;
-            margin-bottom: 18px;
-        }
+                    <div class="auth-form__row auth-form__row--end">
+                        <a th:href="@{/auth/forget-password}" class="auth-link">Forgot password?</a>
+                    </div>
 
-        .form-group label {
-            font-weight: 600;
-            color: #34495e;
-            display: block;
-            margin-bottom: 6px;
-            font-size: 14px;
-        }
+                    <button type="submit" class="auth-button">Login</button>
+                </form>
 
-        .form-group input {
-            width: 100%;
-            padding: 12px 14px;
-            border: 1px solid #dcdcdc;
-            border-radius: 10px;
-            font-size: 15px;
-            transition: all 0.25s ease;
-        }
-
-        .form-group input:focus {
-            border-color: #3498db;
-            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.15);
-            outline: none;
-        }
-
-        /* 🔑 Options */
-        .options {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-top: 10px;
-            font-size: 13px;
-        }
-
-        .options a {
-            color: #3498db;
-            text-decoration: none;
-        }
-
-        .options a:hover {
-            text-decoration: underline;
-        }
-
-        /* 🔘 Button */
-        .btn {
-            width: 100%;
-            padding: 12px;
-            background: #3498db;
-            border: none;
-            border-radius: 10px;
-            color: white;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            margin-top: 30px;
-            transition: background 0.3s;
-        }
-
-        .btn:hover {
-            background: #2c82c9;
-        }
-
-        /* ⚠️ Error Message */
-        .error-message {
-            color: #e74c3c;
-            background: #fdecea;
-            border-radius: 8px;
-            padding: 8px;
-            font-size: 13px;
-            margin-bottom: 15px;
-        }
-
-        /* 🌀 Google Sign-in */
-        .google-signin {
-            display: flex;
-            justify-content: center;
-            margin: 20px 0;
-        }
-
-        .google-signin img {
-            width: 45px;
-            height: 45px;
-            border-radius: 50%;
-            cursor: pointer;
-            transition: transform 0.25s;
-        }
-
-        .google-signin img:hover {
-            transform: scale(1.08);
-        }
-
-        /* 🧾 Register link */
-        .register-link {
-            font-size: 14px;
-            margin-top: 10px;
-        }
-
-        .register-link a {
-            color: #3498db;
-            text-decoration: none;
-            font-weight: 600;
-        }
-
-        .register-link a:hover {
-            text-decoration: underline;
-        }
-
-        /* 📱 Responsive */
-        @media (max-width: 480px) {
-            .container {
-                width: 90%;
-                padding: 30px 25px;
-            }
-        }
-    </style>
-
-<div class="container">
-    <h2>Login</h2>
-
-    <div th:if="${param.error}" class="error-message">
-        ⚠️ Email or phonenumber incorrect!
-    </div>
-
-    <form th:action="@{/auth/login}" method="post">
-        <!-- Giữ lại redirect URL nếu có -->
-        <input type="hidden" name="redirect" th:if="${param.redirect}" th:value="${param.redirect}">
-
-        <div class="form-group">
-            <label for="phoneNumber">📱 Phone Number</label>
-            <input type="text" id="phoneNumber" name="phoneNumber" placeholder="Enter phone number" required
-                   th:value="${phoneNumber != null} ? ${phoneNumber} : ''"/>
+                <p class="auth-switch">
+                    No account yet?
+                    <a th:href="@{/auth/register}">Create an account</a>
+                </p>
+            </div>
         </div>
-
-        <div class="form-group">
-            <label for="password">🔒 Password</label>
-            <input type="password" id="password" name="password" placeholder="Enter Password" required>
-        </div>
-
-        <div class="options">
-            <label><input type="checkbox" name="remember-me"> Remember me</label>
-            <a th:href="@{/auth/forget-password}">Forget Password?</a>
-        </div>
-
-        <button type="submit" class="btn">Login</button>
-    </form>
-
-
-
-    <p class="register-link">
-        No account? <a th:href="@{/auth/register}">Register now</a>
-    </p>
-</div>
+    </section>
 </th:block>
 </body>
 </html>

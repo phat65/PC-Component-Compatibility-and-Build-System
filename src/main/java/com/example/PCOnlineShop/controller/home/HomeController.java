@@ -8,6 +8,7 @@ import com.example.PCOnlineShop.service.account.AccountService;
 import com.example.PCOnlineShop.service.product.CategoryService;
 import com.example.PCOnlineShop.service.product.BrandService;
 import com.example.PCOnlineShop.service.product.ProductService;
+import com.example.PCOnlineShop.util.PaginationUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -21,7 +22,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
 import java.util.Set;
-import java.util.stream.IntStream;
 
 @Controller
 @RequiredArgsConstructor
@@ -75,6 +75,11 @@ public class HomeController {
         return "home";
     }
 
+    @GetMapping("/about-us")
+    public String aboutUs() {
+        return "about-us";
+    }
+
     @GetMapping("/products")
     public String productHome(@RequestParam(required = false) Integer category,
                               @RequestParam(required = false) Integer brand,
@@ -113,7 +118,7 @@ public class HomeController {
         model.addAttribute("currentPage", resolvedPage);
         model.addAttribute("totalPages", productPage.getTotalPages());
         model.addAttribute("pageNumbers",
-                IntStream.range(0, productPage.getTotalPages()).boxed().toList());
+                PaginationUtils.compactPageNumbers(resolvedPage, productPage.getTotalPages()));
         model.addAttribute("categories", categoryService.getMainCategories());
         model.addAttribute("gearCategories", gearCategories);
         model.addAttribute("gearParentCategory", gearParentCategory);

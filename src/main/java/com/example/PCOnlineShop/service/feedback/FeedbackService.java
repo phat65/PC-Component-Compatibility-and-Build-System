@@ -15,7 +15,10 @@ public interface FeedbackService {
 
     void updateReply(Integer id, String reply);
 
+    void approveFeedback(Integer id);
+
     void createFeedback(Integer productId, Integer accountId, Integer rating, String comment);
+
     Double getAverageRating(Integer productId);
 
 }

@@ -239,7 +239,11 @@ public class OrderService {
 
 
     public List<Order> getOrdersByPhoneNumberForWarranty(String phoneNumber) {
-        return orderRepository.findByAccount_PhoneNumber(phoneNumber);
+        return orderRepository.findWarrantyEligibleOrdersByPhoneNumber(
+                phoneNumber,
+                OrderPaymentStatus.PAID,
+                OrderStatus.COMPLETED
+        );
     }
 
     @Transactional(readOnly = true)
@@ -251,11 +255,14 @@ public class OrderService {
                 .map(detail -> {
                     Order order = detail.getOrder();
                     Product product = detail.getProduct();
-                    Category category = (product != null && !product.getCategories().isEmpty())
+                    if (order == null || !isWarrantyEligibleOrder(order) || product == null) {
+                        return null;
+                    }
+                    Category category = (product.getCategories() != null && !product.getCategories().isEmpty())
                             ? product.getCategories().get(0) : null;
 
                     Date createdDate = order.getCreatedDate();
-                    if (order == null || product == null || category == null || createdDate == null) {
+                    if (category == null || createdDate == null) {
                         return null;
                     }
                     int categoryId = category.getCategoryId();
@@ -288,9 +295,17 @@ public class OrderService {
                 .collect(Collectors.toCollection(ArrayList::new));
     }
 
+    private boolean isWarrantyEligibleOrder(Order order) {
+        return OrderPaymentStatus.PAID.equals(order.getPaymentStatus())
+                || OrderStatus.COMPLETED.equals(order.getStatus());
+    }
+
     @Transactional(readOnly = true)
     public List<Order> getShippingQueueOrders() {
-        return orderRepository.findByStatusIn(OrderStatus.SHIPPING_QUEUE);
+        return orderRepository.findShippingManagementOrders(
+                OrderStatus.SHIPPING_MANAGEMENT_STATUSES,
+                OrderStatus.CANCELLED
+        );
     }
 
 
@@ -321,20 +336,44 @@ public class OrderService {
         Date now = new Date();
 
         if (OrderStatus.READY_TO_SHIP.equals(currentStatus)
-                && List.of(OrderStatus.DELIVERING, OrderStatus.COMPLETED, OrderStatus.CANCELLED).contains(newStatus)) {
+                && List.of(OrderStatus.DELIVERING, OrderStatus.CANCELLED).contains(newStatus)) {
             isValidTransition = true;
             if (OrderStatus.DELIVERING.equals(newStatus)) {
+                order.setShipmentReceivedDate(now);
+            }
+            if (OrderStatus.CANCELLED.equals(newStatus) && order.getReadyToShipDate() == null) {
                 order.setReadyToShipDate(now);
             }
         } else if (OrderStatus.DELIVERING.equals(currentStatus)
                 && List.of(OrderStatus.COMPLETED, OrderStatus.CANCELLED, OrderStatus.DELIVERY_FAILED).contains(newStatus)) {
             isValidTransition = true;
+        } else if (OrderStatus.DELIVERY_FAILED.equals(currentStatus)
+                && List.of(OrderStatus.READY_TO_SHIP, OrderStatus.DELIVERING, OrderStatus.CANCELLED).contains(newStatus)) {
+            isValidTransition = true;
+            if (OrderStatus.DELIVERING.equals(newStatus)) {
+                order.setShipmentReceivedDate(now);
+            }
+        } else if (OrderStatus.COMPLETED.equals(currentStatus)) {
+            throw new IllegalArgumentException("Completed orders are final and cannot be updated from Shipping Management.");
         }
 
         if (!isValidTransition) {
             throw new IllegalArgumentException("Invalid transition from " + currentStatus + " to " + newStatus);
         }
         order.setStatus(newStatus);
+        orderRepository.save(order);
+    }
+
+    @Transactional
+    public void completePickupOrder(long orderId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new EntityNotFoundException("Order not found: " + orderId));
+
+        if (!OrderStatus.READY_FOR_PICKUP.equals(order.getStatus())) {
+            throw new IllegalArgumentException("Only ready-for-pickup orders can be completed from this action.");
+        }
+
+        order.setStatus(OrderStatus.COMPLETED);
         orderRepository.save(order);
     }
 }

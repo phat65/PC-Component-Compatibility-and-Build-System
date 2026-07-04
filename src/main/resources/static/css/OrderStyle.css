@@ -341,7 +341,10 @@ td.action-buttons {
 #payment-info-body .info-row span {
     font-weight: 600;
     color: #333;
+    min-width: 0;
     text-align: right;
+    overflow-wrap: anywhere;
+    word-break: break-word;
 }
 
 /* =============================================== */

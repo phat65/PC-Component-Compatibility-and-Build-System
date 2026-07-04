@@ -10,47 +10,94 @@
                 id: 'GAMING_HIGH',
                 name: 'High-End Gaming',
                 description: 'Top performance for 4K gaming',
-                minBudget: 2000,
+                minBudget: 45000000,
                 icon: '4K'
             },
             {
                 id: 'GAMING_MID',
                 name: 'Mid-Range Gaming',
                 description: 'Great 1440p gaming experience',
-                minBudget: 1200,
+                minBudget: 25000000,
                 icon: '1440p'
             },
             {
                 id: 'BUDGET_GAMING',
                 name: 'Budget Gaming',
                 description: 'Solid 1080p gaming',
-                minBudget: 700,
+                minBudget: 14000000,
                 icon: '1080p'
             },
             {
                 id: 'WORKSTATION',
                 name: 'Workstation',
                 description: 'For content creation & 3D work',
-                minBudget: 1500,
+                minBudget: 30000000,
                 icon: 'Work'
             },
             {
                 id: 'STREAMING',
                 name: 'Streaming PC',
                 description: 'For gaming & streaming',
-                minBudget: 1400,
+                minBudget: 35000000,
                 icon: 'Stream'
             },
             {
                 id: 'OFFICE',
                 name: 'Office PC',
                 description: 'For productivity work',
-                minBudget: 500,
+                minBudget: 8000000,
                 icon: 'Office'
             }
         ],
         suggestedBuild: null
     };
+
+    const presetIcons = {
+        GAMING_HIGH: '4K',
+        GAMING_MID: '1440p',
+        BUDGET_GAMING: '1080p',
+        WORKSTATION: 'Work',
+        STREAMING: 'Stream',
+        OFFICE: 'Office'
+    };
+
+    function formatVnd(value) {
+        if (window.Money && typeof window.Money.formatVnd === 'function') {
+            return window.Money.formatVnd(value);
+        }
+        return new Intl.NumberFormat('vi-VN', {
+            maximumFractionDigits: 0,
+            minimumFractionDigits: 0
+        }).format(Math.round(Number(value) || 0)) + ' VND';
+    }
+
+    async function loadPresets() {
+        try {
+            const response = await fetch('/api/build/presets', {
+                headers: {
+                    'Accept': 'application/json'
+                }
+            });
+            if (!response.ok) {
+                return;
+            }
+
+            const presets = await response.json();
+            if (!Array.isArray(presets) || presets.length === 0) {
+                return;
+            }
+
+            state.presets = presets.map(preset => ({
+                id: preset.id,
+                name: preset.name,
+                description: preset.description,
+                minBudget: Number(preset.minBudget) || 0,
+                icon: presetIcons[preset.id] || 'PC'
+            }));
+        } catch (error) {
+            console.warn('Could not load build presets, using fallback presets.', error);
+        }
+    }
     function getCsrfToken() {
         const csrfMeta = document.querySelector('meta[name="_csrf"]');
         const metaToken = csrfMeta ? csrfMeta.getAttribute('content') : '';
@@ -111,7 +158,8 @@
     };
 
     // Initialize
-    function init() {
+    async function init() {
+        await loadPresets();
         attachEventListeners();
     }
 
@@ -148,7 +196,7 @@
                 <div class="preset-info">
                     <div class="preset-name">${escapeHtml(preset.name)}</div>
                     <div class="preset-budget">${escapeHtml(preset.description)}</div>
-                    <div class="preset-budget">Min: $${preset.minBudget}</div>
+                    <div class="preset-budget">Min: ${escapeHtml(formatVnd(preset.minBudget))}</div>
                 </div>
             </div>
         `).join('');
@@ -179,8 +227,9 @@
         // Show budget section
         elements.budgetStep.style.display = 'block';
         elements.budgetInput.min = minBudget;
-        elements.budgetInput.placeholder = `Min: $${minBudget}`;
-        elements.budgetHint.textContent = `Minimum: $${minBudget}`;
+        elements.budgetInput.step = 500000;
+        elements.budgetInput.placeholder = `Min: ${formatVnd(minBudget)}`;
+        elements.budgetHint.textContent = `Minimum: ${formatVnd(minBudget)}`;
         elements.budgetHint.style.color = '#666';
 
         // Reset result and error
@@ -201,11 +250,11 @@
         if (!budget || budget < minBudget) {
             elements.btnGenerateSuggest.disabled = true;
             elements.budgetHint.style.color = '#e74c3c';
-            elements.budgetHint.textContent = `Minimum: $${minBudget}`;
+            elements.budgetHint.textContent = `Minimum: ${formatVnd(minBudget)}`;
         } else {
             elements.btnGenerateSuggest.disabled = false;
             elements.budgetHint.style.color = '#27ae60';
-            elements.budgetHint.textContent = `Budget: $${budget}`;
+            elements.budgetHint.textContent = `Budget: ${formatVnd(budget)}`;
         }
     }
 
@@ -218,7 +267,7 @@
 
         const budget = parseFloat(elements.budgetInput.value);
         if (!budget || budget < state.selectedPreset.minBudget) {
-            showError(`Budget must be at least $${state.selectedPreset.minBudget}`);
+            showError(`Budget must be at least ${formatVnd(state.selectedPreset.minBudget)}`);
             return;
         }
 
@@ -298,7 +347,7 @@
                     <div class="build-item">
                         <div class="build-label">${escapeHtml(componentNames[key])}</div>
                         <div class="build-name">${escapeHtml(component.productName || 'N/A')}</div>
-                        <div class="build-price">$${(component.price || 0).toFixed(2)}</div>
+                        <div class="build-price">${escapeHtml(formatVnd(component.price || 0))}</div>
                     </div>
                 `;
             }
@@ -314,7 +363,7 @@
 
         buildHtml += `
             <div class="build-total">
-                <strong>Total: $${totalPrice.toFixed(2)}</strong>
+                <strong>Total: ${escapeHtml(formatVnd(totalPrice))}</strong>
             </div>
         </div>`;
 

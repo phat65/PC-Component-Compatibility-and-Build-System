@@ -4,72 +4,160 @@
       th:replace="~{layout/app :: page('Admin Dashboard | PC Online Shop', null, ~{::content})}">
 <body>
 <th:block th:fragment="content">
-<section class="dashboard-page">
+<section class="dashboard-page ops-dashboard">
     <div class="container">
-        <div class="section-header">
+        <div class="ops-dashboard-hero">
             <div>
-                <p class="section-kicker">Admin Dashboard</p>
-                <h1 class="commerce-title app-mb-1">System Overview</h1>
-                <p class="section-subtitle app-mb-0">Track revenue, orders, users, inventory, and management workflows.</p>
+                <p class="ops-kicker">Admin Console</p>
+                <h1>Admin Dashboard</h1>
+                <p>Track paid revenue, order volume, product movement, and account operations.</p>
             </div>
-            <div class="hero-actions">
-                <a th:href="@{/staff/products/list}" class="btn btn-app-primary">Product Management</a>
-                <a th:href="@{/orders/list}" class="btn btn-app-outline">Order Management</a>
+            <div class="ops-hero-actions">
+                <a th:href="@{/admin/orders}" class="btn btn-app-primary">Order Management</a>
+                <a th:href="@{/staff/products/list}" class="btn btn-app-outline">Product Management</a>
             </div>
         </div>
 
-        <div class="dashboard-grid app-mb-4">
-            <article class="dashboard-card">
-                <span>Total Users</span>
-                <strong th:text="${totalUsers}">0</strong>
+        <div class="ops-kpi-grid">
+            <article class="ops-kpi-card ops-kpi-card--wide">
+                <span>Total Revenue</span>
+                <strong th:text="${@money.format(revenue)}">0 VND</strong>
+                <small>Paid and completed orders</small>
             </article>
-            <article class="dashboard-card">
-                <span>Total Staff</span>
-                <strong th:text="${totalStaff}">0</strong>
-            </article>
-            <article class="dashboard-card">
+            <article class="ops-kpi-card">
                 <span>Total Orders</span>
                 <strong th:text="${totalOrders}">0</strong>
+                <small th:text="${todayOrders + ' paid today'}">0 paid today</small>
             </article>
-            <article class="dashboard-card">
-                <span>Revenue</span>
-                <strong th:text="${#numbers.formatInteger(revenue, 0)}">0</strong>
-            </article>
-            <article class="dashboard-card">
-                <span>Total Products</span>
+            <article class="ops-kpi-card">
+                <span>Products</span>
                 <strong th:text="${totalProducts}">0</strong>
+                <small>Catalog records</small>
+            </article>
+            <article class="ops-kpi-card">
+                <span>Users</span>
+                <strong th:text="${totalUsers}">0</strong>
+                <small th:text="${totalStaff + ' staff accounts'}">0 staff accounts</small>
             </article>
         </div>
 
-        <div class="row">
-            <div class="col-md-8">
-                <section class="dashboard-panel">
-                    <h2 class="h4 app-mb-3">Order Performance</h2>
-                    <div class="store-panel">
-                        <div class="app-flex app-align-end app-gap-2" style="height: 220px;">
-                            <div class="dashboard-bar" style="height: 42%;"></div>
-                            <div class="dashboard-bar" style="height: 66%;"></div>
-                            <div class="dashboard-bar" style="height: 54%;"></div>
-                            <div class="dashboard-bar" style="height: 78%;"></div>
-                            <div class="dashboard-bar" style="height: 88%;"></div>
-                            <div class="dashboard-bar" style="height: 72%;"></div>
+        <div class="ops-period-grid">
+            <article class="ops-period-card">
+                <span>Today</span>
+                <strong th:text="${@money.format(todayRevenue)}">0 VND</strong>
+                <small th:text="${todayOrders + ' orders / ' + todayUnitsSold + ' units'}">0 orders / 0 units</small>
+            </article>
+            <article class="ops-period-card">
+                <span>This Month</span>
+                <strong th:text="${@money.format(monthRevenue)}">0 VND</strong>
+                <small th:text="${monthOrders + ' orders / ' + monthUnitsSold + ' units'}">0 orders / 0 units</small>
+            </article>
+            <article class="ops-period-card">
+                <span>This Year</span>
+                <strong th:text="${@money.format(yearRevenue)}">0 VND</strong>
+                <small th:text="${yearOrders + ' orders / ' + yearUnitsSold + ' units'}">0 orders / 0 units</small>
+            </article>
+        </div>
+
+        <div class="ops-dashboard-layout">
+            <section class="ops-panel ops-panel--large">
+                <div class="ops-panel-header">
+                    <div>
+                        <span>Revenue</span>
+                        <h2>Last 7 days</h2>
+                    </div>
+                    <small>Scale adjusts to peak day</small>
+                </div>
+                <div class="ops-bar-chart">
+                    <article th:each="point : ${dailyRevenue}" class="ops-bar-item">
+                        <div class="ops-bar-track">
+                            <div class="ops-bar-fill"
+                                 th:style="${'--bar-height:' + point.heightPercent + '%'}"></div>
                         </div>
+                        <strong th:text="${point.label}">Mon</strong>
+                        <span th:text="${@money.format(point.revenue)}">0 VND</span>
+                        <small th:text="${point.orderCount + ' orders'}">0 orders</small>
+                    </article>
+                </div>
+            </section>
+
+            <section class="ops-panel">
+                <div class="ops-panel-header">
+                    <div>
+                        <span>Revenue</span>
+                        <h2>Last 6 months</h2>
                     </div>
-                </section>
-            </div>
-            <div class="col-md-4">
-                <section class="dashboard-panel">
-                    <h2 class="h4 app-mb-3">Management</h2>
-                    <div class="profile-nav">
-                        <a th:href="@{/admin/brand/list}">Brand Management</a>
-                        <a th:href="@{/staff/list}">Staff Management</a>
-                        <a th:href="@{/customer/list}">Customer List</a>
-                        <a th:href="@{/staff/products/list}">Product Management</a>
-                        <a th:href="@{/orders/list}">Order Management</a>
-                        <a th:href="@{/staff/feedback}">Feedback Management</a>
+                </div>
+                <div class="ops-mini-bars">
+                    <article th:each="point : ${monthlyRevenue}">
+                        <div class="ops-mini-bar">
+                            <span th:style="${'--bar-height:' + point.heightPercent + '%'}"></span>
+                        </div>
+                        <div>
+                            <strong th:text="${point.label}">Jan</strong>
+                            <small th:text="${@money.format(point.revenue)}">0 VND</small>
+                        </div>
+                    </article>
+                </div>
+            </section>
+        </div>
+
+        <div class="ops-dashboard-layout ops-dashboard-layout--bottom">
+            <section class="ops-panel">
+                <div class="ops-panel-header">
+                    <div>
+                        <span>Products</span>
+                        <h2>Top products this year</h2>
                     </div>
-                </section>
-            </div>
+                </div>
+                <div class="ops-table">
+                    <div class="ops-table-row ops-table-head">
+                        <span>Product</span>
+                        <span>Units</span>
+                        <span>Revenue</span>
+                    </div>
+                    <div th:if="${#lists.isEmpty(topProducts)}" class="ops-empty-row">No paid product data yet.</div>
+                    <div th:each="product : ${topProducts}" class="ops-table-row">
+                        <span th:text="${product.productName}">Product</span>
+                        <span th:text="${product.unitsSold}">0</span>
+                        <span th:text="${@money.format(product.revenue)}">0 VND</span>
+                    </div>
+                </div>
+            </section>
+
+            <section class="ops-panel">
+                <div class="ops-panel-header">
+                    <div>
+                        <span>Orders</span>
+                        <h2>Status breakdown</h2>
+                    </div>
+                </div>
+                <div class="ops-workload-list">
+                    <article th:each="item : ${orderStatusBreakdown}"
+                             class="ops-workload"
+                             th:classappend="${' ops-workload--' + item.tone}">
+                        <span th:text="${item.label}">Status</span>
+                        <strong th:text="${item.count}">0</strong>
+                    </article>
+                </div>
+            </section>
+
+            <section class="ops-panel">
+                <div class="ops-panel-header">
+                    <div>
+                        <span>Management</span>
+                        <h2>Quick actions</h2>
+                    </div>
+                </div>
+                <div class="ops-action-list">
+                    <a th:href="@{/admin/brand/list}">Brand Management</a>
+                    <a th:href="@{/staff/list}">Staff Management</a>
+                    <a th:href="@{/customer/list}">Customer List</a>
+                    <a th:href="@{/staff/products/list}">Product Management</a>
+                    <a th:href="@{/admin/orders}">Order Management</a>
+                    <a th:href="@{/staff/feedback}">Feedback Management</a>
+                </div>
+            </section>
         </div>
     </div>
 </section>

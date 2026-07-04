@@ -56,11 +56,11 @@
             </div>
 
             <div class="filter-field">
-                <label>Price Range ($)</label>
+                <label>Price Range (VND)</label>
                 <div class="price-range">
-                    <input type="number" name="minPrice" th:value="${minPrice}" placeholder="Min">
+                    <input type="number" name="minPrice" th:value="${minPrice}" min="0" step="100000" placeholder="Min">
                     <span class="price-range__sep">-</span>
-                    <input type="number" name="maxPrice" th:value="${maxPrice}" placeholder="Max">
+                    <input type="number" name="maxPrice" th:value="${maxPrice}" min="0" step="100000" placeholder="Max">
                 </div>
             </div>
 
@@ -108,11 +108,15 @@
         </div>
 
         <nav class="pagination" th:if="${pageNumbers != null and !#lists.isEmpty(pageNumbers)}">
-            <a th:each="i : ${pageNumbers}"
-               th:text="${i + 1}"
-               th:href="@{/products(page=${i}, category=${selectedCategory}, brand=${selectedBrand}, minPrice=${minPrice}, maxPrice=${maxPrice}, keyword=${keyword}, sortDir=${sortDir}, sortField=${sortField})}"
-               class="pagination__link"
-               th:classappend="${i == currentPage} ? ' is-active' : ''"></a>
+            <th:block th:each="i : ${pageNumbers}">
+                <span th:if="${i < 0}" class="pagination__ellipsis" aria-hidden="true">...</span>
+                <a th:if="${i >= 0}"
+                   th:text="${i + 1}"
+                   th:href="@{/products(page=${i}, size=${size}, category=${selectedCategory}, brand=${selectedBrand}, minPrice=${minPrice}, maxPrice=${maxPrice}, keyword=${keyword}, sortDir=${sortDir}, sortField=${sortField})}"
+                   class="pagination__link"
+                   th:classappend="${i == currentPage} ? ' is-active' : ''"
+                   th:attr="aria-current=${i == currentPage} ? 'page' : null"></a>
+            </th:block>
         </nav>
     </div>
 </main>

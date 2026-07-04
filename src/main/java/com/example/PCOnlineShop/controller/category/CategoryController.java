@@ -4,6 +4,7 @@ import com.example.PCOnlineShop.model.product.Category;
 import com.example.PCOnlineShop.model.product.Product;
 import com.example.PCOnlineShop.service.product.CategoryService;
 import com.example.PCOnlineShop.service.product.ProductService;
+import com.example.PCOnlineShop.util.PaginationUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Controller;
@@ -11,7 +12,6 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Set;
-import java.util.stream.IntStream;
 
 @Controller
 @RequiredArgsConstructor
@@ -68,7 +68,7 @@ public class CategoryController {
         model.addAttribute("currentPage", resolvedPage);
         model.addAttribute("totalPages", productPage.getTotalPages());
         model.addAttribute("pageNumbers",
-                IntStream.range(0, productPage.getTotalPages()).boxed().toList());
+                PaginationUtils.compactPageNumbers(resolvedPage, productPage.getTotalPages()));
         model.addAttribute("size", resolvedSize);
         model.addAttribute("sortField", resolvedSortField);
         model.addAttribute("sortDir", resolvedSortDir);

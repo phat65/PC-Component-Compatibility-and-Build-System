@@ -3,28 +3,30 @@
 <body>
 <header th:fragment="header-staff" class="ops-header">
     <div class="ops-header-inner">
-        <button class="ops-menu-btn" type="button" aria-label="Open staff menu" data-ops-toggle>
-            <i class="fa fa-bars"></i>
+        <button class="ops-menu-btn" type="button" aria-label="Open staff menu" aria-expanded="false" data-ops-toggle>
+            <img th:src="@{/images/menu.svg}" alt="" class="ops-btn-icon" aria-hidden="true">
         </button>
         <a th:href="@{/dashboard/staff}" class="site-logo">
             <img th:src="@{/assets/image/logo.jpg}" alt="PCOnlineShop logo" class="site-logo-img">
             <span class="site-logo-text">PCOnlineShop Staff</span>
         </a>
         <div class="ops-actions">
-            <a th:href="@{/profile}" class="btn btn-app-outline">My Profile</a>
-            <form th:action="@{/auth/logout}" method="post">
-                <button type="submit" class="btn btn-app-primary">Logout</button>
+            <a th:href="@{/profile}" class="ops-icon-btn" aria-label="Profile" title="Profile">
+                <img th:src="@{/images/user-svgrepo-com.svg}" alt="" class="ops-btn-icon" aria-hidden="true">
+            </a>
+            <form th:action="@{/auth/logout}" method="post" class="ops-logout-form">
+                <button type="submit" class="ops-logout-btn">Logout</button>
             </form>
         </div>
     </div>
 
     <aside class="ops-drawer" data-ops-drawer>
         <nav class="profile-nav" aria-label="Staff navigation">
-            <a th:href="@{/dashboard/staff}" class="active">Dashboard</a>
+            <a th:href="@{/dashboard/staff}">Dashboard</a>
             <a th:href="@{/staff/products/list}">Product Management</a>
             <a th:href="@{/staff/warranty/check}">Check Warranty</a>
             <a th:href="@{/staff/feedback}">Feedback Management</a>
-            <a th:href="@{/orders/list}">Order Management</a>
+            <a th:href="@{/staff/orders}">Order Management</a>
             <a th:href="@{/staff/shipping/list}">Shipping Management</a>
         </nav>
     </aside>
@@ -39,12 +41,28 @@
             function setOpen(open) {
                 drawer.classList.toggle('is-open', open);
                 overlay.classList.toggle('is-open', open);
+                toggle.setAttribute('aria-expanded', String(open));
+                document.body.classList.toggle('ops-drawer-open', open);
             }
             toggle.addEventListener('click', function () {
                 setOpen(!drawer.classList.contains('is-open'));
             });
             overlay.addEventListener('click', function () {
                 setOpen(false);
+            });
+            drawer.querySelectorAll('a').forEach(function (link) {
+                const linkPath = new URL(link.href, window.location.origin).pathname;
+                if (window.location.pathname === linkPath) {
+                    link.classList.add('active');
+                }
+                link.addEventListener('click', function () {
+                    setOpen(false);
+                });
+            });
+            document.addEventListener('keydown', function (event) {
+                if (event.key === 'Escape') {
+                    setOpen(false);
+                }
             });
         })();
     </script>

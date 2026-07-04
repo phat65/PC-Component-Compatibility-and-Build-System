@@ -19,6 +19,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class VerificationService {
 
     private static final Duration CODE_TTL = Duration.ofMinutes(5);
+    private static final Duration RESEND_COOLDOWN = Duration.ofSeconds(15);
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
     private final AccountRepository accountRepository;
@@ -27,11 +28,9 @@ public class VerificationService {
     private final Map<String, VerificationCode> verificationCodeMap = new ConcurrentHashMap<>();
 
     public void sendVerifyCode(String email) {
-        if (!StringUtils.hasText(email)) {
-            throw new IllegalArgumentException("Email is required!");
-        }
+        email = normalizeEmail(email);
+        enforceResendCooldown(email);
 
-        email = email.trim();
         Optional<Account> optionalAccount = accountRepository.findByEmail(email);
         if (optionalAccount.isEmpty()) {
             throw new IllegalArgumentException("No account found with the provided email!");
@@ -48,15 +47,15 @@ public class VerificationService {
                         "Best regards,\nPC Online Shop";
 
         mailService.sendEmail(acc.getEmail(), "PC Online Shop account verification", content);
-        verificationCodeMap.put(email, new VerificationCode(code, expiresAt()));
+        verificationCodeMap.put(email, new VerificationCode(code, expiresAt(), Instant.now()));
     }
 
     public void verifyAccount(String email, String code) {
-        if (!StringUtils.hasText(email) || !StringUtils.hasText(code)) {
+        if (!StringUtils.hasText(code)) {
             throw new IllegalArgumentException("The verification code is invalid or has expired!");
         }
 
-        email = email.trim();
+        email = normalizeEmail(email);
         VerificationCode storedCode = verificationCodeMap.get(email);
         if (storedCode == null || storedCode.isExpired() || !storedCode.code().equals(code.trim())) {
             verificationCodeMap.remove(email);
@@ -74,6 +73,45 @@ public class VerificationService {
         verificationCodeMap.remove(email);
     }
 
+    public long getResendCooldownSeconds() {
+        return RESEND_COOLDOWN.toSeconds();
+    }
+
+    public long getResendRemainingSeconds(String email) {
+        email = normalizeEmail(email);
+        VerificationCode existingCode = verificationCodeMap.get(email);
+        if (existingCode == null || existingCode.isExpired()) {
+            return 0;
+        }
+
+        Instant nextAllowedAt = existingCode.sentAt().plus(RESEND_COOLDOWN);
+        Instant now = Instant.now();
+        if (!now.isBefore(nextAllowedAt)) {
+            return 0;
+        }
+
+        return Duration.between(now, nextAllowedAt).toSeconds() + 1;
+    }
+
+    private String normalizeEmail(String email) {
+        if (!StringUtils.hasText(email)) {
+            throw new IllegalArgumentException("Email is required!");
+        }
+        return email.trim();
+    }
+
+    private void enforceResendCooldown(String email) {
+        VerificationCode existingCode = verificationCodeMap.get(email);
+        if (existingCode == null || existingCode.isExpired()) {
+            return;
+        }
+
+        long remainingSeconds = getResendRemainingSeconds(email);
+        if (remainingSeconds > 0) {
+            throw new IllegalArgumentException("Please wait " + remainingSeconds + " seconds before requesting another code.");
+        }
+    }
+
     private String generateCode() {
         return String.format("%06d", SECURE_RANDOM.nextInt(1_000_000));
     }
@@ -82,7 +120,7 @@ public class VerificationService {
         return Instant.now().plus(CODE_TTL);
     }
 
-    private record VerificationCode(String code, Instant expiresAt) {
+    private record VerificationCode(String code, Instant expiresAt, Instant sentAt) {
         boolean isExpired() {
             return Instant.now().isAfter(expiresAt);
         }

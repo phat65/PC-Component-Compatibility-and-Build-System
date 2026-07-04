@@ -21,6 +21,9 @@ import java.util.UUID;
 
 @Service
 public class ProductImageService {
+    public static final int MAX_IMAGES_PER_PRODUCT = 8;
+    public static final long MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024;
+
     private static final Path UPLOAD_PATH = Paths.get("uploads", "images");
     private static final String IMAGE_URL_PREFIX = "/image/";
     private static final Set<String> ALLOWED_CONTENT_TYPES = Set.of("image/jpeg", "image/png");
@@ -35,16 +38,8 @@ public class ProductImageService {
     @Transactional
     public List<Image> storeProductImages(Product product, List<MultipartFile> files) throws IOException {
         List<Image> images = new ArrayList<>();
-        if (files == null || files.isEmpty()) {
-            return images;
-        }
-
-        List<MultipartFile> validFiles = files.stream()
-                .filter(file -> file != null && !file.isEmpty())
-                .toList();
-        for (MultipartFile file : validFiles) {
-            validateImageFile(file);
-        }
+        List<MultipartFile> validFiles = getUploadableFiles(files);
+        validateNewProductImages(validFiles);
 
         for (MultipartFile file : validFiles) {
             try {
@@ -59,6 +54,22 @@ public class ProductImageService {
         }
 
         return imageRepository.saveAll(images);
+    }
+
+    public void validateNewProductImages(List<MultipartFile> files) {
+        validateProductImageUpload(files, 0);
+    }
+
+    public void validateProductImageUpload(List<MultipartFile> files, int existingImageCount) {
+        List<MultipartFile> uploadableFiles = getUploadableFiles(files);
+        int totalImageCount = existingImageCount + uploadableFiles.size();
+        if (totalImageCount > MAX_IMAGES_PER_PRODUCT) {
+            throw new IllegalArgumentException("A product can have at most " + MAX_IMAGES_PER_PRODUCT + " images.");
+        }
+
+        for (MultipartFile file : uploadableFiles) {
+            validateImageFile(file);
+        }
     }
 
     private String storeImageFile(MultipartFile file) throws IOException {
@@ -104,6 +115,10 @@ public class ProductImageService {
             throw new IllegalArgumentException("Image file is empty");
         }
 
+        if (file.getSize() > MAX_IMAGE_SIZE_BYTES) {
+            throw new IllegalArgumentException("Each image must be 5MB or smaller");
+        }
+
         String contentType = file.getContentType();
         if (contentType != null && !ALLOWED_CONTENT_TYPES.contains(contentType.toLowerCase(Locale.ROOT))) {
             throw new IllegalArgumentException("Only JPG and PNG images are allowed");
@@ -126,6 +141,16 @@ public class ProductImageService {
             throw new IllegalArgumentException("Image file extension is required");
         }
         return fileName.substring(dotIndex + 1).toLowerCase(Locale.ROOT);
+    }
+
+    private List<MultipartFile> getUploadableFiles(List<MultipartFile> files) {
+        if (files == null || files.isEmpty()) {
+            return List.of();
+        }
+
+        return files.stream()
+                .filter(file -> file != null && !file.isEmpty())
+                .toList();
     }
 
     private void deleteImageFile(Image image) {

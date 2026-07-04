@@ -1,11 +1,18 @@
 package com.example.PCOnlineShop.controller.auth;
 
-import com.example.PCOnlineShop.model.account.Account;
+import com.example.PCOnlineShop.dto.account.RegisterRequest;
 import com.example.PCOnlineShop.service.auth.AuthService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.util.StringUtils;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
@@ -17,38 +24,66 @@ public class AuthController {
 
     @GetMapping("/register")
     public String showRegisterPage(Model model) {
-        model.addAttribute("account", new Account());
+        model.addAttribute("account", new RegisterRequest());
         return "auth/register";
     }
 
     @PostMapping("/register")
-    public String register(@ModelAttribute("account") Account account,
-                           @RequestParam("address") String addressStr,
-                           @RequestParam("confirmPassword") String confirmPassword,
+    public String register(@Valid @ModelAttribute("account") RegisterRequest request,
+                           BindingResult bindingResult,
                            RedirectAttributes redirectAttributes,
                            Model model) {
+        if (StringUtils.hasText(request.getPassword())
+                && StringUtils.hasText(request.getConfirmPassword())
+                && !request.isPasswordConfirmed()) {
+            bindingResult.rejectValue("confirmPassword", "password.mismatch", "Confirm password does not match.");
+        }
+
+        if (bindingResult.hasErrors()) {
+            clearSensitiveFields(request);
+            model.addAttribute("error", firstValidationMessage(bindingResult));
+            return "auth/register";
+        }
+
         try {
-            authService.register(account, addressStr, confirmPassword);
-            redirectAttributes.addFlashAttribute("phoneNumber", account.getPhoneNumber());
-            redirectAttributes.addAttribute("email", account.getEmail());
-            return "redirect:/auth/verify";
+            authService.register(request);
         } catch (IllegalArgumentException e) {
+            clearSensitiveFields(request);
             model.addAttribute("error", e.getMessage());
             return "auth/register";
         }
+
+        redirectAttributes.addFlashAttribute("phoneNumber", request.getPhoneNumber());
+        sendVerifyCodeForRedirect(request.getEmail(), redirectAttributes);
+        return redirectToVerify(request.getEmail(), redirectAttributes);
     }
 
     @GetMapping("/verify")
     public String verify(@RequestParam("email") String email, Model model) {
-        try {
-            authService.sendVerifyCode(email);
-            model.addAttribute("email", email);
-            return "auth/verify";
-        } catch (IllegalArgumentException e) {
-            model.addAttribute("error", e.getMessage());
-            model.addAttribute("account", new Account());
+        if (!StringUtils.hasText(email)) {
+            model.addAttribute("error", "Email is required.");
+            model.addAttribute("account", new RegisterRequest());
             return "auth/register";
         }
+
+        email = email.trim();
+        model.addAttribute("email", email);
+        model.addAttribute("resendDelaySeconds", authService.getVerifyResendRemainingSeconds(email));
+        return "auth/verify";
+    }
+
+    @PostMapping("/verify/resend")
+    public String resendVerifyCode(@RequestParam("email") String email,
+                                   RedirectAttributes redirectAttributes,
+                                   Model model) {
+        if (!StringUtils.hasText(email)) {
+            model.addAttribute("error", "Email is required.");
+            model.addAttribute("account", new RegisterRequest());
+            return "auth/register";
+        }
+
+        sendVerifyCodeForRedirect(email, redirectAttributes);
+        return redirectToVerify(email, redirectAttributes);
     }
 
     @PostMapping("/verify")
@@ -59,8 +94,11 @@ public class AuthController {
             authService.verifyAccount(email, code);
             return "redirect:/auth/login?success";
         } catch (IllegalArgumentException ex) {
-            model.addAttribute("error", "⚠️ Mã xác nhận không đúng hoặc đã hết hạn!");
+            model.addAttribute("error", "The verification code is invalid or has expired.");
             model.addAttribute("email", email);
+            if (StringUtils.hasText(email)) {
+                model.addAttribute("resendDelaySeconds", authService.getVerifyResendRemainingSeconds(email));
+            }
             return "auth/verify";
         }
     }
@@ -105,7 +143,7 @@ public class AuthController {
             return "redirect:/auth/reset-password";
         }
 
-        model.addAttribute("error", "⚠️ Mã xác nhận không đúng hoặc đã hết hạn!");
+        model.addAttribute("error", "The verification code is invalid or has expired.");
         model.addAttribute("identifier", identifier);
         return "auth/code-forget-password";
     }
@@ -129,5 +167,32 @@ public class AuthController {
             model.addAttribute("identifier", identifier);
             return "auth/reset-password";
         }
+    }
+
+    private String firstValidationMessage(BindingResult bindingResult) {
+        return bindingResult.getAllErrors().getFirst().getDefaultMessage();
+    }
+
+    private void clearSensitiveFields(RegisterRequest request) {
+        request.setPassword(null);
+        request.setConfirmPassword(null);
+    }
+
+    private void sendVerifyCodeForRedirect(String email, RedirectAttributes redirectAttributes) {
+        try {
+            authService.sendVerifyCode(email);
+            redirectAttributes.addFlashAttribute("success", "Verification code sent. Please check your email.");
+            redirectAttributes.addFlashAttribute("resendDelaySeconds", authService.getVerifyResendCooldownSeconds());
+        } catch (IllegalArgumentException e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+            if (StringUtils.hasText(email)) {
+                redirectAttributes.addFlashAttribute("resendDelaySeconds", authService.getVerifyResendRemainingSeconds(email));
+            }
+        }
+    }
+
+    private String redirectToVerify(String email, RedirectAttributes redirectAttributes) {
+        redirectAttributes.addAttribute("email", email.trim());
+        return "redirect:/auth/verify";
     }
 }

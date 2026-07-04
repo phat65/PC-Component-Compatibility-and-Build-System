@@ -18,9 +18,18 @@
                         <select id="categorySelect" class="form-control" required>
                             <option value="">-- Choose Primary Category --</option>
                             <option th:each="cat : ${categories}"
-                                    th:if="${cat.displayOrder <= 10}"
                                     th:value="${cat.categoryId}"
-                                    th:text="${cat.categoryName}"></option>
+                                    th:data-gear-parent="${cat.categoryName == 'Other' or cat.categoryName == 'Gear'}"
+                                    th:text="${cat.categoryName == 'Other' ? 'Other / Gear' : cat.categoryName}"></option>
+                        </select>
+                    </div>
+                    <div class="form-group app-mb-0 gear-type-group" id="gearTypeGroup" hidden>
+                        <label for="gearTypeSelect">Gear Type</label>
+                        <select id="gearTypeSelect" class="form-control">
+                            <option value="">-- Choose Gear Type --</option>
+                            <option th:each="gear : ${gearCategories}"
+                                    th:value="${gear.categoryId}"
+                                    th:text="${gear.categoryName}"></option>
                         </select>
                     </div>
                     <button type="button" class="btn btn-app-primary" id="btnStart">Continue</button>
@@ -36,6 +45,7 @@
                   method="post" enctype="multipart/form-data">
 
                 <input type="hidden" id="primaryCategoryId" name="categoryIds">
+                <input type="hidden" id="gearCategoryId" name="categoryIds" disabled>
 
                 <div class="row">
                     <div class="col-sm-6">
@@ -71,8 +81,8 @@
                 <div class="row">
                     <div class="col-sm-6">
                         <div class="form-group">
-                            <label for="price">Price ($)</label>
-                            <input id="price" type="number" th:field="*{price}" class="form-control" min="0.01" step="0.01" required>
+                            <label for="price">Price (VND)</label>
+                            <input id="price" type="number" th:field="*{price}" class="form-control" min="1" step="1000" required>
                             <div class="text-danger" th:if="${#fields.hasErrors('price')}" th:errors="*{price}"></div>
                         </div>
                     </div>
@@ -117,8 +127,10 @@
                     <label>Images</label>
                     <input type="file" id="imageInput" name="imageFiles" accept="image/png, image/jpeg" multiple class="hidden">
                     <button type="button" class="btn btn-app-outline" onclick="document.getElementById('imageInput').click()">Choose Images</button>
+                    <p class="help-block app-mt-2 app-mb-0">Upload up to 8 JPG/PNG images. Each image must be 5MB or smaller.</p>
+                    <div id="imageUploadError" class="text-danger app-mt-2"></div>
                     <div class="product-image-preview" id="imagePreview">
-                        <div class="product-image-thumb"><span class="help-block app-mb-0">No image yet</span></div>
+                        <div class="product-image-thumb"><span class="product-image-placeholder">No image yet</span></div>
                     </div>
                 </div>
 
@@ -133,13 +145,18 @@
     <script th:inline="javascript">
         /*<![CDATA[*/
         const submittedCatId = /*[[${submittedCategoryId}]]*/ null;
+        const submittedGearCategoryId = /*[[${submittedGearCategoryId}]]*/ null;
         const submittedBrandId = /*[[${submittedBrandId}]]*/ null;
         const categorySelectForReload = document.getElementById('categorySelect');
+        const gearTypeSelectForReload = document.getElementById('gearTypeSelect');
         const brandSelect = document.getElementById('brand');
 
         document.addEventListener('DOMContentLoaded', () => {
             if (submittedCatId) {
                 categorySelectForReload.value = submittedCatId;
+                if (submittedGearCategoryId) {
+                    gearTypeSelectForReload.value = submittedGearCategoryId;
+                }
                 if (submittedBrandId) {
                     brandSelect.value = submittedBrandId;
                 }
@@ -151,18 +168,54 @@
 
     <script>
         const categorySelect = document.getElementById('categorySelect');
+        const gearTypeGroup = document.getElementById('gearTypeGroup');
+        const gearTypeSelect = document.getElementById('gearTypeSelect');
         const btnStart = document.getElementById('btnStart');
         const gateMsg = document.getElementById('gateMsg');
         const productForm = document.getElementById('productForm');
         const primaryCategoryId = document.getElementById('primaryCategoryId');
+        const gearCategoryId = document.getElementById('gearCategoryId');
         const specContainer = document.getElementById('specFormContainer');
         const lifecycleSelect = document.getElementById('lifecycleStatus');
         const visibilitySelect = document.getElementById('status');
 
+        function isGearPrimaryCategory(cid) {
+            const option = categorySelect.querySelector(`option[value="${cid}"]`);
+            return option?.dataset.gearParent === 'true';
+        }
+
+        function syncGearTypeState(cid) {
+            const shouldShowGearType = isGearPrimaryCategory(cid);
+            gearTypeGroup.hidden = !shouldShowGearType;
+
+            if (!shouldShowGearType) {
+                gearTypeSelect.value = '';
+                gearCategoryId.value = '';
+                gearCategoryId.disabled = true;
+                return;
+            }
+
+            gearCategoryId.value = gearTypeSelect.value;
+            gearCategoryId.disabled = !gearTypeSelect.value;
+        }
+
+        function hasValidGearSelection(cid) {
+            return !isGearPrimaryCategory(cid) || Boolean(gearTypeSelect.value);
+        }
+
         function openFormWithCategory(cid, shouldScroll = true) {
+            syncGearTypeState(cid);
+
             if (!cid) {
                 productForm.style.display = 'none';
                 gateMsg.textContent = 'Choose primary category to display the specification form.';
+                specContainer.innerHTML = '<p class="help-block app-mb-0">No spec form yet. Select a category first.</p>';
+                return;
+            }
+
+            if (!hasValidGearSelection(cid)) {
+                productForm.style.display = 'none';
+                gateMsg.textContent = 'Choose a gear type before continuing.';
                 specContainer.innerHTML = '<p class="help-block app-mb-0">No spec form yet. Select a category first.</p>';
                 return;
             }
@@ -180,8 +233,26 @@
         btnStart.addEventListener('click', () => openFormWithCategory(categorySelect.value, true));
 
         categorySelect.addEventListener('change', () => {
+            syncGearTypeState(categorySelect.value);
             if (productForm.style.display === 'block') {
                 openFormWithCategory(categorySelect.value, true);
+            }
+        });
+
+        gearTypeSelect.addEventListener('change', () => {
+            syncGearTypeState(categorySelect.value);
+            if (productForm.style.display === 'block' || categorySelect.value) {
+                openFormWithCategory(categorySelect.value, productForm.style.display === 'block');
+            }
+        });
+
+        productForm.addEventListener('submit', (event) => {
+            syncGearTypeState(categorySelect.value);
+            if (!hasValidGearSelection(categorySelect.value)) {
+                event.preventDefault();
+                productForm.style.display = 'none';
+                gateMsg.textContent = 'Choose a gear type before creating this product.';
+                gearTypeSelect.focus();
             }
         });
 
@@ -205,23 +276,117 @@
 
         const imageInput = document.getElementById('imageInput');
         const imagePreview = document.getElementById('imagePreview');
-        imageInput.addEventListener('change', (e) => {
+        const imageUploadError = document.getElementById('imageUploadError');
+        const selectedImageFiles = [];
+        const maxProductImages = 8;
+        const maxImageSizeBytes = 5 * 1024 * 1024;
+        const allowedImageTypes = ['image/jpeg', 'image/png'];
+        const allowedImageExtensions = ['jpg', 'jpeg', 'png'];
+
+        function isAllowedImage(file) {
+            const extension = file.name.split('.').pop()?.toLowerCase();
+            return allowedImageTypes.includes(file.type) || allowedImageExtensions.includes(extension);
+        }
+
+        function renderEmptyImagePreview() {
+            imagePreview.innerHTML = '<div class="product-image-thumb"><span class="product-image-placeholder">No image yet</span></div>';
+        }
+
+        function validateSelectedImages(files = selectedImageFiles, existingImageCount = 0) {
+            imageUploadError.textContent = '';
+
+            if (existingImageCount + files.length > maxProductImages) {
+                imageUploadError.textContent = `A product can have at most ${maxProductImages} images.`;
+                return false;
+            }
+
+            for (const file of files) {
+                if (!isAllowedImage(file)) {
+                    imageUploadError.textContent = 'Only JPG and PNG images are allowed.';
+                    return false;
+                }
+                if (file.size > maxImageSizeBytes) {
+                    imageUploadError.textContent = 'Each image must be 5MB or smaller.';
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        function syncImageInputFiles() {
+            const dataTransfer = new DataTransfer();
+            selectedImageFiles.forEach(file => dataTransfer.items.add(file));
+            imageInput.files = dataTransfer.files;
+        }
+
+        function renderSelectedImagePreview() {
             imagePreview.innerHTML = '';
-            const files = Array.from(e.target.files);
-            if (files.length === 0) {
-                imagePreview.innerHTML = '<div class="product-image-thumb"><span class="help-block app-mb-0">No image yet</span></div>';
+            if (selectedImageFiles.length === 0) {
+                renderEmptyImagePreview();
                 return;
             }
-            files.forEach(f => {
+
+            selectedImageFiles.forEach((file, index) => {
+                const imageNumber = index + 1;
+                const box = document.createElement('div');
+                const img = document.createElement('img');
+                box.className = 'product-image-thumb';
+                box.innerHTML = `
+                    <span class="product-image-badge">${imageNumber === 1 ? 'Main' : imageNumber}</span>
+                    <button type="button"
+                            class="btn btn-danger btn-xs delete-image-btn product-preview-remove"
+                            data-image-index="${index}"
+                            aria-label="Remove image">X</button>
+                `;
+                img.alt = `preview ${imageNumber}`;
+                box.appendChild(img);
+                imagePreview.appendChild(box);
+
                 const reader = new FileReader();
                 reader.onload = ev => {
-                    const box = document.createElement('div');
-                    box.className = 'product-image-thumb';
-                    box.innerHTML = `<img src="${ev.target.result}" alt="preview">`;
-                    imagePreview.appendChild(box);
+                    img.src = ev.target.result;
                 };
-                reader.readAsDataURL(f);
+                reader.readAsDataURL(file);
             });
+        }
+
+        imageInput.addEventListener('change', (e) => {
+            const files = Array.from(e.target.files);
+            if (files.length === 0) {
+                return;
+            }
+            const nextFiles = selectedImageFiles.concat(files);
+            if (!validateSelectedImages(nextFiles)) {
+                syncImageInputFiles();
+                return;
+            }
+
+            selectedImageFiles.push(...files);
+            syncImageInputFiles();
+            renderSelectedImagePreview();
+        });
+
+        imagePreview.addEventListener('click', (event) => {
+            const removeButton = event.target.closest('.product-preview-remove');
+            if (!removeButton) {
+                return;
+            }
+
+            const imageIndex = Number(removeButton.dataset.imageIndex);
+            if (Number.isInteger(imageIndex)) {
+                selectedImageFiles.splice(imageIndex, 1);
+                syncImageInputFiles();
+                renderSelectedImagePreview();
+                validateSelectedImages();
+            }
+        });
+
+        productForm.addEventListener('submit', (event) => {
+            if (!validateSelectedImages()) {
+                event.preventDefault();
+                imageInput.focus();
+            }
         });
     </script>
 </th:block>

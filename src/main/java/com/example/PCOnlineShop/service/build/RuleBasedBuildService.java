@@ -18,6 +18,10 @@ import java.util.function.Function;
 @Slf4j
 @RequiredArgsConstructor
 public class RuleBasedBuildService {
+    private static final double BASIC_BUILD_BUDGET_VND = 10_000_000;
+    private static final double MID_RANGE_BUDGET_VND = 25_000_000;
+    private static final double HIGH_RANGE_BUDGET_VND = 37_500_000;
+
     private final CpuRepository cpuRepository;
     private final GpuRepository gpuRepository;
     private final MainboardRepository mainboardRepository;
@@ -29,12 +33,12 @@ public class RuleBasedBuildService {
     private final CompatibilityService compatibilityService;
 
     public BuildPlanDto suggestBuild(String presetName, double totalBudget) {
-        log.info("Suggesting build for preset: {}, budget: ${}", presetName, totalBudget);
+        log.info("Suggesting build for preset: {}, budget: {} VND", presetName, totalBudget);
         // 1. Get preset
         BuildPreset preset = BuildPreset.valueOf(presetName.toUpperCase().replace(" ", "_").replace("-", "_"));
         // 2. Validate budget
         if (totalBudget < preset.getSuggestedMinBudget()) {
-            log.warn("Budget ${} is below recommended ${}", totalBudget, preset.getSuggestedMinBudget());
+            log.warn("Budget {} VND is below recommended {} VND", totalBudget, preset.getSuggestedMinBudget());
         }
         // 3. Create temporary BuildItemDto for compatibility checking
         BuildItemDto tempBuild = new BuildItemDto();
@@ -176,7 +180,7 @@ public class RuleBasedBuildService {
         return null;
     }
     private <T> void logSelected(String componentName, String selectionMode, T component, double budget) {
-        log.info("Selected {} ({}): {} - ${} (Budget: ${})",
+        log.info("Selected {} ({}): {} - {} VND (Budget: {} VND)",
                 componentName,
                 selectionMode,
                 getProductName(component),
@@ -217,8 +221,8 @@ public class RuleBasedBuildService {
     // ============================================
     private Mainboard selectMainboardEntity(BuildPreset preset, double totalBudget, BuildItemDto tempBuild) {
         double budget = preset.calculateComponentBudget("mainboard", totalBudget);
-        int minScore = totalBudget >= 1500 ? 60 : (totalBudget >= 1000 ? 50 : 40);
-        log.debug("Selecting Mainboard: budget=${} (target range: 80%-120%)", budget);
+        int minScore = totalBudget >= HIGH_RANGE_BUDGET_VND ? 60 : (totalBudget >= MID_RANGE_BUDGET_VND ? 50 : 40);
+        log.debug("Selecting Mainboard: budget={} VND (target range: 80%-120%)", budget);
         List<Mainboard> mainboards = mainboardRepository.findBestMainboardsByBudgetAndScore(budget * 1.2, minScore);
         if (mainboards.isEmpty()) {
             log.warn("No mainboard with score >= {}, trying with lower score", minScore);
@@ -236,7 +240,7 @@ public class RuleBasedBuildService {
         }
         if (!mainboards.isEmpty()) {
             Mainboard selected = mainboards.get(0);
-            log.warn("No mainboard in 80-120% range, selected: {} - ${}",
+            log.warn("No mainboard in 80-120% range, selected: {} - {} VND",
                     selected.getProduct().getProductName(),
                     selected.getProduct().getPrice());
             return selected;
@@ -247,7 +251,7 @@ public class RuleBasedBuildService {
     private CPU selectCpuEntity(BuildPreset preset, double totalBudget, BuildItemDto tempBuild) {
         double budget = preset.calculateComponentBudget("cpu", totalBudget);
         int minScore = Math.max(preset.getRequirement("cpu_score_min") - 20, 40);
-        log.debug("Selecting CPU: budget=${} (target range: 80%-120%)", budget);
+        log.debug("Selecting CPU: budget={} VND (target range: 80%-120%)", budget);
         List<CPU> cpus = cpuRepository.findBestCpusByBudgetAndScore(budget * 1.2, minScore);
         if (cpus.isEmpty()) {
             cpus = cpuRepository.findBestCpusByBudgetAndScore(budget * 1.3, 30);
@@ -255,8 +259,25 @@ public class RuleBasedBuildService {
         if (cpus.isEmpty()) {
             cpus = cpuRepository.findBestCpusByBudgetAndScore(budget * 1.5, 0);
         }
-        CPU selected = selectCompatibleComponent("CPU", cpus, BudgetRange.around(budget),
+
+        List<CPU> preferredCpus = cpus;
+        if (prefersIntegratedGraphics(preset, totalBudget)) {
+            List<CPU> integratedCpus = cpus.stream()
+                    .filter(cpu -> Boolean.TRUE.equals(cpu.getHasIGPU()))
+                    .toList();
+            if (!integratedCpus.isEmpty()) {
+                preferredCpus = integratedCpus;
+                log.debug("Office/basic build: prioritizing {} CPU candidates with integrated graphics", integratedCpus.size());
+            }
+        }
+
+        CPU selected = selectCompatibleComponent("CPU", preferredCpus, BudgetRange.around(budget),
                 cpu -> compatibilityService.validateCpuCompatibility(tempBuild, cpu));
+        if (selected == null && preferredCpus != cpus) {
+            log.warn("No compatible iGPU CPU found, falling back to all compatible CPU candidates");
+            selected = selectCompatibleComponent("CPU", cpus, BudgetRange.around(budget),
+                    cpu -> compatibilityService.validateCpuCompatibility(tempBuild, cpu));
+        }
         if (selected == null) {
             log.error("No compatible CPU found");
         }
@@ -265,7 +286,7 @@ public class RuleBasedBuildService {
     private Memory selectMemoryEntity(BuildPreset preset, double totalBudget, BuildItemDto tempBuild) {
         double budget = preset.calculateComponentBudget("memory", totalBudget);
         int minScore = 30;
-        log.debug("Selecting Memory: budget=${} (target range: 80%-120%)", budget);
+        log.debug("Selecting Memory: budget={} VND (target range: 80%-120%)", budget);
         List<Memory> memories = memoryRepository.findBestMemoryByBudgetAndScore(budget * 1.2, minScore);
         if (memories.isEmpty()) {
             memories = memoryRepository.findBestMemoryByBudgetAndScore(budget * 1.5, 0);
@@ -279,8 +300,12 @@ public class RuleBasedBuildService {
     }
     private GPU selectGpuEntity(BuildPreset preset, double totalBudget, BuildItemDto tempBuild) {
         double budget = preset.calculateComponentBudget("gpu", totalBudget);
+        if (!requiresDedicatedGpu(preset, totalBudget)) {
+            log.info("Skipping dedicated GPU for {} preset at {} VND budget", preset.name(), totalBudget);
+            return null;
+        }
         int minScore = Math.max(preset.getRequirement("gpu_score_min") - 20, 40);
-        log.debug("Selecting GPU: budget=${} (target range: 80%-120%)", budget);
+        log.debug("Selecting GPU: budget={} VND (target range: 80%-120%)", budget);
         List<GPU> gpus = gpuRepository.findBestGpusByBudgetAndScore(budget * 1.2, minScore);
         if (gpus.isEmpty()) {
             gpus = gpuRepository.findBestGpusByBudgetAndScore(budget * 1.3, 30);
@@ -298,7 +323,7 @@ public class RuleBasedBuildService {
     private Storage selectStorageEntity(BuildPreset preset, double totalBudget, BuildItemDto tempBuild) {
         double budget = preset.calculateComponentBudget("storage", totalBudget);
         int minScore = 30;
-        log.debug("Selecting Storage: budget=${} (target range: 80%-120%)", budget);
+        log.debug("Selecting Storage: budget={} VND (target range: 80%-120%)", budget);
         List<Storage> storages = storageRepository.findBestStorageByBudgetAndScore(budget * 1.2, minScore);
         if (storages.isEmpty()) {
             storages = storageRepository.findBestStorageByBudgetAndScore(budget * 1.5, 0);
@@ -312,10 +337,10 @@ public class RuleBasedBuildService {
     }
     private PowerSupply selectPsuEntity(BuildPreset preset, double totalBudget, BuildItemDto tempBuild) {
         double budget = preset.calculateComponentBudget("psu", totalBudget);
-        log.debug("Selecting PSU: budget=${} (target range: 80%-120%)", budget);
+        log.debug("Selecting PSU: budget={} VND (target range: 80%-120%)", budget);
         List<PowerSupply> psus = powerSupplyRepository.findBestPsuByBudgetAndScore(budget * 1.2, 0);
         if (psus.isEmpty()) {
-            log.warn("No PSU found in budget ${}, relaxing to ${}", budget, budget * 1.5);
+            log.warn("No PSU found in budget {} VND, relaxing to {} VND", budget, budget * 1.5);
             psus = powerSupplyRepository.findBestPsuByBudgetAndScore(budget * 1.5, 0);
         }
         PowerSupply selected = selectCompatibleComponent("PSU", psus, BudgetRange.around(budget),
@@ -336,7 +361,11 @@ public class RuleBasedBuildService {
     }
     private Cooling selectCoolingEntity(BuildPreset preset, double totalBudget, BuildItemDto tempBuild) {
         double budget = preset.calculateComponentBudget("cooling", totalBudget);
-        log.debug("Selecting Cooling: budget=${} (target range: 80%-120%)", budget);
+        if (usesStockCooling(preset, totalBudget)) {
+            log.info("Skipping aftermarket cooling for {} preset at {} VND budget", preset.name(), totalBudget);
+            return null;
+        }
+        log.debug("Selecting Cooling: budget={} VND (target range: 80%-120%)", budget);
         List<Cooling> coolings = coolingRepository.findBestCoolingByBudgetAndScore(budget * 1.2, 0);
         if (coolings.isEmpty()) {
             coolings = coolingRepository.findBestCoolingByBudgetAndScore(budget * 1.5, 0);
@@ -350,9 +379,9 @@ public class RuleBasedBuildService {
     }
     private Case selectCaseEntity(BuildPreset preset, double totalBudget, BuildItemDto tempBuild) {
         double budget = preset.calculateComponentBudget("case", totalBudget);
-        log.debug("Selecting Case: budget=${} (target range: 80%-120%)", budget);
+        log.debug("Selecting Case: budget={} VND (target range: 80%-120%)", budget);
         List<Case> cases = caseRepository.findBestCasesByBudgetAndScore(budget * 1.2, 0);
-        log.info("Found {} cases within budget ${}", cases.size(), budget);
+        log.info("Found {} cases within budget {} VND", cases.size(), budget);
         logBuildStateForCaseSelection(tempBuild);
         Case selected = selectCompatibleComponent("Case", cases, BudgetRange.around(budget),
                 pcCase -> compatibilityService.validateCaseCompatibility(tempBuild, pcCase));
@@ -381,15 +410,25 @@ public class RuleBasedBuildService {
     }
     private Case selectCaseWithExpandedBudget(BuildItemDto tempBuild, double budget, double multiplier) {
         double expandedBudget = budget * multiplier;
-        log.warn("No Case found in previous budget range, trying with {}x budget ${}", multiplier, expandedBudget);
+        log.warn("No Case found in previous budget range, trying with {}x budget {} VND", multiplier, expandedBudget);
         List<Case> cases = caseRepository.findBestCasesByBudgetAndScore(expandedBudget, 0);
-        log.info("Found {} cases within {}x budget ${}", cases.size(), multiplier, expandedBudget);
+        log.info("Found {} cases within {}x budget {} VND", cases.size(), multiplier, expandedBudget);
         Case selected = findCompatible("Case", cases,
                 pcCase -> compatibilityService.validateCaseCompatibility(tempBuild, pcCase));
         if (selected != null) {
             logSelected("Case", multiplier + "x budget", selected, budget);
         }
         return selected;
+    }
+    private boolean prefersIntegratedGraphics(BuildPreset preset, double totalBudget) {
+        return preset == BuildPreset.OFFICE || (totalBudget <= BASIC_BUILD_BUDGET_VND && !requiresDedicatedGpu(preset, totalBudget));
+    }
+    private boolean requiresDedicatedGpu(BuildPreset preset, double totalBudget) {
+        return preset.calculateComponentBudget("gpu", totalBudget) > 0
+                && preset.getRequirement("gpu_score_min") > 0;
+    }
+    private boolean usesStockCooling(BuildPreset preset, double totalBudget) {
+        return preset == BuildPreset.OFFICE && totalBudget <= BASIC_BUILD_BUDGET_VND;
     }
     private void logBuildStateForCaseSelection(BuildItemDto tempBuild) {
         log.info("Current build state for case compatibility:");

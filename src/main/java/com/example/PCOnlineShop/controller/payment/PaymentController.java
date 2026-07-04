@@ -45,7 +45,7 @@ public class PaymentController {
             log.error("Unexpected error checking payment success callback for orderCode {}", orderCode, e);
             redirectAttributes.addFlashAttribute("error", "Error checking payment.");
         }
-        return "redirect:/orders/list";
+        return "redirect:/account/orders";
     }
 
     @GetMapping("/callback/failed")
@@ -54,7 +54,7 @@ public class PaymentController {
         try {
             if (orderCode == null) {
                 redirectAttributes.addFlashAttribute("error", "Payment Cancelled.");
-                return "redirect:/orders/list";
+                return "redirect:/account/orders";
             }
 
             PaymentService.FailedPaymentResult result = paymentService.processFailedPayment(orderCode);
@@ -72,7 +72,7 @@ public class PaymentController {
             log.error("Unexpected error checking payment failed callback for orderCode {}", orderCode, e);
             redirectAttributes.addFlashAttribute("error", "Unable to verify cancelled payment.");
         }
-        return "redirect:/orders/list";
+        return "redirect:/account/orders";
     }
 
     @GetMapping("/continue/{orderId}")
@@ -85,14 +85,14 @@ public class PaymentController {
             return "redirect:" + checkoutUrl;
         } catch (SecurityException | EntityNotFoundException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
-            return "redirect:/orders/list";
+            return "redirect:/account/orders";
         } catch (IllegalStateException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
-            return "redirect:/orders/detail/" + orderId;
+            return "redirect:/account/orders/" + orderId;
         } catch (RuntimeException e) {
             log.error("Unexpected error retrieving payment link for order {}", orderId, e);
             redirectAttributes.addFlashAttribute("error", "Unable to retrieve payment link. Please try again.");
-            return "redirect:/orders/detail/" + orderId;
+            return "redirect:/account/orders/" + orderId;
         }
     }
 

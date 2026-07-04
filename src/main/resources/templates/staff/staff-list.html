@@ -10,7 +10,11 @@
     <section class="commerce-page admin-page">
         <div class="container">
             <div class="section-header">
-                <h1 class="commerce-title app-mb-0">Staff List</h1>
+                <div>
+                    <p class="section-kicker">Admin Console</p>
+                    <h1 class="commerce-title app-mb-0">Staff Management</h1>
+                    <p class="section-subtitle app-mb-0">Review staff accounts, contact information, and account status.</p>
+                </div>
                 <a th:href="@{/staff/add}" class="btn btn-app-primary" sec:authorize="hasRole('ADMIN')">Add Staff</a>
             </div>
 

@@ -16,15 +16,11 @@ document.addEventListener("DOMContentLoaded", function () {
             MEMORY: "Memory",
             STORAGE: "Storage",
             PSU: "Power Supplies",
-            OTHER: "Add-ons"
+            OTHER: "Gear",
+            GEAR: "Gear"
         };
 
         return titles[normalized] || normalized || "Components";
-    }
-
-    function currentCartCount() {
-        const existingCount = document.querySelector(".cart-count");
-        return existingCount ? existingCount.textContent.trim() || "0" : "0";
     }
 
     if (mainContent && detailHeader && !mainContent.querySelector(".build-topbar")) {
@@ -35,20 +31,7 @@ document.addEventListener("DOMContentLoaded", function () {
         title.className = "build-component-title";
         title.textContent = componentTitleFromHeader(detailHeader.textContent);
 
-        const actions = document.createElement("div");
-        actions.className = "build-top-actions";
-        actions.innerHTML = `
-            <a href="/cart" class="build-icon-link site-cart-link" aria-label="Cart">
-                <img src="/images/shopping_cart_40dp_E3E3E3_FILL0_wght400_GRAD0_opsz40.svg" alt="">
-                <span class="cart-count">${currentCartCount()}</span>
-            </a>
-            <a href="/profile" class="build-icon-link" aria-label="Account">
-                <img src="/images/account_circle_40dp_E3E3E3_FILL0_wght400_GRAD0_opsz40.svg" alt="">
-            </a>
-        `;
-
         topbar.appendChild(title);
-        topbar.appendChild(actions);
         mainContent.prepend(topbar);
     }
 
@@ -116,8 +99,16 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function parseMoney(text) {
-        const cleaned = String(text || "").replace(/[^\d.-]/g, "");
-        const value = parseFloat(cleaned);
+        if (window.Money && typeof window.Money.parseMoney === "function") {
+            return window.Money.parseMoney(text);
+        }
+        const raw = String(text || "").trim();
+        const plainNumber = raw.replace(/,/g, "");
+        if (/^-?\d+(\.\d+)?$/.test(plainNumber)) {
+            return Number(plainNumber);
+        }
+        const cleaned = raw.replace(/[^\d-]/g, "");
+        const value = Number.parseInt(cleaned, 10);
         return Number.isNaN(value) ? 0 : value;
     }
 
@@ -132,7 +123,13 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function formatMoney(value) {
-        return "$" + (Number.isInteger(value) ? value.toFixed(0) : value.toFixed(2));
+        if (window.Money && typeof window.Money.formatVnd === "function") {
+            return window.Money.formatVnd(value);
+        }
+        return new Intl.NumberFormat("vi-VN", {
+            maximumFractionDigits: 0,
+            minimumFractionDigits: 0
+        }).format(Math.round(Number(value) || 0)) + " VND";
     }
 
     function readDisplayedTotal() {
@@ -170,33 +167,42 @@ document.addEventListener("DOMContentLoaded", function () {
         brandSelect.setAttribute("aria-label", "Filter by brand");
         brandSelect.appendChild(createFilterOption("", "All Brands"));
 
+        const brandOptions = new Map();
         document.querySelectorAll("#filterPopup input[name='brands']").forEach(input => {
-            brandSelect.appendChild(createFilterOption(input.value, input.value));
+            const brand = String(input.value || "").trim();
+            if (brand) {
+                brandOptions.set(brand.toLowerCase(), brand);
+            }
         });
+        if (brandOptions.size === 0) {
+            document.querySelectorAll(".product-card[data-brand]").forEach(card => {
+                const brand = String(card.getAttribute("data-brand") || "").trim();
+                if (brand) {
+                    brandOptions.set(brand.toLowerCase(), brand);
+                }
+            });
+        }
+        Array.from(brandOptions.values())
+            .sort((a, b) => a.localeCompare(b))
+            .forEach(brand => brandSelect.appendChild(createFilterOption(brand, brand)));
 
         const priceSelect = document.createElement("select");
         priceSelect.className = "build-price-filter";
         priceSelect.setAttribute("aria-label", "Filter by price");
         [
             ["", "All Prices"],
-            ["0-100", "Under $100"],
-            ["100-300", "$100 - $300"],
-            ["300-700", "$300 - $700"],
-            ["700-1200", "$700 - $1200"],
-            ["1200-", "Over $1200"]
+            ["0-2500000", "Under 2.5M VND"],
+            ["2500000-7500000", "2.5M - 7.5M VND"],
+            ["7500000-17500000", "7.5M - 17.5M VND"],
+            ["17500000-30000000", "17.5M - 30M VND"],
+            ["30000000-", "Over 30M VND"]
         ].forEach(([value, label]) => priceSelect.appendChild(createFilterOption(value, label)));
-
-        const label = document.createElement("span");
-        label.className = "build-filter-label";
-        label.textContent = "Filter by:";
 
         const searchBox = document.getElementById("searchBox");
         if (searchBox && searchBox.nextSibling) {
-            filterBar.insertBefore(label, searchBox.nextSibling);
-            filterBar.insertBefore(brandSelect, label.nextSibling);
+            filterBar.insertBefore(brandSelect, searchBox.nextSibling);
             filterBar.insertBefore(priceSelect, brandSelect.nextSibling);
         } else {
-            filterBar.appendChild(label);
             filterBar.appendChild(brandSelect);
             filterBar.appendChild(priceSelect);
         }
@@ -549,21 +555,25 @@ function filterProducts() {
     const searchBox = document.getElementById("searchBox");
     const brandSelect = document.querySelector(".build-brand-filter");
     const priceSelect = document.querySelector(".build-price-filter");
+    const categoryInput = document.querySelector("input[name='categoryFilter']:checked");
     const query = normalizeSearchText(searchBox ? searchBox.value : "");
     const selectedBrand = normalizeFilterText(brandSelect ? brandSelect.value : "");
     const selectedPrice = priceSelect ? priceSelect.value : "";
+    const selectedCategory = normalizeFilterText(categoryInput ? categoryInput.value : "");
     const cards = document.querySelectorAll(".product-card");
 
     cards.forEach(card => {
         const name = normalizeSearchText(card.getAttribute("data-name"));
         const brand = normalizeFilterText(card.getAttribute("data-brand"));
+        const category = normalizeFilterText(card.getAttribute("data-category"));
         const price = parseFloat(card.getAttribute("data-price") || "0");
 
         const matchesSearch = !query || name.includes(query);
         const matchesBrand = !selectedBrand || brand === selectedBrand;
         const matchesPrice = !selectedPrice || priceMatchesRange(price, selectedPrice);
+        const matchesCategory = !selectedCategory || selectedCategory === "all" || category === selectedCategory;
 
-        card.style.display = matchesSearch && matchesBrand && matchesPrice ? "flex" : "none";
+        card.style.display = matchesSearch && matchesBrand && matchesPrice && matchesCategory ? "flex" : "none";
     });
 
     const emptyState = document.getElementById("buildSearchEmpty");
@@ -595,6 +605,14 @@ function clearFilter() {
     const priceSelect = document.querySelector(".build-price-filter");
     if (priceSelect) {
         priceSelect.value = "";
+    }
+    const sortSelect = document.getElementById("sortSelect");
+    if (sortSelect) {
+        sortSelect.value = "";
+    }
+    const allCategoryInput = document.querySelector("input[name='categoryFilter'][value='all']");
+    if (allCategoryInput) {
+        allCategoryInput.checked = true;
     }
 
     document.querySelectorAll(".product-card").forEach(card => {

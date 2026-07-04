@@ -4,6 +4,7 @@ import com.example.PCOnlineShop.model.product.Brand;
 import com.example.PCOnlineShop.service.product.BrandService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -30,7 +31,9 @@ public class BrandController {
 
     @GetMapping("/add")
     public String showAddBrandPage(Model model) {
-        prepareBrandForm(model, new Brand(), false);
+        Brand brand = new Brand();
+        brand.setStatus(true);
+        prepareBrandForm(model, brand, false);
         return BRAND_FORM_VIEW;
     }
 
@@ -49,6 +52,10 @@ public class BrandController {
         } catch (IllegalArgumentException e) {
             prepareBrandForm(model, brand, false);
             model.addAttribute("error", e.getMessage());
+            return BRAND_FORM_VIEW;
+        } catch (DataIntegrityViolationException e) {
+            prepareBrandForm(model, brand, false);
+            model.addAttribute("error", "Cannot save brand because the database rejected this value.");
             return BRAND_FORM_VIEW;
         }
     }
@@ -84,6 +91,11 @@ public class BrandController {
             brand.setBrandId(id);
             prepareBrandForm(model, brand, true);
             model.addAttribute("error", e.getMessage());
+            return BRAND_FORM_VIEW;
+        } catch (DataIntegrityViolationException e) {
+            brand.setBrandId(id);
+            prepareBrandForm(model, brand, true);
+            model.addAttribute("error", "Cannot save brand because the database rejected this value.");
             return BRAND_FORM_VIEW;
         }
     }

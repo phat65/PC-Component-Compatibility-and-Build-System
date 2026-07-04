@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/app :: page('Order Management | PC Online Shop', null, ~{::content})}">
+<body>
+<th:block th:fragment="content">
+    <link rel="stylesheet" th:href="@{/css/pages/order-management.css}">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+
+    <section class="commerce-page management-orders-page">
+        <div class="management-orders-container">
+            <div class="orders-page-header">
+                <div class="orders-page-header__left">
+                    <p class="orders-page-header__eyebrow">Admin Console</p>
+                    <h1 class="orders-page-header__title" th:text="${pageTitle ?: 'Order Management'}">Order Management</h1>
+                    <p class="orders-page-header__subtitle">Review all customer orders, payment state, and fulfillment progress.</p>
+                </div>
+            </div>
+
+            <div th:if="${error}" class="orders-alert orders-alert--danger" th:text="${error}"></div>
+            <div th:if="${success}" class="orders-alert orders-alert--success" th:text="${success}"></div>
+            <div th:if="${info}" class="orders-alert orders-alert--info" th:text="${info}"></div>
+
+            <div class="orders-card">
+                <div class="orders-table-wrap">
+                    <table id="adminOrderTable" class="orders-table" style="width:100%">
+                        <thead>
+                        <tr>
+                            <th>Order ID</th>
+                            <th>Customer</th>
+                            <th>Date</th>
+                            <th>Total</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="order : ${adminOrderList}">
+                            <td th:text="${order.orderId}"></td>
+                            <td th:text="${order.account?.fullName}"></td>
+                            <td th:data-order="${#dates.format(order.createdDate, 'yyyyMMdd')}"
+                                th:text="${#dates.format(order.createdDate, 'dd/MM/yyyy')}"></td>
+                            <td th:data-order="${order.finalAmount}" th:text="${@money.format(order.finalAmount)}"></td>
+                            <td>
+                                <span class="status-badge"
+                                      th:classappend="${
+                                        (order.status == 'Pending Payment' or order.status == 'Pending') ? ' status-pending' :
+                                        order.status == 'Processing' ? ' status-processing' :
+                                        order.status == 'Ready to Ship' ? ' status-ready' :
+                                        order.status == 'Ready for Pickup' ? ' status-pickup' :
+                                        order.status == 'Delivering' ? ' status-delivering' :
+                                        order.status == 'Completed' ? ' status-completed' :
+                                        order.status == 'Cancelled' ? ' status-cancelled' : ''
+                                      }"
+                                      th:text="${order.status ?: 'N/A'}">Status</span>
+                            </td>
+                            <td>
+                                <a th:href="@{/admin/orders/{id}(id=${order.orderId})}" class="btn-order-view">View</a>
+                            </td>
+                        </tr>
+                        <tr th:if="${adminOrderList == null or #lists.isEmpty(adminOrderList)}">
+                            <td colspan="6">No orders found.</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script th:inline="none">
+        $(document).ready(function () {
+            $('#adminOrderTable').DataTable({
+                paging: true,
+                info: true,
+                lengthMenu: [[10, 25, 50, -1], [10, 25, 50, 'All']],
+                order: [[2, 'desc']],
+                columnDefs: [{ orderable: false, targets: [4, 5] }]
+            });
+        });
+    </script>
+</th:block>
+</body>
+</html>

@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base-storefront :: storefront(
+          ~{::title},
+          'storefront-page about-page',
+          ~{::main},
+          ~{::page-styles},
+          ${false}
+      )}">
+<head>
+    <title>About Us - PCOnlineShop</title>
+    <th:block th:fragment="page-styles">
+        <link rel="stylesheet" th:href="@{/css/pages/about.css}">
+    </th:block>
+</head>
+<body>
+<main th:fragment="main" class="about-main">
+    <section class="about-hero">
+        <div class="page-container about-hero__grid">
+            <div class="about-hero__copy">
+                <p class="about-kicker">About PCOnlineShop</p>
+                <h1>Hardware shopping with fewer doubts.</h1>
+                <p>
+                    PCOnlineShop is built for people who want a clear path from choosing parts
+                    to completing a working PC. The store combines curated components,
+                    compatibility guidance, and a straightforward checkout flow.
+                </p>
+            </div>
+            <div class="about-visual" aria-hidden="true">
+                <div class="about-visual__image"></div>
+                <div class="about-visual__panel">
+                    <span>Built around compatibility</span>
+                    <strong>CPU, board, memory, power, case fit</strong>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="about-section">
+        <div class="page-container about-grid">
+            <article class="about-card about-card--wide">
+                <span class="about-card__label">What we do</span>
+                <h2>Make PC buying easier to understand.</h2>
+                <p>
+                    We organize components by real build needs: gaming, school, work,
+                    streaming, and upgrade paths. Product information is presented so customers
+                    can compare performance, price, and compatibility without jumping between
+                    too many pages.
+                </p>
+            </article>
+
+            <article class="about-card">
+                <span class="about-card__label">Build flow</span>
+                <h2>Part-by-part guidance</h2>
+                <p>
+                    The custom build flow helps customers choose parts in a logical order and
+                    reduces common mismatch issues before checkout.
+                </p>
+            </article>
+
+            <article class="about-card">
+                <span class="about-card__label">Store focus</span>
+                <h2>Useful choices</h2>
+                <p>
+                    The catalog focuses on PC components and accessories that fit the needs of
+                    everyday builders, not a cluttered list of unrelated products.
+                </p>
+            </article>
+        </div>
+    </section>
+
+    <section class="about-section about-section--tight">
+        <div class="page-container about-values">
+            <div>
+                <p class="about-kicker">Our approach</p>
+                <h2>Simple pages, clear specs, practical support.</h2>
+            </div>
+            <div class="about-values__list">
+                <div>
+                    <strong>Clear product details</strong>
+                    <span>Specs and categories are structured for quick comparison.</span>
+                </div>
+                <div>
+                    <strong>Compatibility first</strong>
+                    <span>Build decisions consider socket, memory, PSU, case, and cooling needs.</span>
+                </div>
+                <div>
+                    <strong>Focused shopping</strong>
+                    <span>Customers can move from browse to build to checkout with less friction.</span>
+                </div>
+            </div>
+        </div>
+    </section>
+</main>
+</body>
+</html>

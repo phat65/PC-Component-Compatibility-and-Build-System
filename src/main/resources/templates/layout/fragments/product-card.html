@@ -14,7 +14,7 @@
     <div class="product-card__body">
         <h3 class="product-card__name" th:text="*{productName}">Product Name</h3>
         <p class="product-card__price"
-           th:text="${item != null ? '$' + #numbers.formatDecimal(item.price, 1, 2) : '$0.00'}">$0.00</p>
+           th:text="${item != null ? @money.format(item.price) : @money.format(0)}">0 VND</p>
         <a th:href="@{/products/{id}(id=*{productId})}"
            class="product-card__cta">View Details</a>
     </div>

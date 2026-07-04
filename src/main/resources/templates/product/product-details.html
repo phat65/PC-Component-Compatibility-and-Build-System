@@ -19,22 +19,35 @@
     <div class="page-container">
 
         <section class="product-detail">
-            <div>
-                <img id="mainImage"
-                     th:if="${product.images != null and !product.images.isEmpty()}"
-                     th:src="@{${product.images[0].imageUrl}}"
-                     alt="Main product image"
-                     class="product-detail__gallery-main">
-                <img th:if="${product.images == null or product.images.isEmpty()}"
-                     th:src="@{/images/no-image.svg}"
-                     alt="No image"
-                     class="product-detail__gallery-main">
-                <div class="product-detail__thumbs" th:if="${product.images != null and !product.images.isEmpty()}">
-                    <img th:each="img : ${product.images}"
-                         th:src="@{${img.imageUrl}}"
-                         alt="Thumbnail"
-                         class="product-detail__thumb"
-                         th:onclick="|setMainImage(this.src)|">
+            <div class="product-detail__gallery">
+                <figure class="product-detail__gallery-frame">
+                    <img id="mainImage"
+                         th:if="${product.images != null and !product.images.isEmpty()}"
+                         th:src="@{${product.images[0].imageUrl}}"
+                         th:alt="|${product.productName} main image|"
+                         class="product-detail__gallery-main">
+                    <img th:if="${product.images == null or product.images.isEmpty()}"
+                         th:src="@{/images/no-image.svg}"
+                         alt="No image"
+                         class="product-detail__gallery-main">
+                    <figcaption class="product-detail__gallery-count"
+                                th:if="${product.images != null and #lists.size(product.images) > 1}">
+                        <span id="galleryCurrent">1</span>/<span th:text="${#lists.size(product.images)}">1</span>
+                    </figcaption>
+                </figure>
+
+                <div class="product-detail__thumbs"
+                     th:if="${product.images != null and #lists.size(product.images) > 1}">
+                    <button th:each="img, iter : ${product.images}"
+                            type="button"
+                            class="product-detail__thumb"
+                            th:classappend="${iter.index == 0} ? ' is-active' : ''"
+                            th:attr="data-image-src=@{${img.imageUrl}},
+                                     data-image-index=${iter.index}"
+                            aria-label="View product image">
+                        <img th:src="@{${img.imageUrl}}"
+                             th:alt="|${product.productName} thumbnail ${iter.count}|">
+                    </button>
                 </div>
             </div>
 
@@ -52,7 +65,7 @@
                     </span>
                 </div>
 
-                <p class="product-detail__price" th:text="'$' + ${product.price}">$0.00</p>
+                <p class="product-detail__price" th:text="${@money.format(product.price)}">0 VND</p>
                 <div class="product-detail__description" th:utext="${product.description}">Description</div>
 
                 <div class="product-detail__meta">

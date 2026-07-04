@@ -1,179 +1,74 @@
-<th:block xmlns:th="http://www.thymeleaf.org" th:fragment="header-admin">
-    <style>
-        .admin-shell * {
-            box-sizing: border-box;
-        }
-
-        .admin-shell header {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 60px;
-            background-color: #1f2937;
-            color: #fff;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 20px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-            z-index: 1000;
-        }
-
-        .admin-shell .menu-btn {
-            font-size: 22px;
-            cursor: pointer;
-            transition: transform 0.3s ease;
-        }
-
-        .admin-shell .menu-btn.active {
-            transform: rotate(90deg);
-        }
-
-        .admin-shell .title {
-            font-size: 18px;
-            font-weight: 600;
-            margin-left: 10px;
-        }
-
-        .admin-shell .logout-btn {
-            background: transparent;
-            border: 1px solid #ccc;
-            color: white;
-            padding: 6px 12px;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .admin-shell .logout-btn:hover {
-            background: #374151;
-        }
-
-        .admin-shell .sidebar {
-            position: fixed;
-            top: 0;
-            left: -250px;
-            width: 250px;
-            height: 100%;
-            background-color: #111827;
-            color: white;
-            padding: 20px 15px;
-            transition: left 0.3s ease;
-            z-index: 999;
-            box-shadow: 2px 0 8px rgba(0,0,0,0.3);
-        }
-
-        .admin-shell .sidebar.active {
-            left: 0;
-        }
-
-        .admin-shell .sidebar .profile {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            margin-bottom: 25px;
-        }
-
-        .admin-shell .sidebar img {
-            width: 70px;
-            height: 70px;
-            border-radius: 50%;
-            margin-bottom: 8px;
-            border: 2px solid #444;
-        }
-
-        .admin-shell .sidebar h3 {
-            font-size: 16px;
-            margin-bottom: 8px;
-        }
-
-        .admin-shell .sidebar nav {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .admin-shell .nav-btn {
-            display: block;
-            width: 100%;
-            padding: 10px;
-            text-align: left;
-            border: none;
-            background: #1f2937;
-            color: white;
-            border-radius: 6px;
-            text-decoration: none;
-            margin: 5px 0;
-            transition: background 0.3s;
-        }
-
-        .admin-shell .nav-btn:hover {
-            background: #374151;
-        }
-
-        .admin-shell .overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.4);
-            opacity: 0;
-            visibility: hidden;
-            transition: all 0.3s;
-            z-index: 998;
-        }
-
-        .admin-shell .overlay.active {
-            opacity: 1;
-            visibility: visible;
-        }
-    </style>
-
-    <div class="admin-shell">
-        <header>
-            <div class="menu-btn" id="admin-menu-btn">☰</div>
-            <div class="title">Admin Dashboard</div>
-            <form th:action="@{/auth/logout}" method="post" style="display:inline;">
-                <button type="submit" class="logout-btn">Logout</button>
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+<header th:fragment="header-admin" class="ops-header">
+    <div class="ops-header-inner">
+        <button class="ops-menu-btn" type="button" aria-label="Open admin menu" aria-expanded="false" data-ops-toggle>
+            <img th:src="@{/images/menu.svg}" alt="" class="ops-btn-icon" aria-hidden="true">
+        </button>
+        <a th:href="@{/dashboard/admin}" class="site-logo">
+            <img th:src="@{/assets/image/logo.jpg}" alt="PCOnlineShop logo" class="site-logo-img">
+            <span class="site-logo-text">PCOnlineShop Admin</span>
+        </a>
+        <div class="ops-actions">
+            <a th:href="@{/profile}" class="ops-icon-btn" aria-label="Profile" title="Profile">
+                <img th:src="@{/images/user-svgrepo-com.svg}" alt="" class="ops-btn-icon" aria-hidden="true">
+            </a>
+            <form th:action="@{/auth/logout}" method="post" class="ops-logout-form">
+                <button type="submit" class="ops-logout-btn">Logout</button>
             </form>
-        </header>
-
-        <aside class="sidebar" id="admin-sidebar">
-            <div class="profile">
-                <img th:src="@{/assets/image/logo.jpg}" alt="Admin">
-                <h3>Admin</h3>
-            </div>
-            <nav>
-                <a th:href="@{/dashboard/admin}" class="nav-btn">Dashboard</a>
-                <a th:href="@{/admin/brand/list}" class="nav-btn">Brand Management</a>
-                <a th:href="@{/staff/list}" class="nav-btn">Staff Management</a>
-                <a th:href="@{/customer/list}" class="nav-btn">Customer Management</a>
-            </nav>
-        </aside>
-
-        <div class="overlay" id="admin-overlay"></div>
+        </div>
     </div>
+
+    <aside class="ops-drawer" data-ops-drawer>
+        <nav class="profile-nav" aria-label="Admin navigation">
+            <a th:href="@{/dashboard/admin}">Dashboard</a>
+            <a th:href="@{/admin/brand/list}">Brand Management</a>
+            <a th:href="@{/staff/list}">Staff Management</a>
+            <a th:href="@{/customer/list}">Customer Management</a>
+            <a th:href="@{/staff/products/list}">Product Management</a>
+            <a th:href="@{/admin/orders}">Order Management</a>
+            <a th:href="@{/staff/feedback}">Feedback Management</a>
+            <a th:href="@{/staff/warranty/check}">Check Warranty</a>
+            <a th:href="@{/staff/shipping/list}">Shipping Management</a>
+        </nav>
+    </aside>
+    <div class="ops-overlay" data-ops-overlay></div>
 
     <script>
         (function () {
-            const menuBtn = document.getElementById('admin-menu-btn');
-            const sidebar = document.getElementById('admin-sidebar');
-            const overlay = document.getElementById('admin-overlay');
-            if (!menuBtn || !sidebar || !overlay) return;
-
-            menuBtn.addEventListener('click', () => {
-                sidebar.classList.toggle('active');
-                overlay.classList.toggle('active');
-                menuBtn.classList.toggle('active');
+            const header = document.currentScript.closest('.ops-header');
+            const drawer = header.querySelector('[data-ops-drawer]');
+            const overlay = header.querySelector('[data-ops-overlay]');
+            const toggle = header.querySelector('[data-ops-toggle]');
+            function setOpen(open) {
+                drawer.classList.toggle('is-open', open);
+                overlay.classList.toggle('is-open', open);
+                toggle.setAttribute('aria-expanded', String(open));
+                document.body.classList.toggle('ops-drawer-open', open);
+            }
+            toggle.addEventListener('click', function () {
+                setOpen(!drawer.classList.contains('is-open'));
             });
-
-            overlay.addEventListener('click', () => {
-                sidebar.classList.remove('active');
-                overlay.classList.remove('active');
-                menuBtn.classList.remove('active');
+            overlay.addEventListener('click', function () {
+                setOpen(false);
+            });
+            drawer.querySelectorAll('a').forEach(function (link) {
+                const linkPath = new URL(link.href, window.location.origin).pathname;
+                if (window.location.pathname === linkPath) {
+                    link.classList.add('active');
+                }
+                link.addEventListener('click', function () {
+                    setOpen(false);
+                });
+            });
+            document.addEventListener('keydown', function (event) {
+                if (event.key === 'Escape') {
+                    setOpen(false);
+                }
             });
         })();
     </script>
-</th:block>
+</header>
+</body>
+</html>

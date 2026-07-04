@@ -320,17 +320,10 @@ public class BuildService {
     }
     // Other (generic product)
     public List<Product> getOtherProducts() {
-        List<Product> otherProducts = new ArrayList<>();
-        otherProducts= productRepository.findAllWithImages().stream()
-                .filter(Product::isSellableOnStorefront)
-                .filter(p -> p
-                        .getCategories().stream().anyMatch(c -> c
-                                .getCategoryName().equalsIgnoreCase("Other"))).toList();
-        return sortByPerformanceAndPrice(otherProducts);
+        return sortByPerformanceAndPrice(productRepository.findSellableOtherProductsWithDetails());
     }
 
     public Optional<Product> findOtherByProductId(Integer productId) {
-        return productRepository.findById(productId)
-                .filter(Product::isSellableOnStorefront);
+        return productRepository.findSellableOtherProductByIdWithDetails(productId);
     }
 }

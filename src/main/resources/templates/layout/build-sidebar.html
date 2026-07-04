@@ -63,9 +63,9 @@
                 </a>
             </li>
             <li th:class="|build-step ${currentSection == 'other' ? 'active' : ''} ${(buildItems != null && buildItems.hasOtherProducts()) ? 'complete' : 'optional'}|">
-                <a th:href="@{/build/other}">
+                <a th:href="@{/build/gear}">
                     <span class="step-index">9</span>
-                    <span class="step-text">Other</span>
+                    <span class="step-text">Gear</span>
                     <span class="step-status" th:text="${buildItems != null && buildItems.hasOtherProducts() ? #lists.size(buildItems.other) + ' selected' : 'Optional'}">Optional</span>
                 </a>
             </li>
@@ -95,7 +95,7 @@
                             <span class="overview-label">Mainboard</span>
                             <span class="overview-value" th:text="${buildItems != null && buildItems.mainboard != null ? buildItems.mainboard.product.productName : 'Not selected'}">Not selected</span>
                         </div>
-                        <span class="overview-price" th:if="${buildItems != null && buildItems.mainboard != null}" th:text="'$' + ${#numbers.formatDecimal(buildItems.mainboard.product.price, 1, 2)}"></span>
+                        <span class="overview-price" th:if="${buildItems != null && buildItems.mainboard != null}" th:text="${@money.format(buildItems.mainboard.product.price)}"></span>
                     </div>
 
                     <div class="overview-item">
@@ -110,7 +110,7 @@
                             <span class="overview-label">CPU</span>
                             <span class="overview-value" th:text="${buildItems != null && buildItems.cpu != null ? buildItems.cpu.product.productName : 'Not selected'}">Not selected</span>
                         </div>
-                        <span class="overview-price" th:if="${buildItems != null && buildItems.cpu != null}" th:text="'$' + ${#numbers.formatDecimal(buildItems.cpu.product.price, 1, 2)}"></span>
+                        <span class="overview-price" th:if="${buildItems != null && buildItems.cpu != null}" th:text="${@money.format(buildItems.cpu.product.price)}"></span>
                     </div>
 
                     <div class="overview-item">
@@ -125,7 +125,7 @@
                             <span class="overview-label">GPU</span>
                             <span class="overview-value" th:text="${buildItems != null && buildItems.gpu != null ? buildItems.gpu.product.productName : 'Not selected'}">Not selected</span>
                         </div>
-                        <span class="overview-price" th:if="${buildItems != null && buildItems.gpu != null}" th:text="'$' + ${#numbers.formatDecimal(buildItems.gpu.product.price, 1, 2)}"></span>
+                        <span class="overview-price" th:if="${buildItems != null && buildItems.gpu != null}" th:text="${@money.format(buildItems.gpu.product.price)}"></span>
                     </div>
 
                     <div class="overview-item">
@@ -140,7 +140,7 @@
                             <span class="overview-label">Case</span>
                             <span class="overview-value" th:text="${buildItems != null && buildItems.pcCase != null ? buildItems.pcCase.product.productName : 'Not selected'}">Not selected</span>
                         </div>
-                        <span class="overview-price" th:if="${buildItems != null && buildItems.pcCase != null}" th:text="'$' + ${#numbers.formatDecimal(buildItems.pcCase.product.price, 1, 2)}"></span>
+                        <span class="overview-price" th:if="${buildItems != null && buildItems.pcCase != null}" th:text="${@money.format(buildItems.pcCase.product.price)}"></span>
                     </div>
 
                     <div class="overview-item">
@@ -155,7 +155,7 @@
                             <span class="overview-label">Cooling</span>
                             <span class="overview-value" th:text="${buildItems != null && buildItems.cooling != null ? buildItems.cooling.product.productName : 'Not selected'}">Not selected</span>
                         </div>
-                        <span class="overview-price" th:if="${buildItems != null && buildItems.cooling != null}" th:text="'$' + ${#numbers.formatDecimal(buildItems.cooling.product.price, 1, 2)}"></span>
+                        <span class="overview-price" th:if="${buildItems != null && buildItems.cooling != null}" th:text="${@money.format(buildItems.cooling.product.price)}"></span>
                     </div>
 
                     <div class="overview-item">
@@ -170,7 +170,7 @@
                             <span class="overview-label">Memory</span>
                             <span class="overview-value" th:text="${buildItems != null && buildItems.memory != null ? buildItems.memory.product.productName : 'Not selected'}">Not selected</span>
                         </div>
-                        <span class="overview-price" th:if="${buildItems != null && buildItems.memory != null}" th:text="'$' + ${#numbers.formatDecimal(buildItems.memory.product.price, 1, 2)}"></span>
+                        <span class="overview-price" th:if="${buildItems != null && buildItems.memory != null}" th:text="${@money.format(buildItems.memory.product.price)}"></span>
                     </div>
 
                     <div class="overview-item">
@@ -185,7 +185,7 @@
                             <span class="overview-label">Storage</span>
                             <span class="overview-value" th:text="${buildItems != null && buildItems.storage != null ? buildItems.storage.product.productName : 'Not selected'}">Not selected</span>
                         </div>
-                        <span class="overview-price" th:if="${buildItems != null && buildItems.storage != null}" th:text="'$' + ${#numbers.formatDecimal(buildItems.storage.product.price, 1, 2)}"></span>
+                        <span class="overview-price" th:if="${buildItems != null && buildItems.storage != null}" th:text="${@money.format(buildItems.storage.product.price)}"></span>
                     </div>
 
                     <div class="overview-item">
@@ -200,7 +200,7 @@
                             <span class="overview-label">PSU</span>
                             <span class="overview-value" th:text="${buildItems != null && buildItems.powerSupply != null ? buildItems.powerSupply.product.productName : 'Not selected'}">Not selected</span>
                         </div>
-                        <span class="overview-price" th:if="${buildItems != null && buildItems.powerSupply != null}" th:text="'$' + ${#numbers.formatDecimal(buildItems.powerSupply.product.price, 1, 2)}"></span>
+                        <span class="overview-price" th:if="${buildItems != null && buildItems.powerSupply != null}" th:text="${@money.format(buildItems.powerSupply.product.price)}"></span>
                     </div>
 
                     <div class="overview-item" th:each="otherProduct : ${buildItems.other}" th:if="${buildItems != null && buildItems.hasOtherProducts()}">
@@ -212,15 +212,15 @@
                                  class="build-no-image">?</div>
                         </div>
                         <div class="overview-info">
-                            <span class="overview-label">Other</span>
+                            <span class="overview-label">Gear</span>
                             <span class="overview-value" th:text="${otherProduct.productName}">Not selected</span>
                         </div>
-                        <span class="overview-price" th:text="'$' + ${#numbers.formatDecimal(otherProduct.price, 1, 2)}"></span>
+                        <span class="overview-price" th:text="${@money.format(otherProduct.price)}"></span>
                     </div>
                 </div>
                 <div class="overview-total">
                     <span class="overview-total-label">Total Price:</span>
-                    <span class="overview-total-price" th:text="${buildItems != null ? '$' + buildItems.formattedTotalPrice : '$0.00'}">$0.00</span>
+                    <span class="overview-total-price" th:text="${buildItems != null ? @money.format(buildItems.calculateTotalPrice()) : @money.format(0)}">$0.00</span>
                 </div>
             </div>
             <div class="overview-footer">

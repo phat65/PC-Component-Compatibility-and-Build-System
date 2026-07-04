@@ -83,6 +83,14 @@ public class FeedbackServiceImpl implements FeedbackService {
     }
 
     @Override
+    @Transactional
+    public void approveFeedback(Integer id) {
+        Feedback fb = get(id);
+        fb.setCommentStatus(STATUS_ALLOW);
+        feedbackRepository.save(fb);
+    }
+
+    @Override
     public Page<Feedback> getAllowedByProduct(Integer productId, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
         return feedbackRepository.findByProduct_ProductIdAndCommentStatusOrderByCreatedAtDesc(

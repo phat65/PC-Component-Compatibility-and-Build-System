@@ -37,12 +37,17 @@ public class ProductController {
 
     @ModelAttribute("categories")
     public List<Category> categories() {
-        return categoryService.getAllCategories();
+        return categoryService.getMainCategories();
     }
 
     @ModelAttribute("brands")
     public List<Brand> brands() {
         return brandService.getAllBrands();
+    }
+
+    @ModelAttribute("gearCategories")
+    public List<Category> gearCategories() {
+        return categoryService.getGearCategories();
     }
 
     // Exception handler for validation errors
@@ -60,7 +65,7 @@ public class ProductController {
         List<Product> products = productService.getProductsForManagement();
         model.addAttribute("products", products);
         model.addAttribute("brands", brandService.getAllBrands());
-        model.addAttribute("categories", categoryService.getAllCategories());
+        model.addAttribute("categories", categoryService.getMainCategories());
         return "product/product-list";
     }
 
@@ -100,29 +105,39 @@ public class ProductController {
                               @RequestParam(value = "imageFiles", required = false) List<MultipartFile> imageFiles,
                               Model model) {
 
+        categoryIds = normalizeCategoryIds(categoryIds);
+        Integer primaryCategoryId = categoryIds.isEmpty() ? null : categoryIds.get(0);
+        Integer submittedGearCategoryId = resolveSubmittedGearCategoryId(categoryIds);
+
         if (productService.existsNonDiscontinuedProductName(product.getProductName())) {
             result.rejectValue("productName", "error.product", "Product name already exists.");
         }
         if (brandId == null) {
             model.addAttribute("brandError", "Please select brand");
         }
-        if (categoryIds == null || categoryIds.isEmpty()) {
+        if (categoryIds.isEmpty()) {
             model.addAttribute("categoryError", "Please select at least one category");
+        } else if (categoryService.isGearParentCategory(primaryCategoryId)
+                && (submittedGearCategoryId == null || !categoryService.isGearChildCategory(submittedGearCategoryId))) {
+            model.addAttribute("categoryError", "Please select a valid gear type");
         }
 
-        if (result.hasErrors() || brandId == null || categoryIds == null || categoryIds.isEmpty()) {
+        if (result.hasErrors() || brandId == null || model.containsAttribute("categoryError")) {
             model.addAttribute("isEdit", false);
-            model.addAttribute("submittedCategoryId", categoryIds != null && !categoryIds.isEmpty() ? categoryIds.get(0) : null);
+            model.addAttribute("submittedCategoryId", primaryCategoryId);
+            model.addAttribute("submittedGearCategoryId", submittedGearCategoryId);
             model.addAttribute("submittedBrandId", brandId);
             return "product/product-form";
         }
 
-        Integer primaryCategoryId = categoryIds.get(0);
+        categoryIds = buildCategoryIdsForSave(primaryCategoryId, submittedGearCategoryId);
+
         List<String> specErrors = componentSpecService.validateSpecParams(primaryCategoryId, params);
         if (!specErrors.isEmpty()) {
             model.addAttribute("specErrors", specErrors);
             model.addAttribute("isEdit", false);
             model.addAttribute("submittedCategoryId", primaryCategoryId);
+            model.addAttribute("submittedGearCategoryId", submittedGearCategoryId);
             model.addAttribute("submittedBrandId", brandId);
             return "product/product-form";
         }
@@ -133,6 +148,7 @@ public class ProductController {
             model.addAttribute("error", e.getMessage());
             model.addAttribute("isEdit", false);
             model.addAttribute("submittedCategoryId", primaryCategoryId);
+            model.addAttribute("submittedGearCategoryId", submittedGearCategoryId);
             model.addAttribute("submittedBrandId", brandId);
             return "product/product-form";
         } catch (IOException e) {
@@ -140,6 +156,7 @@ public class ProductController {
             model.addAttribute("error", "Failed to save product images. Please try again.");
             model.addAttribute("isEdit", false);
             model.addAttribute("submittedCategoryId", primaryCategoryId);
+            model.addAttribute("submittedGearCategoryId", submittedGearCategoryId);
             model.addAttribute("submittedBrandId", brandId);
             return "product/product-form";
         } catch (RuntimeException e) {
@@ -147,6 +164,7 @@ public class ProductController {
             model.addAttribute("error", "Failed to save product. Please try again.");
             model.addAttribute("isEdit", false);
             model.addAttribute("submittedCategoryId", primaryCategoryId);
+            model.addAttribute("submittedGearCategoryId", submittedGearCategoryId);
             model.addAttribute("submittedBrandId", brandId);
             return "product/product-form";
         }
@@ -262,6 +280,40 @@ public class ProductController {
             model.addAttribute(form.attributeName(), form.spec());
         }
         return form.template();
+    }
+
+    private List<Integer> normalizeCategoryIds(List<Integer> categoryIds) {
+        if (categoryIds == null || categoryIds.isEmpty()) {
+            return List.of();
+        }
+
+        Set<Integer> uniqueCategoryIds = new LinkedHashSet<>();
+        for (Integer categoryId : categoryIds) {
+            if (categoryId != null) {
+                uniqueCategoryIds.add(categoryId);
+            }
+        }
+        return new ArrayList<>(uniqueCategoryIds);
+    }
+
+    private Integer resolveSubmittedGearCategoryId(List<Integer> categoryIds) {
+        if (categoryIds == null || categoryIds.size() < 2) {
+            return null;
+        }
+        for (int index = 1; index < categoryIds.size(); index++) {
+            Integer categoryId = categoryIds.get(index);
+            if (categoryService.isGearChildCategory(categoryId)) {
+                return categoryId;
+            }
+        }
+        return null;
+    }
+
+    private List<Integer> buildCategoryIdsForSave(Integer primaryCategoryId, Integer submittedGearCategoryId) {
+        if (categoryService.isGearParentCategory(primaryCategoryId)) {
+            return List.of(primaryCategoryId, submittedGearCategoryId);
+        }
+        return List.of(primaryCategoryId);
     }
 
 }

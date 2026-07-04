@@ -1,0 +1,14 @@
+.git
+.agents
+.codex-run
+.vscode
+target
+uploads/**
+!uploads/images/
+!uploads/images/**
+.docker-secrets
+.env
+.env.*
+*.log
+*.tmp
+HashPasswords.class

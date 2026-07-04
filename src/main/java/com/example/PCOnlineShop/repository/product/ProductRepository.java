@@ -47,6 +47,35 @@ public interface ProductRepository extends JpaRepository<Product, Integer> {
     @Query("SELECT DISTINCT p FROM Product p")
     List<Product> findAllWithImages();
 
+    @EntityGraph(attributePaths = {"images", "brand"})
+    @Query("""
+        SELECT DISTINCT p FROM Product p
+        JOIN p.categories c
+        LEFT JOIN c.parent parent
+        WHERE p.status = true
+          AND p.lifecycleStatus = com.example.PCOnlineShop.model.product.ProductLifecycleStatus.SELLING
+          AND (
+              LOWER(c.categoryName) = 'other'
+              OR LOWER(parent.categoryName) = 'other'
+          )
+    """)
+    List<Product> findSellableOtherProductsWithDetails();
+
+    @EntityGraph(attributePaths = {"images", "brand"})
+    @Query("""
+        SELECT DISTINCT p FROM Product p
+        JOIN p.categories c
+        LEFT JOIN c.parent parent
+        WHERE p.productId = :productId
+          AND p.status = true
+          AND p.lifecycleStatus = com.example.PCOnlineShop.model.product.ProductLifecycleStatus.SELLING
+          AND (
+              LOWER(c.categoryName) = 'other'
+              OR LOWER(parent.categoryName) = 'other'
+          )
+    """)
+    Optional<Product> findSellableOtherProductByIdWithDetails(@Param("productId") Integer productId);
+
     @EntityGraph(attributePaths = "images")
     @Query("SELECT p FROM Product p WHERE p.productId = :productId")
     Optional<Product> findByIdWithImages(@Param("productId") Integer productId);
@@ -150,6 +179,10 @@ public interface ProductRepository extends JpaRepository<Product, Integer> {
     );
 
     boolean existsByProductNameIgnoreCaseAndLifecycleStatusNot(String productName, ProductLifecycleStatus lifecycleStatus);
+
+    long countByInventoryQuantityGreaterThan(Integer inventoryQuantity);
+
+    long countByInventoryQuantityLessThanEqual(Integer inventoryQuantity);
 
     @EntityGraph(attributePaths = "images")
     @Query("""

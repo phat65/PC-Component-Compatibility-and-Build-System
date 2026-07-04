@@ -1,9 +1,21 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org"
       xmlns:sec="https://www.thymeleaf.org/extras/spring-security"
-      th:replace="~{layout/app :: page('Select Cooling', null, ~{::content})}">
+      th:replace="~{layout/base-storefront :: storefront(
+          ~{::title},
+          'storefront-page page-build',
+          ~{::main},
+          ~{::page-styles},
+          ${false}
+      )}">
+<head>
+    <title>Select Cooling PCOnlineShop</title>
+    <th:block th:fragment="page-styles">
+        <link rel="stylesheet" th:href="@{/css/pages/build.css}">
+    </th:block>
+</head>
 <body>
-<th:block th:fragment="content">
+<main th:fragment="main">
 <section class="build-page">
 <div class="build-shell">
     <!-- Sidebar -->
@@ -25,28 +37,42 @@
         <!-- Filter & Sort Form Popup -->
         <div id="filterPopup" class="popup">
             <div class="popup-content">
-                <form th:action="@{/build/cooling/filter}" method="post" id="filterForm">
-                    <h4>Filter By:</h4>
-                    <div>
-                        <div th:each="brandObj : ${allBrands}">
-                            <input type="checkbox" name="brands" th:value="${brandObj.name}"
-                                   th:id="${'brand-' + brandObj.brandId}"
-                                   th:checked="${selectedBrands != null && selectedBrands.contains(brandObj.name)}" />
-                            <label th:for="${'brand-' + brandObj.brandId}" th:text="${brandObj.name}"></label>
+                <form th:action="@{/build/cooling/filter}" method="post" id="filterForm" class="build-filter-panel">
+                    <div class="gear-filter-heading">
+                        <div>
+                            <h4>Filter Cooling</h4>
+                            <span>Choose brand and sort order.</span>
                         </div>
                     </div>
 
-                    <h4 class="build-popup-subtitle">Sort By:</h4>
-                    <select name="sortBy" id="sortSelect">
-                        <option value="">-- No Sort --</option>
-                        <option value="priceAsc" th:selected="${selectedSort == 'priceAsc'}">Price: Low to High</option>
-                        <option value="priceDesc" th:selected="${selectedSort == 'priceDesc'}">Price: High to Low</option>
-                        <option value="nameAsc" th:selected="${selectedSort == 'nameAsc'}">Name: A-Z</option>
-                        <option value="nameDesc" th:selected="${selectedSort == 'nameDesc'}">Name: Z-A</option>
-                    </select>
+                    <div class="gear-filter-section">
+                        <span class="gear-filter-label">Brand</span>
+                        <div class="build-filter-options">
+                            <div th:each="brandObj : ${allBrands}">
+                                <input type="checkbox" name="brands" th:value="${brandObj.name}"
+                                       th:id="${'brand-' + brandObj.brandId}"
+                                       th:checked="${selectedBrands != null && selectedBrands.contains(brandObj.name)}" />
+                                <label th:for="${'brand-' + brandObj.brandId}" th:text="${brandObj.name}"></label>
+                            </div>
+                        </div>
+                    </div>
 
-                    <button type="submit" id="applyFilter">Apply</button>
-                    <button type="button" id="closeFilterPopup">Close</button>
+                    <div class="gear-filter-section">
+                        <span class="gear-filter-label">Sort</span>
+                        <select name="sortBy" id="sortSelect">
+                            <option value="">No Sort</option>
+                            <option value="priceAsc" th:selected="${selectedSort == 'priceAsc'}">Price: Low to High</option>
+                            <option value="priceDesc" th:selected="${selectedSort == 'priceDesc'}">Price: High to Low</option>
+                            <option value="nameAsc" th:selected="${selectedSort == 'nameAsc'}">Name: A-Z</option>
+                            <option value="nameDesc" th:selected="${selectedSort == 'nameDesc'}">Name: Z-A</option>
+                        </select>
+                    </div>
+
+                    <div class="gear-filter-actions">
+                        <a class="build-filter-reset" th:href="@{/build/cooling}">Reset</a>
+                        <button type="button" id="closeFilterPopup">Close</button>
+                        <button type="submit" id="applyFilter">Apply</button>
+                    </div>
                 </form>
             </div>
         </div>
@@ -78,11 +104,11 @@
                     <h4 th:text="${cl.product.productName}"></h4>
                     <p th:text="'Type: ' + ${cl.type}"></p>
                     <p th:text="'Fan Size: ' + ${cl.fanSize}"></p>
-                    <strong th:text="'$' + ${cl.product.price}"></strong>
+                    <strong th:text="${@money.format(cl.product.price)}"></strong>
                 </div>
             </div>
 <div class="footer-bar">
-                <span>Total Price: <strong id="priceTotal" th:text="'$' + ${buildItems.formattedTotalPrice}"></strong></span>
+                <span>Total Price: <strong id="priceTotal" th:text="${@money.format(buildItems.calculateTotalPrice())}"></strong></span>
                 <button type="submit" class="next-btn">Choose</button>
             </div>
         </form>
@@ -106,6 +132,6 @@
 </section>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script th:src="@{/js/BuildJs.js}"></script>
-</th:block>
+</main>
 </body>
 </html>

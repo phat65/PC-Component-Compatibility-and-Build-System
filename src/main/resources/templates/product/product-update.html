@@ -36,8 +36,8 @@
                         <div class="row">
                             <div class="col-sm-6">
                                 <div class="form-group">
-                                    <label for="price">Price ($)</label>
-                                    <input type="number" class="form-control" id="price" th:field="*{price}" min="1" required>
+                                    <label for="price">Price (VND)</label>
+                                    <input type="number" class="form-control" id="price" th:field="*{price}" min="1" step="1000" required>
                                     <div class="text-danger" th:if="${#fields.hasErrors('price')}" th:errors="*{price}"></div>
                                 </div>
                             </div>
@@ -81,15 +81,22 @@
                         <h3>Image Management</h3>
                         <div class="form-group">
                             <label for="imageFiles">Add New Images</label>
-                            <input class="form-control" type="file" id="imageFiles" name="imageFiles" multiple>
+                            <input type="file" id="imageFiles" name="imageFiles"
+                                   accept="image/png, image/jpeg" multiple class="hidden">
+                            <button type="button" class="btn btn-app-outline"
+                                    onclick="document.getElementById('imageFiles').click()">Choose Images</button>
+                            <p class="help-block app-mt-2 app-mb-0">Total product images cannot exceed 8. Each new JPG/PNG image must be 5MB or smaller.</p>
+                            <div id="imageUploadError" class="text-danger app-mt-2"></div>
                         </div>
 
                         <div class="form-group">
                             <label>Current Images</label>
                             <div class="product-image-preview" id="image-preview-container">
-                                <div th:each="img : *{images}"
+                                <div th:each="img, iter : *{images}"
                                      class="product-image-thumb product-existing-image"
                                      th:id="'image-item-' + ${img.imageId}">
+                                    <span class="product-image-badge"
+                                          th:text="${iter.index == 0 ? 'Main' : iter.count}">Main</span>
                                     <img th:src="@{${img.imageUrl}}" alt="Product Image">
                                     <button type="button"
                                             class="btn btn-danger btn-xs delete-image-btn"
@@ -97,7 +104,7 @@
                                         X
                                     </button>
                                 </div>
-                                <div th:if="${#lists.isEmpty(product.images)}" class="text-muted">
+                                <div th:if="${#lists.isEmpty(product.images)}" class="text-muted product-image-empty">
                                     This product has no images.
                                 </div>
                             </div>
@@ -148,6 +155,11 @@
 
         const productId = /*[[${product.productId}]]*/ 0;
         const initialCategoryId = /*[[${!product.categories.isEmpty() ? product.categories[0].categoryId : 0}]]*/ 0;
+        const maxProductImages = 8;
+        const maxImageSizeBytes = 5 * 1024 * 1024;
+        const allowedImageTypes = ['image/jpeg', 'image/png'];
+        const allowedImageExtensions = ['jpg', 'jpeg', 'png'];
+        const selectedNewImageFiles = [];
 
         function getCsrfToken() {
             const match = document.cookie.match(/(?:^|; )XSRF-TOKEN=([^;]+)/);
@@ -171,7 +183,20 @@
             syncVisibilityWithLifecycle();
 
             const imageContainer = document.getElementById('image-preview-container');
+            const imageInput = document.getElementById('imageFiles');
             imageContainer.addEventListener('click', function(event) {
+                const newRemoveButton = event.target.closest('.product-new-remove');
+                if (newRemoveButton) {
+                    const imageIndex = Number(newRemoveButton.dataset.imageIndex);
+                    if (Number.isInteger(imageIndex)) {
+                        selectedNewImageFiles.splice(imageIndex, 1);
+                        syncImageInputFiles();
+                        renderImagePreview();
+                        validateSelectedImages();
+                    }
+                    return;
+                }
+
                 if (event.target.classList.contains('delete-image-btn')) {
                     event.preventDefault();
                     const button = event.target;
@@ -183,8 +208,120 @@
                 }
             });
 
+            imageInput.addEventListener('change', function() {
+                const incomingFiles = Array.from(imageInput.files);
+                if (incomingFiles.length === 0) {
+                    return;
+                }
+
+                const nextFiles = selectedNewImageFiles.concat(incomingFiles);
+                if (!validateSelectedImages(nextFiles)) {
+                    syncImageInputFiles();
+                    return;
+                }
+
+                selectedNewImageFiles.push(...incomingFiles);
+                syncImageInputFiles();
+                renderImagePreview();
+            });
+
+            document.querySelector('.product-edit-form').addEventListener('submit', function(event) {
+                if (!validateSelectedImages()) {
+                    event.preventDefault();
+                    imageInput.focus();
+                }
+            });
+
             document.getElementById('lifecycleStatus').addEventListener('change', syncVisibilityWithLifecycle);
         });
+
+        function isAllowedImage(file) {
+            const extension = file.name.split('.').pop()?.toLowerCase();
+            return allowedImageTypes.includes(file.type) || allowedImageExtensions.includes(extension);
+        }
+
+        function currentImageCount() {
+            return document.querySelectorAll('.product-existing-image').length;
+        }
+
+        function syncImageInputFiles() {
+            const imageInput = document.getElementById('imageFiles');
+            const dataTransfer = new DataTransfer();
+            selectedNewImageFiles.forEach(file => dataTransfer.items.add(file));
+            imageInput.files = dataTransfer.files;
+        }
+
+        function refreshImageBadges() {
+            document.querySelectorAll('#image-preview-container .product-image-thumb').forEach((item, index) => {
+                const badge = item.querySelector('.product-image-badge');
+                if (badge) {
+                    badge.textContent = index === 0 ? 'Main' : String(index + 1);
+                }
+            });
+        }
+
+        function renderImagePreview() {
+            const imageContainer = document.getElementById('image-preview-container');
+            imageContainer.querySelectorAll('.product-new-image-thumb').forEach(item => item.remove());
+
+            const emptyMessage = imageContainer.querySelector('.product-image-empty');
+            if (emptyMessage) {
+                emptyMessage.style.display = currentImageCount() === 0 && selectedNewImageFiles.length === 0 ? 'block' : 'none';
+            }
+
+            if (selectedNewImageFiles.length === 0) {
+                refreshImageBadges();
+                return;
+            }
+
+            selectedNewImageFiles.forEach((file, index) => {
+                const imageNumber = currentImageCount() + index + 1;
+                const box = document.createElement('div');
+                const img = document.createElement('img');
+                box.className = 'product-image-thumb product-new-image-thumb';
+                box.innerHTML = `
+                    <span class="product-image-badge">${imageNumber === 1 ? 'Main' : imageNumber}</span>
+                    <button type="button"
+                            class="btn btn-danger btn-xs delete-image-btn product-new-remove"
+                            data-image-index="${index}"
+                            aria-label="Remove image">X</button>
+                `;
+                img.alt = `new preview ${imageNumber}`;
+                box.appendChild(img);
+                imageContainer.appendChild(box);
+
+                const reader = new FileReader();
+                reader.onload = event => {
+                    img.src = event.target.result;
+                };
+                reader.readAsDataURL(file);
+            });
+
+            refreshImageBadges();
+        }
+
+        function validateSelectedImages(files = selectedNewImageFiles) {
+            const imageUploadError = document.getElementById('imageUploadError');
+            imageUploadError.textContent = '';
+
+            if (currentImageCount() + files.length > maxProductImages) {
+                imageUploadError.textContent = `A product can have at most ${maxProductImages} images.`;
+                return false;
+            }
+
+            for (const file of files) {
+                if (!isAllowedImage(file)) {
+                    imageUploadError.textContent = 'Only JPG and PNG images are allowed.';
+                    return false;
+                }
+                if (file.size > maxImageSizeBytes) {
+                    imageUploadError.textContent = 'Each image must be 5MB or smaller.';
+                    return false;
+                }
+            }
+
+            return true;
+        }
 
         function syncVisibilityWithLifecycle() {
             const lifecycleSelect = document.getElementById('lifecycleStatus');
@@ -218,6 +355,7 @@
 
                 if (response.ok) {
                     button.closest('.product-existing-image').remove();
+                    renderImagePreview();
                     alert('Image deleted successfully.');
                 } else {
                     throw new Error('Could not delete image.');
