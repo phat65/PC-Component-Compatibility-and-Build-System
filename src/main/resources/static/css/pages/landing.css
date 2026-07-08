@@ -2,7 +2,7 @@
 
 .landing-page {
     margin: 0;
-    min-height: 100vh;
+    min-height: 100svh;
     font-family: var(--font-family);
     background: var(--color-canvas);
     color: var(--color-text-primary);
@@ -17,7 +17,7 @@
     align-items: center;
     justify-content: center;
     text-align: center;
-    padding: 48px 24px;
+    padding: clamp(40px, 8vw, 64px) var(--page-gutter);
     background:
         radial-gradient(ellipse at 50% 20%, rgba(120, 60, 220, 0.25) 0%, transparent 50%),
         radial-gradient(ellipse at 80% 80%, rgba(40, 100, 220, 0.2) 0%, transparent 45%),
@@ -43,7 +43,7 @@
 
 .landing-footer {
     text-align: center;
-    padding: 20px;
+    padding: 20px var(--page-gutter);
     font-size: 13px;
     color: var(--color-text-muted);
     border-top: 1px solid var(--color-border);

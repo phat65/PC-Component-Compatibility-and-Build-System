@@ -9,8 +9,8 @@ import java.util.Optional;
 
 @Service
 public class CategoryService {
-    private static final String GEAR_PARENT_CATEGORY = "Other";
-    private static final List<String> GEAR_PARENT_CATEGORIES = List.of("Other", "Gear");
+    private static final String GEAR_PARENT_CATEGORY = "Gear";
+    private static final List<String> GEAR_PARENT_CATEGORIES = List.of("Gear", "Other");
 
     private final CategoryRepository categoryRepository;
 

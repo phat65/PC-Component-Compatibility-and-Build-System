@@ -48,3 +48,11 @@ Use `docker compose --env-file .env.deploy -f compose.deploy.yaml down -v` only 
 ## Schema Rule
 
 Schema changes must be added as new Flyway migrations in `src/main/resources/db/migration`. Do not depend on Hibernate `ddl-auto`; it is intentionally set to `none`.
+
+This branch uses a squashed clean migration baseline. If a Docker `mysql_data` volume was created from the old migration chain, remove it before deploying this version:
+
+```powershell
+docker compose --env-file .env.deploy -f compose.deploy.yaml down -v
+```
+
+For product images used by seed data or staff uploads, see `docs/PRODUCT_IMAGE_GUIDE.md`.

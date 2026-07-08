@@ -5,6 +5,7 @@
     flex-wrap: wrap;
     gap: 10px;
     margin: 18px 0 24px;
+    min-width: 0;
 }
 
 .gear-category-chip {
@@ -29,4 +30,21 @@
     border-color: var(--color-primary);
     background: rgba(244, 197, 66, 0.12);
     color: var(--color-primary);
+}
+
+@media (max-width: 600px) {
+    .gear-category-strip {
+        flex-wrap: nowrap;
+        margin-right: calc(0px - var(--page-gutter));
+        margin-left: calc(0px - var(--page-gutter));
+        padding: 0 var(--page-gutter) 4px;
+        overflow-x: auto;
+        scrollbar-width: thin;
+    }
+
+    .gear-category-chip {
+        flex: 0 0 auto;
+        min-height: 36px;
+        font-size: 12px;
+    }
 }

@@ -55,8 +55,8 @@ public interface ProductRepository extends JpaRepository<Product, Integer> {
         WHERE p.status = true
           AND p.lifecycleStatus = com.example.PCOnlineShop.model.product.ProductLifecycleStatus.SELLING
           AND (
-              LOWER(c.categoryName) = 'other'
-              OR LOWER(parent.categoryName) = 'other'
+              LOWER(c.categoryName) IN ('other', 'gear')
+              OR LOWER(parent.categoryName) IN ('other', 'gear')
           )
     """)
     List<Product> findSellableOtherProductsWithDetails();
@@ -70,8 +70,8 @@ public interface ProductRepository extends JpaRepository<Product, Integer> {
           AND p.status = true
           AND p.lifecycleStatus = com.example.PCOnlineShop.model.product.ProductLifecycleStatus.SELLING
           AND (
-              LOWER(c.categoryName) = 'other'
-              OR LOWER(parent.categoryName) = 'other'
+              LOWER(c.categoryName) IN ('other', 'gear')
+              OR LOWER(parent.categoryName) IN ('other', 'gear')
           )
     """)
     Optional<Product> findSellableOtherProductByIdWithDetails(@Param("productId") Integer productId);
@@ -124,6 +124,18 @@ public interface ProductRepository extends JpaRepository<Product, Integer> {
     List<Product> findByCategoryAndStatusTrueAndLifecycleStatus(@Param("category") Category category,
                                                                 @Param("lifecycleStatus") ProductLifecycleStatus lifecycleStatus);
 
+    @Query("""
+        SELECT DISTINCT p FROM Product p
+        JOIN p.categories c
+        LEFT JOIN c.parent parent
+        WHERE p.status = true
+          AND p.lifecycleStatus = :lifecycleStatus
+          AND (c = :category OR parent = :category)
+    """)
+    @EntityGraph(attributePaths = "images")
+    List<Product> findByCategoryOrParentCategoryAndStatusTrueAndLifecycleStatus(@Param("category") Category category,
+                                                                                @Param("lifecycleStatus") ProductLifecycleStatus lifecycleStatus);
+
     @EntityGraph(attributePaths = "images")
     List<Product> findByBrandAndStatusTrueAndLifecycleStatus(Brand brand, ProductLifecycleStatus lifecycleStatus);
 
@@ -133,9 +145,10 @@ public interface ProductRepository extends JpaRepository<Product, Integer> {
     @Query("""
         SELECT DISTINCT p FROM Product p
         LEFT JOIN p.categories c
+        LEFT JOIN c.parent parent
         WHERE p.status = true
           AND p.lifecycleStatus = :lifecycleStatus
-          AND (:categoryId IS NULL OR c.categoryId = :categoryId)
+          AND (:categoryId IS NULL OR c.categoryId = :categoryId OR parent.categoryId = :categoryId)
           AND (:brandId IS NULL OR p.brand.brandId = :brandId)
         """)
     Page<Product> searchProducts(
@@ -148,7 +161,10 @@ public interface ProductRepository extends JpaRepository<Product, Integer> {
     @Query(value = """
             SELECT DISTINCT p.* FROM product p
             LEFT JOIN product_category pc ON p.product_id = pc.product_id
-            WHERE (:categoryId IS NULL OR pc.category_id = :categoryId)
+            LEFT JOIN category c ON c.category_id = pc.category_id
+            LEFT JOIN category parent ON parent.category_id = c.parent_id
+            WHERE ((:categoryId IS NULL OR pc.category_id = :categoryId)
+               OR (:categoryId IS NOT NULL AND parent.category_id = :categoryId))
               AND (:brandId IS NULL OR p.brand_id = :brandId)
               AND (:keyword IS NULL OR LOWER(p.product_name) LIKE LOWER(CONCAT('%', :keyword, '%')))
               AND (:minPrice IS NULL OR p.price >= :minPrice)
@@ -159,7 +175,10 @@ public interface ProductRepository extends JpaRepository<Product, Integer> {
             countQuery = """
             SELECT COUNT(DISTINCT p.product_id) FROM product p
             LEFT JOIN product_category pc ON p.product_id = pc.product_id
-            WHERE (:categoryId IS NULL OR pc.category_id = :categoryId)
+            LEFT JOIN category c ON c.category_id = pc.category_id
+            LEFT JOIN category parent ON parent.category_id = c.parent_id
+            WHERE ((:categoryId IS NULL OR pc.category_id = :categoryId)
+               OR (:categoryId IS NOT NULL AND parent.category_id = :categoryId))
               AND (:brandId IS NULL OR p.brand_id = :brandId)
               AND (:keyword IS NULL OR LOWER(p.product_name) LIKE LOWER(CONCAT('%', :keyword, '%')))
               AND (:minPrice IS NULL OR p.price >= :minPrice)

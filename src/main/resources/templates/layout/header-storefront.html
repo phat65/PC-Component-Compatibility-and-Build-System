@@ -15,7 +15,7 @@
 
         <nav class="site-header__nav" aria-label="Main navigation">
             <a th:href="@{/products}" class="site-header__nav-link">Shop</a>
-            <a th:href="@{/build/start}" class="site-header__nav-link">Build PC</a>
+            <a th:href="@{/build/startover(target='start')}" class="site-header__nav-link">Build PC</a>
             <div class="site-header__categories" th:if="${gearParentCategory != null}">
                 <button type="button"
                         class="site-header__nav-link site-header__categories-toggle"
@@ -78,7 +78,7 @@
         </form>
 
         <div class="site-header__actions">
-            <a th:href="@{/build/start}" class="site-header__cta" title="Build PC">
+            <a th:href="@{/build/startover(target='start')}" class="site-header__cta" title="Build PC">
                 <svg class="site-header__cta-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                     <path d="M12 2l2 6h6l-5 4 2 6-5-4-5 4 2-6-5-4h6l2-6z" stroke="currentColor" stroke-width="1.75" stroke-linejoin="round"/>
                 </svg>
@@ -142,7 +142,7 @@
     <div id="mobileMenu" class="site-header__mobile" aria-hidden="true">
         <nav class="site-header__mobile-nav" aria-label="Mobile navigation">
             <a th:href="@{/products}" class="site-header__mobile-link">Shop</a>
-            <a th:href="@{/build/start}" class="site-header__mobile-link">Build PC</a>
+            <a th:href="@{/build/startover(target='start')}" class="site-header__mobile-link">Build PC</a>
             <a th:if="${gearParentCategory != null}"
                th:href="@{/products(category=${gearParentCategory.categoryId})}"
                class="site-header__mobile-link">Gear</a>

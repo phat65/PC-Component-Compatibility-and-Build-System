@@ -443,9 +443,30 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
+    function waitForOverviewImages(container) {
+        const images = Array.from(container.querySelectorAll("img"))
+            .filter(image => !image.complete);
+
+        if (images.length === 0) {
+            return Promise.resolve();
+        }
+
+        const imagePromises = images.map(image => new Promise(resolve => {
+            image.addEventListener("load", resolve, { once: true });
+            image.addEventListener("error", resolve, { once: true });
+        }));
+
+        const timeout = new Promise(resolve => setTimeout(resolve, 5000));
+        return Promise.race([Promise.all(imagePromises), timeout]);
+    }
+
+    function nextFrame() {
+        return new Promise(resolve => requestAnimationFrame(() => resolve()));
+    }
+
     const saveAsImageBtn = document.getElementById("saveAsImageBtn");
     if (saveAsImageBtn) {
-        saveAsImageBtn.addEventListener("click", function () {
+        saveAsImageBtn.addEventListener("click", async function () {
             const overviewContent = document.querySelector(".overview-popup-content");
             if (!overviewContent || typeof html2canvas !== "function") {
                 alert("Cannot save overview image right now.");
@@ -462,47 +483,47 @@ document.addEventListener("DOMContentLoaded", function () {
                 closeBtn.hidden = true;
             }
 
+            saveAsImageBtn.disabled = true;
             overviewContent.classList.add("capturing-image");
 
-            setTimeout(() => {
-                html2canvas(overviewContent, {
+            try {
+                await nextFrame();
+                await waitForOverviewImages(overviewContent);
+
+                const canvas = await html2canvas(overviewContent, {
                     backgroundColor: "#ffffff",
-                    scale: 3,
+                    scale: Math.min(window.devicePixelRatio || 2, 2),
                     logging: false,
                     useCORS: true,
-                    allowTaint: true,
+                    allowTaint: false,
                     scrollY: 0,
                     scrollX: 0,
-                    windowHeight: overviewContent.scrollHeight,
+                    windowWidth: Math.max(document.documentElement.clientWidth, overviewContent.scrollWidth),
+                    windowHeight: Math.max(document.documentElement.clientHeight, overviewContent.scrollHeight),
                     height: overviewContent.scrollHeight,
-                    width: 1000,
-                    imageTimeout: 0,
+                    width: overviewContent.scrollWidth,
+                    imageTimeout: 8000,
                     removeContainer: true
-                }).then(function (canvas) {
-                    if (footer) {
-                        footer.hidden = false;
-                    }
-                    if (closeBtn) {
-                        closeBtn.hidden = false;
-                    }
-                    overviewContent.classList.remove("capturing-image");
-
-                    const link = document.createElement("a");
-                    const timestamp = new Date().toISOString().slice(0, 10);
-                    link.download = "PC-Build-Overview-" + timestamp + ".png";
-                    link.href = canvas.toDataURL("image/png", 1.0);
-                    link.click();
-                }).catch(function () {
-                    if (footer) {
-                        footer.hidden = false;
-                    }
-                    if (closeBtn) {
-                        closeBtn.hidden = false;
-                    }
-                    overviewContent.classList.remove("capturing-image");
-                    alert("Error saving image. Please try again.");
                 });
-            }, 100);
+
+                const link = document.createElement("a");
+                const timestamp = new Date().toISOString().slice(0, 10);
+                link.download = "PC-Build-Overview-" + timestamp + ".png";
+                link.href = canvas.toDataURL("image/png", 1.0);
+                link.click();
+            } catch (error) {
+                console.error("Error saving build overview image", error);
+                alert("Error saving image. Please try again.");
+            } finally {
+                if (footer) {
+                    footer.hidden = false;
+                }
+                if (closeBtn) {
+                    closeBtn.hidden = false;
+                }
+                saveAsImageBtn.disabled = false;
+                overviewContent.classList.remove("capturing-image");
+            }
         });
     }
 

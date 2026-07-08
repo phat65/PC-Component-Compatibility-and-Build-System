@@ -13,6 +13,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.SessionAttributes;
 import org.springframework.web.bind.support.SessionStatus;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
@@ -46,7 +47,8 @@ public class BuildController {
     }
 
     @GetMapping({"", "/"})
-    public String redirectToBuildStartPage() {
+    public String redirectToBuildStartPage(SessionStatus sessionStatus) {
+        sessionStatus.setComplete();
         return "redirect:/build/start";
     }
 
@@ -61,8 +63,12 @@ public class BuildController {
     }
 
     @GetMapping("/startover")
-    public String restartBuild(SessionStatus sessionStatus) {
+    public String restartBuild(@RequestParam(name = "target", defaultValue = "mainboard") String target,
+                               SessionStatus sessionStatus) {
         sessionStatus.setComplete();
+        if ("start".equalsIgnoreCase(target)) {
+            return "redirect:/build/start";
+        }
         return "redirect:/build/mainboard";
     }
 

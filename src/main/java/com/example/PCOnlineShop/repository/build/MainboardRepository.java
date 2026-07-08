@@ -14,7 +14,7 @@ import com.example.PCOnlineShop.model.build.Mainboard;
 public interface MainboardRepository extends JpaRepository<Mainboard, Integer> {
     Optional<Mainboard> findByProduct_ProductId(int id);
 
-    @Query("SELECT m FROM Mainboard m " +
+    @Query("SELECT DISTINCT m FROM Mainboard m " +
            "JOIN FETCH m.product p " +
            "LEFT JOIN FETCH p.images " +
            "LEFT JOIN FETCH p.brand " +
@@ -27,7 +27,7 @@ public interface MainboardRepository extends JpaRepository<Mainboard, Integer> {
     List<Mainboard> findBestMainboardsByBudgetAndScore(@Param("maxPrice") double maxPrice,
                                                         @Param("minScore") int minScore);
 
-    @Query("SELECT m FROM Mainboard m " +
+    @Query("SELECT DISTINCT m FROM Mainboard m " +
            "JOIN FETCH m.product p " +
            "LEFT JOIN FETCH p.images " +
            "LEFT JOIN FETCH p.brand " +
@@ -36,7 +36,7 @@ public interface MainboardRepository extends JpaRepository<Mainboard, Integer> {
            "AND (p.inventoryQuantity IS NULL OR p.inventoryQuantity > 0)")
     List<Mainboard> findAllWithImages();
 
-    @Query("SELECT m FROM Mainboard m " +
+    @Query("SELECT DISTINCT m FROM Mainboard m " +
            "JOIN FETCH m.product p " +
            "LEFT JOIN FETCH p.images " +
            "LEFT JOIN FETCH p.brand " +

@@ -22,7 +22,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -102,7 +104,7 @@ public class CompatibilityService {
     }
 
     public List<String> validateFullBuild(BuildItemDto buildItem) {
-        List<String> errors = new ArrayList<>();
+        Set<String> errors = new LinkedHashSet<>();
 
         if (buildItem.getMainboard() != null) {
             errors.addAll(validateMainboardCompatibility(buildItem, buildItem.getMainboard()).reasons());
@@ -136,7 +138,7 @@ public class CompatibilityService {
             errors.addAll(validateCoolingCompatibility(buildItem, buildItem.getCooling()).reasons());
         }
 
-        return errors;
+        return new ArrayList<>(errors);
     }
 
     public boolean isComponentCompatibleWithBuild(BuildItemDto buildItem, Object component) {

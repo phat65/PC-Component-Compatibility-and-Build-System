@@ -388,12 +388,13 @@
                 }),
             body: JSON.stringify(state.suggestedBuild)
         })
-        .then(response => {
+        .then(async response => {
             if (response.status === 403) {
                 throw new Error('PC Builder is available for customers and guests. Please switch from admin/staff account.');
             }
             if (!response.ok) {
-                throw new Error('Failed to apply build');
+                const errorText = await response.text();
+                throw new Error(errorText || 'Failed to apply build');
             }
             return response.json();
         })

@@ -14,11 +14,11 @@ import java.util.Optional;
 public interface CategoryRepository extends JpaRepository<Category, Integer> {
 
     /**
-     * Get only main component categories (Mainboard, CPU, GPU, Memory, Storage, Case, Power Supply, Cooling, Other/Gear)
+     * Get only main component categories (Mainboard, CPU, GPU, Memory, Storage, Case, Power Supply, Cooling, Gear)
      * Excludes sub-categories like Socket types, Form factors, Memory types, etc.
      */
     @Query("SELECT c FROM Category c WHERE c.categoryName IN " +
-            "('Mainboard', 'CPU', 'GPU', 'Memory', 'Storage', 'Case', 'Power Supply', 'Cooling', 'Other', 'Gear') " +
+            "('Mainboard', 'CPU', 'GPU', 'Memory', 'Storage', 'Case', 'Power Supply', 'Cooling', 'Gear') " +
             "ORDER BY c.displayOrder")
     List<Category> findMainCategories();
 

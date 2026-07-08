@@ -1,0 +1,426 @@
+/* Admin/staff order pages. Kept separate from customer orders.css for safer debugging. */
+
+.management-orders-page {
+    --mgmt-canvas: #10151d;
+    --mgmt-surface: #171e29;
+    --mgmt-surface-soft: #1c2532;
+    --mgmt-surface-head: #202938;
+    --mgmt-border: #2b3442;
+    --mgmt-border-strong: #3a4656;
+    --mgmt-text: #f5f7fa;
+    --mgmt-text-secondary: #d5dde8;
+    --mgmt-text-muted: #8793a3;
+    --mgmt-primary: var(--color-primary, #f4c542);
+    --mgmt-success: var(--color-success, #00e676);
+    --mgmt-warning: var(--color-warning, #ffc107);
+    --mgmt-danger: #ff8080;
+    --mgmt-radius-lg: var(--rounded-lg, 8px);
+    --mgmt-radius-sm: var(--rounded-sm, 4px);
+
+    min-height: calc(100vh - 70px);
+    padding: var(--section-padding, 56px) 0;
+    background: var(--mgmt-canvas);
+    color: var(--mgmt-text);
+}
+
+.management-orders-container {
+    width: 100%;
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 0 var(--spacing-md, 24px);
+}
+
+.management-orders-page .orders-page-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-bottom: 32px;
+}
+
+.management-orders-page .orders-page-header__eyebrow {
+    margin: 0 0 8px;
+    color: var(--mgmt-primary);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    line-height: 1.2;
+    text-transform: uppercase;
+}
+
+.management-orders-page .orders-page-header__title {
+    margin: 0;
+    color: var(--mgmt-text);
+    font-size: 26px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+}
+
+.management-orders-page .orders-page-header__subtitle {
+    max-width: 680px;
+    margin: 8px 0 0;
+    color: var(--mgmt-text-secondary);
+    font-size: 14px;
+    line-height: 1.55;
+}
+
+.management-orders-page .orders-alert {
+    padding: 12px 16px;
+    border: 1px solid transparent;
+    border-radius: var(--mgmt-radius-sm);
+    margin-bottom: 20px;
+    font-size: 13px;
+}
+
+.management-orders-page .orders-alert--danger {
+    background: rgba(255, 82, 82, 0.1);
+    border-color: rgba(255, 82, 82, 0.3);
+    color: var(--mgmt-danger);
+}
+
+.management-orders-page .orders-alert--success {
+    background: rgba(0, 230, 118, 0.1);
+    border-color: rgba(0, 230, 118, 0.25);
+    color: var(--mgmt-success);
+}
+
+.management-orders-page .orders-alert--info {
+    background: rgba(100, 180, 255, 0.1);
+    border-color: rgba(100, 180, 255, 0.25);
+    color: #82c6ff;
+}
+
+.management-orders-page .orders-card,
+.management-orders-page .orders-detail-card {
+    border: 1px solid var(--mgmt-border);
+    border-radius: var(--mgmt-radius-lg);
+    background: var(--mgmt-surface);
+    box-shadow: none;
+}
+
+.management-orders-page .orders-card {
+    overflow: hidden;
+}
+
+.management-orders-page .orders-detail-card {
+    padding: 22px 24px;
+}
+
+.management-orders-page .orders-detail-card__title {
+    margin: 0 0 18px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--mgmt-border);
+    color: var(--mgmt-text);
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.management-orders-page .orders-table-wrap {
+    overflow-x: auto;
+}
+
+.management-orders-page .orders-table {
+    width: 100%;
+    margin: 0 !important;
+    border-collapse: collapse !important;
+    color: var(--mgmt-text-secondary);
+    font-size: 13px;
+}
+
+.management-orders-page .orders-table thead tr {
+    background: var(--mgmt-surface-head);
+}
+
+.management-orders-page .orders-table th {
+    padding: 13px 16px;
+    border-right: 1px solid var(--mgmt-border);
+    border-bottom: 1px solid var(--mgmt-border-strong);
+    background: var(--mgmt-surface-head);
+    color: var(--mgmt-text-muted);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    line-height: 1.3;
+    text-align: left;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.management-orders-page .orders-table td {
+    padding: 14px 16px;
+    border-right: 1px solid var(--mgmt-border);
+    border-bottom: 1px solid var(--mgmt-border);
+    background: transparent;
+    color: var(--mgmt-text-secondary);
+    vertical-align: middle;
+}
+
+.management-orders-page .orders-table th:last-child,
+.management-orders-page .orders-table td:last-child {
+    border-right: 0;
+}
+
+.management-orders-page .orders-table tbody tr {
+    transition: background 0.15s;
+}
+
+.management-orders-page .orders-table tbody tr:hover {
+    background: rgba(255, 255, 255, 0.025);
+}
+
+.management-orders-page .orders-table tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+.management-orders-page .orders-table a {
+    color: var(--mgmt-text-secondary);
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.management-orders-page .orders-table a:hover {
+    color: var(--mgmt-primary);
+}
+
+.management-orders-page .btn-order-view {
+    display: inline-block;
+    padding: 6px 14px;
+    border: 1px solid var(--mgmt-border-strong);
+    border-radius: var(--mgmt-radius-sm);
+    color: var(--mgmt-text-secondary);
+    font-size: 12px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: border-color 0.2s, color 0.2s, background 0.2s;
+}
+
+.management-orders-page .btn-order-view:hover {
+    border-color: var(--mgmt-primary);
+    background: rgba(244, 197, 66, 0.04);
+    color: var(--mgmt-primary);
+}
+
+.management-orders-page .status-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.management-orders-page .status-pending {
+    background: rgba(255, 193, 7, 0.12);
+    border: 1px solid rgba(255, 193, 7, 0.25);
+    color: var(--mgmt-warning);
+}
+
+.management-orders-page .status-processing {
+    background: rgba(100, 180, 255, 0.1);
+    border: 1px solid rgba(100, 180, 255, 0.2);
+    color: #82c6ff;
+}
+
+.management-orders-page .status-ready {
+    background: rgba(244, 197, 66, 0.1);
+    border: 1px solid rgba(244, 197, 66, 0.2);
+    color: var(--mgmt-primary);
+}
+
+.management-orders-page .status-pickup {
+    background: rgba(45, 156, 219, 0.12);
+    border: 1px solid rgba(45, 156, 219, 0.28);
+    color: #7ccfff;
+}
+
+.management-orders-page .status-delivering {
+    background: rgba(100, 100, 255, 0.1);
+    border: 1px solid rgba(100, 100, 255, 0.2);
+    color: #a0a0ff;
+}
+
+.management-orders-page .status-completed {
+    background: rgba(0, 230, 118, 0.1);
+    border: 1px solid rgba(0, 230, 118, 0.2);
+    color: var(--mgmt-success);
+}
+
+.management-orders-page .status-cancelled {
+    background: rgba(255, 82, 82, 0.1);
+    border: 1px solid rgba(255, 82, 82, 0.2);
+    color: var(--mgmt-danger);
+}
+
+.management-orders-page .pickup-complete-form {
+    margin-top: 16px;
+}
+
+.management-orders-page .pickup-complete-btn {
+    width: 100%;
+    border: 1px solid var(--mgmt-success);
+    background: var(--mgmt-success);
+    color: #06100a;
+    cursor: pointer;
+}
+
+.management-orders-page .order-detail-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 340px;
+    gap: 24px;
+    align-items: start;
+}
+
+.management-orders-page .order-detail-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.management-orders-page .detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--mgmt-border);
+    font-size: 13px;
+}
+
+.management-orders-page .detail-row:last-child {
+    border-bottom: 0;
+}
+
+.management-orders-page .detail-row strong {
+    flex-shrink: 0;
+    color: var(--mgmt-text-muted);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.management-orders-page .detail-row span {
+    min-width: 0;
+    color: var(--mgmt-text-secondary);
+    text-align: right;
+}
+
+.management-orders-page .payment-transaction-id {
+    max-width: 100%;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    line-height: 1.45;
+}
+
+.management-orders-page .summary-line {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0 0;
+    margin-top: 8px;
+    border-top: 1px solid var(--mgmt-border-strong);
+}
+
+.management-orders-page .summary-line span {
+    color: var(--mgmt-text-secondary);
+    font-size: 14px;
+}
+
+.management-orders-page .summary-line .summary-value {
+    color: var(--mgmt-primary);
+    font-size: 20px;
+    font-weight: 800;
+}
+
+.management-orders-page .orders-back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 24px;
+    color: var(--mgmt-text-muted);
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.management-orders-page .orders-back-link:hover {
+    color: var(--mgmt-text-secondary);
+}
+
+.management-orders-page .dataTables_wrapper {
+    padding: 16px 24px 20px;
+    color: var(--mgmt-text-secondary);
+    font-size: 13px;
+}
+
+.management-orders-page .dataTables_wrapper .dataTables_length,
+.management-orders-page .dataTables_wrapper .dataTables_filter,
+.management-orders-page .dataTables_wrapper .dataTables_info,
+.management-orders-page .dataTables_wrapper .dataTables_paginate {
+    color: var(--mgmt-text-secondary);
+    font-size: 13px;
+}
+
+.management-orders-page .dataTables_wrapper .dataTables_filter input,
+.management-orders-page .dataTables_wrapper .dataTables_length select {
+    min-height: 36px;
+    margin-left: 8px;
+    padding: 6px 10px;
+    border: 1px solid var(--mgmt-border);
+    border-radius: var(--mgmt-radius-sm);
+    background: var(--mgmt-surface-head);
+    color: var(--mgmt-text);
+    outline: none;
+}
+
+.management-orders-page .dataTables_wrapper .dataTables_filter input:focus,
+.management-orders-page .dataTables_wrapper .dataTables_length select:focus {
+    border-color: var(--mgmt-primary);
+}
+
+.management-orders-page .dataTables_wrapper .dataTables_paginate .paginate_button {
+    margin: 0 2px;
+    padding: 4px 10px !important;
+    border: 1px solid var(--mgmt-border) !important;
+    border-radius: 4px !important;
+    background: transparent !important;
+    color: var(--mgmt-text-secondary) !important;
+}
+
+.management-orders-page .dataTables_wrapper .dataTables_paginate .paginate_button.current,
+.management-orders-page .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+    border-color: var(--mgmt-primary) !important;
+    background: var(--mgmt-primary) !important;
+    color: #090b10 !important;
+}
+
+.management-orders-page .dataTables_wrapper .dataTables_info {
+    color: var(--mgmt-text-muted);
+}
+
+@media (max-width: 900px) {
+    .management-orders-page .order-detail-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 600px) {
+    .management-orders-page {
+        padding: 40px 0;
+    }
+
+    .management-orders-page .orders-page-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .management-orders-page .orders-detail-card {
+        padding: 18px 16px;
+    }
+}

@@ -24,6 +24,7 @@ import java.util.Objects;
 public class OtherController {
     private static final String OTHER_VIEW = "build/other";
     private static final String REDIRECT_GEAR = "redirect:/build/gear";
+    private static final List<String> GEAR_PARENT_CATEGORY_NAMES = List.of("Gear", "Other");
 
     private final BuildService buildService;
     private final CategoryService categoryService;
@@ -170,8 +171,13 @@ public class OtherController {
     }
 
     private boolean isGearParentCategory(Category category) {
-        return category.getCategoryName() != null
-                && "Other".equalsIgnoreCase(category.getCategoryName().trim());
+        if (category.getCategoryName() == null) {
+            return false;
+        }
+
+        String categoryName = category.getCategoryName().trim();
+        return GEAR_PARENT_CATEGORY_NAMES.stream()
+                .anyMatch(parentName -> parentName.equalsIgnoreCase(categoryName));
     }
 
     private String toCategorySlug(String categoryName) {

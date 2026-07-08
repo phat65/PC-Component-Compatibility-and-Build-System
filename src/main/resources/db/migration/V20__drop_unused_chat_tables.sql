@@ -1,4 +1,0 @@
-DROP TABLE IF EXISTS ChatMessage;
-DROP TABLE IF EXISTS chat_message;
-DROP TABLE IF EXISTS ChatRoom;
-DROP TABLE IF EXISTS chat_room;

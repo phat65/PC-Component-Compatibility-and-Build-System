@@ -12,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Function;
 
 @Service
@@ -74,12 +75,12 @@ public class RuleBasedBuildService {
             log.warn("No compatible Storage found");
         }
         tempBuild.setStorage(storage);
-        // Step 6: Select PSU (compatibility-based: sufficient wattage + form factor match)
-        PowerSupply psu = selectPsuEntity(preset, totalBudget, tempBuild);
-        tempBuild.setPowerSupply(psu);
-        // Step 7: Select Cooling (compatibility-based: size match with case)
+        // Step 6: Select Cooling before PSU so PSU sizing includes cooler TDP
         Cooling cooling = selectCoolingEntity(preset, totalBudget, tempBuild);
         tempBuild.setCooling(cooling);
+        // Step 7: Select PSU (compatibility-based: sufficient wattage + form factor match)
+        PowerSupply psu = selectPsuEntity(preset, totalBudget, tempBuild);
+        tempBuild.setPowerSupply(psu);
         // Step 8: Select Case (compatibility-based: form factor + GPU length + PSU + cooling)
         Case pcCase = selectCaseEntity(preset, totalBudget, tempBuild);
         tempBuild.setPcCase(pcCase);
@@ -461,38 +462,34 @@ public class RuleBasedBuildService {
      */
     public BuildItemDto convertPlanToItems(BuildPlanDto plan) {
         log.info("Converting BuildPlanDto to BuildItemDto for session storage");
+        if (plan == null) {
+            throw new IllegalArgumentException("Build plan is required");
+        }
+
         BuildItemDto items = new BuildItemDto();
         if (plan.getCpu() != null) {
-            items.setCpu(cpuRepository.findByIdWithImages(plan.getCpu().getProductId().intValue())
-                .orElse(null));
+            items.setCpu(resolveRequiredComponent(plan.getCpu(), "CPU", cpuRepository::findByIdWithImages));
         }
         if (plan.getGpu() != null) {
-            items.setGpu(gpuRepository.findByIdWithImages(plan.getGpu().getProductId().intValue())
-                .orElse(null));
+            items.setGpu(resolveRequiredComponent(plan.getGpu(), "GPU", gpuRepository::findByIdWithImages));
         }
         if (plan.getMainboard() != null) {
-            items.setMainboard(mainboardRepository.findByIdWithImages(plan.getMainboard().getProductId().intValue())
-                .orElse(null));
+            items.setMainboard(resolveRequiredComponent(plan.getMainboard(), "Mainboard", mainboardRepository::findByIdWithImages));
         }
         if (plan.getMemory() != null) {
-            items.setMemory(memoryRepository.findByIdWithImages(plan.getMemory().getProductId().intValue())
-                .orElse(null));
+            items.setMemory(resolveRequiredComponent(plan.getMemory(), "Memory", memoryRepository::findByIdWithImages));
         }
         if (plan.getStorage() != null) {
-            items.setStorage(storageRepository.findByIdWithImages(plan.getStorage().getProductId().intValue())
-                .orElse(null));
+            items.setStorage(resolveRequiredComponent(plan.getStorage(), "Storage", storageRepository::findByIdWithImages));
         }
         if (plan.getPowerSupply() != null) {
-            items.setPowerSupply(powerSupplyRepository.findByIdWithImages(plan.getPowerSupply().getProductId().intValue())
-                .orElse(null));
+            items.setPowerSupply(resolveRequiredComponent(plan.getPowerSupply(), "PowerSupply", powerSupplyRepository::findByIdWithImages));
         }
         if (plan.getPcCase() != null) {
-            items.setPcCase(caseRepository.findByIdWithImages(plan.getPcCase().getProductId().intValue())
-                .orElse(null));
+            items.setPcCase(resolveRequiredComponent(plan.getPcCase(), "Case", caseRepository::findByIdWithImages));
         }
         if (plan.getCooling() != null) {
-            items.setCooling(coolingRepository.findByIdWithImages(plan.getCooling().getProductId().intValue())
-                .orElse(null));
+            items.setCooling(resolveRequiredComponent(plan.getCooling(), "Cooling", coolingRepository::findByIdWithImages));
         }
         List<String> compatibilityErrors = compatibilityService.validateFullBuild(items);
         if (!compatibilityErrors.isEmpty()) {
@@ -502,6 +499,19 @@ public class RuleBasedBuildService {
 
         log.info("BuildItemDto created successfully");
         return items;
+    }
+
+    private <T> T resolveRequiredComponent(ComponentDto component,
+                                           String componentName,
+                                           Function<Integer, Optional<T>> resolver) {
+        if (component.getProductId() == null) {
+            throw new IllegalArgumentException(componentName + " is missing product id");
+        }
+
+        int productId = component.getProductId().intValue();
+        return resolver.apply(productId)
+            .orElseThrow(() -> new IllegalArgumentException(
+                componentName + " is unavailable or missing component data: productId=" + productId));
     }
 }
 

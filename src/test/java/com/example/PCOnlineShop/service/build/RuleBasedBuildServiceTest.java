@@ -104,9 +104,9 @@ class RuleBasedBuildServiceTest {
         when(storageRepository.findBestStorageByBudgetAndScore(anyDouble(), anyInt()))
                 .thenReturn(List.of(storage(5, "Storage", 120)));
         when(powerSupplyRepository.findBestPsuByBudgetAndScore(anyDouble(), anyInt()))
-                .thenReturn(List.of(powerSupply(6, "Too Small PSU", 80, 300)));
+                .thenReturn(List.of(powerSupply(6, "Too Small After Cooling PSU", 80, 750)));
         when(powerSupplyRepository.findAllWithImages())
-                .thenReturn(List.of(powerSupply(7, "Sellable Fallback PSU", 140, 750)));
+                .thenReturn(List.of(powerSupply(7, "Sellable Fallback PSU", 140, 800)));
         when(coolingRepository.findBestCoolingByBudgetAndScore(anyDouble(), anyInt()))
                 .thenReturn(List.of(cooling(8, "Cooling", 40)));
         when(caseRepository.findBestCasesByBudgetAndScore(anyDouble(), anyInt()))

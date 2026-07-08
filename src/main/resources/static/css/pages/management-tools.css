@@ -16,8 +16,8 @@
     --tool-radius-lg: var(--rounded-lg, 8px);
     --tool-radius-sm: var(--rounded-sm, 4px);
 
-    min-height: calc(100vh - 70px);
-    padding: 48px 0;
+    min-height: calc(100svh - 70px);
+    padding: clamp(32px, 6vw, 48px) 0;
     background: var(--tool-canvas);
     color: var(--tool-text);
 }
@@ -26,7 +26,7 @@
     width: 100%;
     max-width: 1400px;
     margin: 0 auto;
-    padding: 0 24px;
+    padding: 0 var(--page-gutter, 24px);
 }
 
 .management-tool-container--wide {

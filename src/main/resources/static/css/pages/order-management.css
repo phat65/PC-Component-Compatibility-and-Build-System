@@ -17,7 +17,7 @@
     --mgmt-radius-lg: var(--rounded-lg, 8px);
     --mgmt-radius-sm: var(--rounded-sm, 4px);
 
-    min-height: calc(100vh - 70px);
+    min-height: calc(100svh - 70px);
     padding: var(--section-padding, 56px) 0;
     background: var(--mgmt-canvas);
     color: var(--mgmt-text);
@@ -27,7 +27,7 @@
     width: 100%;
     max-width: 1180px;
     margin: 0 auto;
-    padding: 0 var(--spacing-md, 24px);
+    padding: 0 var(--page-gutter, 24px);
 }
 
 .management-orders-page .orders-page-header {

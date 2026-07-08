@@ -73,7 +73,7 @@ public class ProductService {
         }
         Optional<Category> category = categoryRepository.findById(categoryId);
         return category
-                .map(value -> productRepository.findByCategoryAndStatusTrueAndLifecycleStatus(value, PUBLIC_CATALOG_STATUS))
+                .map(value -> productRepository.findByCategoryOrParentCategoryAndStatusTrueAndLifecycleStatus(value, PUBLIC_CATALOG_STATUS))
                 .orElse(List.of());
     }
 
